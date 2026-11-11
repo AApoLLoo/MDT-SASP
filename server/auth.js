@@ -71,7 +71,8 @@ export function authenticate(req, res, next) {
 
 // Comptes du MDT pour l'espace agent du site public : superviseurs, état-major et administrateurs y forment le commandement
 const officer = u => (u ? { matricule: u.matricule, name: [u.prenom, u.nom].filter(Boolean).join(' '), rank: u.grade, command: hasRole(u, 'superviseur') } : null);
-const activeUser = matricule => db.prepare('SELECT * FROM users WHERE matricule = ? AND actif = 1').get(matricule);
+// Les comptes justice n'ont pas accès à l'espace agent du site public
+const activeUser = matricule => db.prepare(`SELECT * FROM users WHERE matricule = ? AND actif = 1 AND role NOT IN ('magistrat', 'avocat')`).get(matricule);
 export const siteAuth = {
   find: matricule => officer(activeUser(matricule)),
   verify: (matricule, password) => {

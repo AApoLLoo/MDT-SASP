@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db, parseJson, getList } from '../db.js';
-import { requireRole, hasRole, hashPassword, checkPassword, ROLES } from '../auth.js';
+import { requireRole, hasRole, hashPassword, checkPassword, ALL_ROLES, JUSTICE_ROLES, JUSTICE_FONCTIONS, isJustice } from '../auth.js';
 import { fail, pick, str, bool, intParam, insertRow, updateRow, cleanPhotos, logAction, getOr404 } from '../util.js';
 import { isMember, divisionConflict, ROOKIE, SPECIAL_DIVISIONS } from '../../public/mdt/js/service-kinds.js';
 
@@ -17,6 +17,7 @@ const ACADEMY_FIELDS = ['tuteurs'];
 const ADMIN_FIELDS = ['matricule', 'nom', 'prenom', 'grade', 'role', 'actif'];
 
 const PUBLIC_COLUMNS = 'id, matricule, nom, prenom, grade, role, actif, photo_url, telephone, discord, divisions, grade_swat, grade_bci, date_entree, qualifications, tuteurs, bio, created_at';
+const JUSTICE_SQL = JUSTICE_ROLES.map(r => `'${r}'`).join(', ');
 const parseUser = u => ({ ...u, divisions: parseJson(u.divisions, []), qualifications: parseJson(u.qualifications, []), tuteurs: parseJson(u.tuteurs, []) });
 
 // Tuteurs d'un rookie (identifiants) : agents actifs de l'Academy, cinq au plus
@@ -34,7 +35,14 @@ function clean(body, allowed, current = {}) {
   const f = pick(body, allowed);
   for (const k of ['matricule', 'nom', 'prenom', 'grade', 'grade_swat', 'grade_bci', 'telephone', 'discord', 'bio']) if (k in f) f[k] = str(f[k]);
   if ('matricule' in f && !f.matricule) fail(400, 'Le matricule est obligatoire');
-  if (f.grade && f.grade !== current.grade && !getList('grades').includes(f.grade)) {
+  if ('role' in f && !ALL_ROLES.includes(f.role)) fail(400, 'Rôle invalide');
+  // Compte justice : la fonction (Procureur, Juge, Avocat) remplace le grade SASP
+  const role = f.role ?? current.role ?? 'agent';
+  if (isJustice({ role })) {
+    if (('grade' in f || 'role' in f) && !JUSTICE_FONCTIONS[role].includes(f.grade ?? current.grade)) {
+      fail(400, `Fonction invalide pour ce compte : ${JUSTICE_FONCTIONS[role].join(' ou ')}`);
+    }
+  } else if (f.grade && f.grade !== current.grade && !getList('grades').includes(f.grade)) {
     fail(400, `Grade inconnu : ${f.grade}. Les grades se règlent dans Administration → Paramètres`);
   }
   // Grades internes des divisions (S.W.A.T., BCI) : pris dans leur liste réglable
@@ -43,7 +51,6 @@ function clean(body, allowed, current = {}) {
       fail(400, `Grade ${nom} inconnu : ${f[k]}. Les grades ${nom} se règlent dans Administration → Paramètres`);
     }
   }
-  if ('role' in f && !ROLES.includes(f.role)) fail(400, 'Rôle invalide');
   if ('actif' in f) f.actif = bool(f.actif);
   if ('photo_url' in f) f.photo_url = cleanPhotos({ photo: f.photo_url }).photo ?? '';
   if ('date_entree' in f) {
@@ -92,10 +99,18 @@ function loadProfile(id) {
 
 const r = Router();
 
-// Annuaire visible par tous les agents ; jamais de hash de mot de passe
+// Annuaire visible par tous les agents ; jamais de hash de mot de passe. Les comptes justice n'en font pas partie :
+// l'administration les liste à part (?justice=1)
 r.get('/', (req, res) => {
-  res.json(db.prepare(`SELECT ${PUBLIC_COLUMNS} FROM users ORDER BY actif DESC, matricule`).all()
-    .map(parseUser));
+  const justice = req.query.justice === '1';
+  if (justice && !hasRole(req.user, 'admin')) fail(403, 'Droits insuffisants');
+  res.json(db.prepare(`SELECT ${PUBLIC_COLUMNS} FROM users WHERE (role IN (${JUSTICE_SQL})) = ? ORDER BY actif DESC, matricule`)
+    .all(justice ? 1 : 0).map(parseUser));
+});
+
+// Avocats actifs, pour les rattacher à un rapport ou une plainte
+r.get('/avocats', (req, res) => {
+  res.json(db.prepare(`SELECT id, matricule, nom, prenom FROM users WHERE role = 'avocat' AND actif = 1 ORDER BY nom, prenom`).all());
 });
 
 r.get('/:id', (req, res) => res.json(loadProfile(intParam(req.params.id))));

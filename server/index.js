@@ -16,6 +16,7 @@ import misc from './routes/misc.js';
 import incidents from './routes/incidents.js';
 import evidence from './routes/evidence.js';
 import admin from './routes/admin.js';
+import justice, { justiceGate } from './justice.js';
 import { dailyMaintenance } from './maintenance.js';
 
 ensureAdmin();
@@ -51,6 +52,8 @@ app.use(authenticate);
 
 app.use('/api/auth', authRouter);
 app.use('/api', requireAuth);
+app.use('/api', justiceGate);
+app.use('/api/justice', justice);
 app.use('/api/citizens', citizens);
 app.use('/api/vehicles', vehicles);
 app.use('/api/warrants', warrants);
