@@ -238,7 +238,9 @@ async function showApp() {
       <aside class="sidebar">
         <a class="brand" href="#/">
           <img src="img/sasp-seal.png" alt="">
-          <span><strong>SASP</strong><small>San Andreas State Police</small></span>
+          ${isJustice()
+            ? html`<span><strong>DOJ</strong><small>Department of Justice</small></span>`
+            : html`<span><strong>SASP</strong><small>San Andreas State Police</small></span>`}
         </a>
         <nav class="nav">
           ${navItems().map(e => (typeof e === 'string' ? html`<p class="nav-group">${e}</p>` : html`
