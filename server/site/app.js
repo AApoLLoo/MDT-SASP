@@ -196,7 +196,8 @@ const mastheadOf = (post) => {
     foot: m.footer ? `<footer class="edition__foot"><p>${esc(m.footer)}</p><img src="/img/logo-128.webp" alt="" decoding="async"></footer>` : "",
   };
 };
-const EDITION_FONT = '<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">';
+// Police du journal (Oswald, licence OFL) hébergée sur le site : aucune requête vers Google Fonts
+const EDITION_FONT = '<link rel="preload" href="/fonts/oswald-latin.woff2" as="font" type="font/woff2" crossorigin>';
 
 // Every uploaded photo a news item uses: cover + photos inside the content.
 const photosOf = (post) => [post.image, ...blocksOf(post).filter((b) => b.type === "image").map((b) => b.image)].filter(Boolean);

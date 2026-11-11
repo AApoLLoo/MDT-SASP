@@ -60,6 +60,11 @@ const main = async () => {
     let res = await req("GET", "/");
     assert.equal(res.status, 200);
     assert.match(res.headers.get("content-security-policy"), /script-src 'self'/);
+    // Aucun service tiers : la police du journal est servie par le site, Google Fonts n'est plus autorisé
+    assert.doesNotMatch(res.headers.get("content-security-policy"), /googleapis|gstatic/);
+    const font = await req("GET", "/fonts/oswald-latin.woff2");
+    assert.equal(font.status, 200);
+    assert.equal(font.headers.get("content-type"), "font/woff2");
     const home = await res.text();
     assert.match(home, /Session de recrutement d&#39;hiver ouverte/);
     // Divisions and recruitment services follow the MDT lists

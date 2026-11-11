@@ -4,8 +4,8 @@ const MAX_BODY = 64 * 1024;
 
 const SECURITY_HEADERS = {
   "Content-Security-Policy": [
-    "default-src 'self'", "script-src 'self'", "style-src 'self' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:", "connect-src 'self'",
+    "default-src 'self'", "script-src 'self'", "style-src 'self'",
+    "font-src 'self'", "img-src 'self' data:", "connect-src 'self'",
     "frame-ancestors 'none'", "base-uri 'self'", "form-action 'self'",
   ].join("; "),
   "X-Content-Type-Options": "nosniff",
