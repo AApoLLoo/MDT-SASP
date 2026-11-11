@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson, transaction, getDefcon } from '../db.js';
 import { hasRole, canJudge, requireJudge } from '../auth.js';
-import { cleanAvocatId } from '../justice.js';
+import { cleanAvocatId, blanchirRapports } from '../justice.js';
 import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
@@ -22,6 +22,8 @@ function loadReport(id, user) {
   for (const [k, def] of Object.entries(JSON_DEFAULTS)) rep[k] = parseJson(rep[k], def);
   // Un avocat ne lit que les dossiers où son compte est inscrit
   if (user.role === 'avocat' && rep.avocat_id !== user.id) fail(403, "Vous n'êtes pas l'avocat inscrit sur ce dossier");
+  // Une condamnation blanchie n'existe plus pour la police ; la justice la consulte encore
+  if (rep.blanchi_at && !canJudge(user)) fail(404, 'Rapport introuvable');
   rep.calc_result = parseJson(rep.calc_result, null);
   rep.calc_result_police = parseJson(rep.calc_result_police, null);
   rep.evidence = db.prepare('SELECT id, numero, description, statut FROM evidence WHERE report_id = ? ORDER BY id').all(id);
@@ -115,7 +117,9 @@ r.get('/', (req, res) => {
     FROM arrest_reports a JOIN users u ON u.id = a.redacteur_id
     WHERE (? IS NULL OR a.statut = ?) AND (? IS NULL OR a.redacteur_id = ?)
       AND (a.numero LIKE ? OR IFNULL(json_extract(a.suspect, '$.nom') || ' ' || json_extract(a.suspect, '$.prenom'), '') LIKE ?)
-    ORDER BY ${statut === 'en_attente' ? 'a.depose_at ASC' : 'a.updated_at DESC'} LIMIT ?`).all(statut, statut, mine, mine, q, q, listLimit(req)));
+      AND (? OR a.blanchi_at IS NULL)
+    ORDER BY ${statut === 'en_attente' ? 'a.depose_at ASC' : 'a.updated_at DESC'} LIMIT ?`)
+    .all(statut, statut, mine, mine, q, q, canJudge(req.user) ? 1 : 0, listLimit(req)));
 });
 
 r.get('/:id', (req, res) => res.json(loadReport(intParam(req.params.id), req.user)));
@@ -235,6 +239,25 @@ r.post('/:id/reopen', requireJudge, (req, res) => {
   if (!changes) fail(404, 'Rapport introuvable ou non finalisé');
   logAction(req.user, "Rapport d'arrestation rouvert", 'report', id, rep.numero, 'Retiré du casier, de nouveau en attente de jugement');
   res.json({ ok: true });
+});
+
+r.post('/:id/blanchir', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const rep = loadReport(id, req.user);
+  if (rep.statut !== 'finalise' || rep.blanchi_at) fail(400, 'Seule une condamnation finalisée et non blanchie peut être blanchie');
+  blanchirRapports(req.user, [rep], req.body?.motif);
+  res.json(loadReport(id, req.user));
+});
+
+r.post('/:id/unblanchir', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const motif = str(req.body?.motif);
+  if (!motif) fail(400, "Indiquez le motif de l'annulation");
+  const rep = loadReport(id, req.user);
+  if (!rep.blanchi_at) fail(400, "Ce rapport n'est pas blanchi");
+  db.prepare(`UPDATE arrest_reports SET blanchi_at = NULL, blanchi_par = NULL, blanchi_motif = '' WHERE id = ?`).run(id);
+  logAction(req.user, 'Blanchiment annulé', 'report', id, rep.numero, motif);
+  res.json(loadReport(id, req.user));
 });
 
 // Un brouillon se supprime par son rédacteur ou un superviseur ; un rapport déposé ou jugé, par un administrateur seulement

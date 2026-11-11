@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { db } from './db.js';
+import { db, transaction } from './db.js';
 import { isJustice } from './auth.js';
-import { fail } from './util.js';
+import { fail, str, logAction } from './util.js';
 
 // Routes /api ouvertes aux comptes justice ; tout le reste leur est refusé (refus par défaut).
 // Les contrôles fins (avocat rattaché, rapport blanchi) sont faits dans les routes elles-mêmes.
@@ -42,6 +42,24 @@ export function cleanAvocatId(value) {
 export function cleanAvocatIds(values) {
   const ids = (Array.isArray(values) ? values : []).map(cleanAvocatId).filter(id => id !== null);
   return JSON.stringify([...new Set(ids)].slice(0, 4));
+}
+
+// Blanchiment : les condamnations restent en base, marquées (date, auteur, motif), et sortent du casier vu par la police.
+// reports : [{ id, numero }] ; seuls les rapports finalisés non blanchis sont touchés. Renvoie le nombre blanchi.
+export function blanchirRapports(user, reports, motif) {
+  const m = str(motif);
+  if (!m) fail(400, 'Indiquez le motif du blanchiment');
+  const stmt = db.prepare(`UPDATE arrest_reports SET blanchi_at = datetime('now'), blanchi_par = ?, blanchi_motif = ?
+    WHERE id = ? AND statut = 'finalise' AND blanchi_at IS NULL`);
+  let count = 0;
+  transaction(() => {
+    for (const rep of reports) {
+      if (!stmt.run(user.id, m, rep.id).changes) continue;
+      count++;
+      logAction(user, 'Condamnation blanchie', 'report', rep.id, rep.numero, m);
+    }
+  });
+  return count;
 }
 
 const r = Router();

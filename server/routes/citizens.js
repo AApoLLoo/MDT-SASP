@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson } from '../db.js';
-import { requireRole } from '../auth.js';
+import { requireRole, requireJudge, canJudge } from '../auth.js';
+import { blanchirRapports } from '../justice.js';
 import { fail, pick, str, intParam, optionalId, insertRow, updateRow, getOr404, listLimit, logAction, cleanPhotos } from '../util.js';
 
 const citizenName = c => [c.prenom, c.nom].filter(Boolean).join(' ');
@@ -56,10 +57,11 @@ r.get('/:id', (req, res) => {
   citizen.warrants = db.prepare(`
     SELECT w.*, u.matricule AS auteur_matricule FROM warrants w LEFT JOIN users u ON u.id = w.created_by
     WHERE w.citizen_id = ? ORDER BY w.statut = 'clos', w.created_at DESC`).all(id);
+  // Condamnations blanchies : hors du casier vu par la police, visibles de la justice
   citizen.reports = db.prepare(`
-    SELECT a.id, a.numero, a.statut, a.date_faits, a.calc_result, a.finalized_at, u.matricule AS redacteur_matricule
+    SELECT a.id, a.numero, a.statut, a.date_faits, a.calc_result, a.finalized_at, a.blanchi_at, a.blanchi_motif, u.matricule AS redacteur_matricule
     FROM arrest_reports a JOIN users u ON u.id = a.redacteur_id
-    WHERE a.citizen_id = ? ORDER BY a.date_faits DESC, a.id DESC`).all(id)
+    WHERE a.citizen_id = ? AND (? OR a.blanchi_at IS NULL) ORDER BY a.date_faits DESC, a.id DESC`).all(id, canJudge(req.user) ? 1 : 0)
     .map(({ calc_result, ...a }) => {
       const result = parseJson(calc_result, null);
       return { ...a, charges: result?.lignes.map(l => l.infraction) ?? [], amende: result?.amende ?? 0, gav_minutes: result?.gavMinutes ?? 0 };
@@ -88,6 +90,16 @@ r.put('/:id', (req, res) => {
   updateRow('citizens', id, fields);
   logAction(req.user, 'Fiche citoyen modifiée', 'citizen', id, citizenName(getOr404('SELECT nom, prenom FROM citizens WHERE id = ?', id)));
   res.json({ ok: true });
+});
+
+// Blanchit tout le casier : chaque condamnation finalisée non blanchie
+r.post('/:id/blanchir', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const citizen = getOr404('SELECT nom, prenom FROM citizens WHERE id = ?', id, 'Citoyen introuvable');
+  const reports = db.prepare(`SELECT id, numero FROM arrest_reports WHERE citizen_id = ? AND statut = 'finalise' AND blanchi_at IS NULL`).all(id);
+  const count = blanchirRapports(req.user, reports, req.body?.motif);
+  logAction(req.user, 'Casier blanchi', 'citizen', id, [citizen.prenom, citizen.nom].filter(Boolean).join(' '), `${count} condamnation(s) · ${str(req.body?.motif)}`);
+  res.json({ count });
 });
 
 r.delete('/:id', requireRole('superviseur'), (req, res) => {

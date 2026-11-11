@@ -144,3 +144,33 @@ test('liste des rapports en attente, du plus ancien au plus récent', async () =
   const ids = list.map(r => r.id);
   assert.ok(ids.includes(a) && ids.indexOf(a) < ids.indexOf(b));
 });
+
+// Rapport jugé sur un citoyen sans autre condamnation
+async function rapportFinalise() {
+  const id = await rapportPret(agent);
+  await req('POST', `/reports/${id}/submit`, agent);
+  const rep = (await req('POST', `/reports/${id}/finalize`, magistrat)).body;
+  return { id, citizenId: rep.citizen_id };
+}
+
+test('blanchiment : caché à la police, visible du magistrat, réversible', async () => {
+  const { id, citizenId } = await rapportFinalise();
+  const casiersAvant = (await req('GET', '/dashboard', agent)).body.stats.casiers;
+  assert.equal((await req('POST', `/reports/${id}/blanchir`, superviseur, { motif: 'x' })).status, 403);
+  assert.equal((await req('POST', `/reports/${id}/blanchir`, magistrat, {})).status, 400);
+  assert.equal((await req('POST', `/reports/${id}/blanchir`, magistrat, { motif: 'Réhabilitation' })).status, 200);
+  assert.equal((await req('GET', `/citizens/${citizenId}`, agent)).body.reports.length, 0);
+  assert.equal((await req('GET', `/reports/${id}`, agent)).status, 404);
+  assert.ok(!(await req('GET', '/reports', agent)).body.some(r => r.id === id));
+  assert.equal((await req('GET', '/dashboard', agent)).body.stats.casiers, casiersAvant - 1);
+  const vu = (await req('GET', `/citizens/${citizenId}`, magistrat)).body.reports[0];
+  assert.equal(vu.blanchi_motif, 'Réhabilitation');
+  assert.equal((await req('POST', `/reports/${id}/unblanchir`, magistrat, { motif: 'Erreur' })).status, 200);
+  assert.equal((await req('GET', `/citizens/${citizenId}`, agent)).body.reports.length, 1);
+});
+
+test('blanchiment de tout le casier', async () => {
+  const { citizenId } = await rapportFinalise();
+  assert.equal((await req('POST', `/citizens/${citizenId}/blanchir`, magistrat, { motif: 'Amnistie' })).body.count, 1);
+  assert.equal((await req('GET', `/citizens/${citizenId}`, agent)).body.reports.length, 0);
+});

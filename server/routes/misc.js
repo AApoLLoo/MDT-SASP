@@ -55,17 +55,17 @@ r.get('/dashboard', (req, res) => {
   const count = (sql, ...params) => db.prepare(sql).get(...params).n;
   res.json({
     stats: {
-      casiers: count(`SELECT COUNT(DISTINCT citizen_id) AS n FROM arrest_reports WHERE statut = 'finalise'`),
+      casiers: count(`SELECT COUNT(DISTINCT citizen_id) AS n FROM arrest_reports WHERE statut = 'finalise' AND blanchi_at IS NULL`),
       mandats_actifs: count(`SELECT COUNT(*) AS n FROM warrants WHERE statut = 'actif'`),
       vehicules_voles: count(`SELECT COUNT(*) AS n FROM vehicles WHERE statut = 'vole'`),
-      rapports_mois: count(`SELECT COUNT(*) AS n FROM arrest_reports WHERE statut = 'finalise' AND finalized_at >= date('now', 'start of month')`),
+      rapports_mois: count(`SELECT COUNT(*) AS n FROM arrest_reports WHERE statut = 'finalise' AND blanchi_at IS NULL AND finalized_at >= date('now', 'start of month')`),
     },
     mandats: db.prepare(`${WARRANT_SELECT} WHERE w.statut = 'actif' ORDER BY w.created_at DESC LIMIT 8`).all(),
     rapports: db.prepare(`
       SELECT a.id, a.numero, a.date_faits, json_extract(a.suspect, '$.nom') AS suspect_nom, json_extract(a.suspect, '$.prenom') AS suspect_prenom,
         json_extract(a.calc_result, '$.nbChefs') AS nb_chefs, u.matricule AS redacteur_matricule
       FROM arrest_reports a JOIN users u ON u.id = a.redacteur_id
-      WHERE a.statut = 'finalise' ORDER BY a.finalized_at DESC LIMIT 8`).all(),
+      WHERE a.statut = 'finalise' AND a.blanchi_at IS NULL ORDER BY a.finalized_at DESC LIMIT 8`).all(),
     annonces: db.prepare(`
       SELECT a.id, a.categorie, a.division, a.titre, a.importance, a.epingle, a.created_at, u.matricule AS auteur_matricule,
         (a.created_by = ? OR EXISTS (SELECT 1 FROM announcement_reads r WHERE r.announcement_id = a.id AND r.user_id = ?)) AS lu
