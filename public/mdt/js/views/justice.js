@@ -1,5 +1,6 @@
-import { html, mount, fullName, fmtDate, fmtDateTime } from '../dom.js';
-import { api, isAvocat } from '../api.js';
+import { html, mount, $, attempt, toast, formValues, fullName, fmtDate, fmtDateTime } from '../dom.js';
+import { api, state, isAvocat } from '../api.js';
+import { mountPhotos } from '../components/photos.js';
 import { formatDollars } from '../calc.js';
 import { statutBadge } from './reports.js';
 
@@ -24,6 +25,49 @@ export async function render(main) {
   main.addEventListener('click', e => {
     const tr = e.target.closest('tr[data-href]');
     if (tr) location.hash = tr.dataset.href;
+  });
+}
+
+// Profil d'un compte justice : photo, contact, présentation, mot de passe (la fonction se change par un administrateur)
+export async function renderProfile(main) {
+  const u = await api(`/users/${state.user.id}`);
+  const photos = { photo_url: u.photo_url };
+  mount(main, html`
+    <div class="page-head"><div><h1>Mon profil</h1><p class="muted">${u.grade || ''} ${fullName(u)} · identifiant ${u.matricule}</p></div></div>
+    <section class="card">
+      <form class="form-grid" data-profile>
+        <div class="span-2" data-photo></div>
+        <label>Téléphone (en jeu)<input class="input" name="telephone" value="${u.telephone}" placeholder="(000) 000-0000"></label>
+        <label>Discord<input class="input" name="discord" value="${u.discord}" placeholder="pseudo"></label>
+        <label class="span-2">Présentation<textarea class="input" name="bio" rows="4">${u.bio}</textarea></label>
+        <div class="span-2 form-actions"><button class="btn btn-primary">Enregistrer</button></div>
+      </form>
+    </section>
+    <section class="card">
+      <div class="card-head"><h3>Mot de passe</h3></div>
+      <form class="form-grid" data-password>
+        <label>Mot de passe actuel<input class="input" type="password" name="current" required autocomplete="current-password"></label>
+        <label>Nouveau mot de passe (8 caractères min.)<input class="input" type="password" name="next" required minlength="8" autocomplete="new-password"></label>
+        <div class="span-2 form-actions"><button class="btn">Changer le mot de passe</button></div>
+      </form>
+    </section>`);
+  mountPhotos($('[data-photo]', main), photos, () => {}, [{ titre: '', slots: [['photo_url', 'Photo de profil']] }]);
+  $('[data-profile]', main).addEventListener('submit', e => {
+    e.preventDefault();
+    attempt(async () => {
+      const saved = await api(`/users/${u.id}`, { method: 'PUT', body: { ...formValues(e.target), photo_url: photos.photo_url ?? '' } });
+      state.user.photo_url = saved.photo_url;
+      window.dispatchEvent(new Event('profile-change'));
+      toast('Profil enregistré');
+    }, e.submitter);
+  });
+  $('[data-password]', main).addEventListener('submit', e => {
+    e.preventDefault();
+    attempt(async () => {
+      await api('/auth/password', { method: 'POST', body: formValues(e.target) });
+      e.target.reset();
+      toast('Mot de passe changé');
+    }, e.submitter);
   });
 }
 

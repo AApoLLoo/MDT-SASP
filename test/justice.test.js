@@ -241,3 +241,14 @@ test("annuaire : le magistrat ne voit que l'identité des agents", async () => {
   const u = (await req('GET', '/users', magistrat)).body[0];
   assert.deepEqual(Object.keys(u).sort(), ['grade', 'id', 'matricule', 'nom', 'prenom']);
 });
+
+test('comptes justice : leur propre profil seulement', async () => {
+  assert.equal((await req('GET', `/users/${avocat}`, avocat)).status, 200);
+  assert.equal((await req('GET', `/users/${avocat2}`, avocat)).status, 403);
+  assert.equal((await req('GET', `/users/${agent}`, magistrat)).status, 403);
+  const saved = (await req('PUT', `/users/${magistrat}`, magistrat, { telephone: '555-0101', discord: 'juge', grade: 'Procureur', role: 'admin' })).body;
+  assert.equal(saved.telephone, '555-0101');
+  assert.equal(saved.grade, 'Juge', 'la fonction ne se change pas soi-même');
+  assert.equal(saved.role, 'magistrat', 'le rôle non plus');
+  assert.equal((await req('PUT', `/users/${avocat2}`, avocat, { telephone: 'x' })).status, 403);
+});

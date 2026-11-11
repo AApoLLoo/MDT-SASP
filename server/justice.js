@@ -19,12 +19,16 @@ const ALLOWED = {
   avocat: [
     ['GET', /^\/(reports|complaints)\/\d+$/],
     ['GET', /^\/(justice\/mes-dossiers|settings|penal-code)$/],
+    ['POST', /^\/uploads$/], // photo de profil
   ],
 };
+// Leur propre profil (photo, contact, présentation) ; la route ne leur laisse modifier que ces champs
+const SELF = [['GET', /^\/users\/(\d+)$/], ['PUT', /^\/users\/(\d+)$/]];
 
 export function justiceGate(req, res, next) {
   if (!isJustice(req.user)) return next();
-  const allowed = ALLOWED[req.user.role].some(([method, pattern]) => method === req.method && pattern.test(req.path));
+  const own = SELF.some(([method, pattern]) => method === req.method && Number(req.path.match(pattern)?.[1]) === req.user.id);
+  const allowed = own || ALLOWED[req.user.role].some(([method, pattern]) => method === req.method && pattern.test(req.path));
   return allowed ? next() : res.status(403).json({ error: 'Accès réservé à la police' });
 }
 

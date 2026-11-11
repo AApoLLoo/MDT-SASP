@@ -257,7 +257,7 @@ async function showApp() {
           <a href="#/references?onglet=defcon" data-defcon-badge></a>
           <span class="clock" data-clock><b></b><small></small></span>
           <div class="topbar-user">
-            <a class="user-label" href="#/${isJustice() ? '' : `agents/${state.user.id}`}" title="${isJustice() ? 'Accueil' : 'Mon profil'}" data-user-label></a>
+            <a class="user-label" href="#/${isJustice() ? 'profil' : `agents/${state.user.id}`}" title="Mon profil" data-user-label></a>
             <a class="btn btn-sm btn-ghost" href="/" title="Site public">${icon('back')}</a>
             <button type="button" class="btn btn-sm btn-ghost" data-lite>${icon('zap')}</button>
             <button type="button" class="btn btn-sm btn-ghost" data-logout title="Déconnexion">${icon('logout')}</button>
@@ -300,7 +300,9 @@ async function showApp() {
 async function route() {
   if (!state.user) return showLogin();
   let { view, params, query, path } = resolve();
-  if (isJustice()) view = path === '/' ? justice.render : JUSTICE_PATHS[state.user.role].test(path) ? view : null;
+  if (isJustice()) {
+    view = { '/': justice.render, '/profil': justice.renderProfile }[path] ?? (JUSTICE_PATHS[state.user.role].test(path) ? view : null);
+  }
   if (path !== '/annonces') updateUnread();
   for (const a of $$('[data-nav]')) {
     const p = a.dataset.nav;
