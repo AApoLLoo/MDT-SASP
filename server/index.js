@@ -17,6 +17,7 @@ import incidents from './routes/incidents.js';
 import evidence from './routes/evidence.js';
 import admin from './routes/admin.js';
 import justice, { justiceGate } from './justice.js';
+import bordereau from './bordereau.js';
 import { dailyMaintenance } from './maintenance.js';
 
 ensureAdmin();
@@ -57,6 +58,7 @@ app.use('/api/justice', justice);
 app.use('/api/citizens', citizens);
 app.use('/api/vehicles', vehicles);
 app.use('/api/warrants', warrants);
+app.use('/api/reports/import', bordereau);
 app.use('/api/reports', reports);
 app.use('/api/incidents', incidents);
 app.use('/api/evidence', evidence);

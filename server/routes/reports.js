@@ -7,7 +7,7 @@ import { upsertCitizen } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
 import { compute, formatDollars, MAX_CHARGES, MAJORATION_DEFCON } from '../../public/mdt/js/calc.js';
 
-const SUSPECT_FIELDS = ['nom', 'prenom', 'date_naissance', 'id_unique', 'empreinte', 'telephone'];
+export const SUSPECT_FIELDS = ['nom', 'prenom', 'date_naissance', 'id_unique', 'empreinte', 'telephone'];
 const JSON_DEFAULTS = { suspect: {}, agents_presents: [], objets_illegaux: [], photos: {}, calc_input: {}, calc_input_police: null };
 const MAJORATIONS = [1, 1.5, 2, 3];
 

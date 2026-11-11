@@ -1,5 +1,6 @@
-import { html, mount, $, attempt, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, toast, openModal, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
 import { api, isJustice } from '../api.js';
+import { navigate } from '../router.js';
 import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
 
@@ -7,11 +8,45 @@ const STATUTS = { brouillon: ['Brouillon', 'badge-warn'], en_attente: ['En atten
 export const statutLabel = s => (STATUTS[s] ?? STATUTS.brouillon)[0];
 export const statutBadge = s => html`<span class="badge ${(STATUTS[s] ?? STATUTS.brouillon)[1]}">${statutLabel(s)}</span>`;
 
+// Import d'un bordereau Google Docs : le serveur lit le document partagé et crée un brouillon pré-rempli à relire
+function openImport() {
+  const dialog = openModal('Importer un bordereau Google Docs', html`
+    <form class="form-grid" data-import-form>
+      <label class="span-2">Lien du document<input class="input" name="url" type="url" required autofocus
+        placeholder="https://docs.google.com/document/d/…"></label>
+      <p class="span-2 muted small">Le document doit être partagé en « Toute personne disposant du lien » (lecteur).
+        Les champs, chefs d'accusation et photos sont repris dans un brouillon : relisez-le avant de le déposer.</p>
+      <div class="span-2 form-actions"><button class="btn btn-primary">${icon('check')} Importer</button></div>
+    </form>`);
+  $('[data-import-form]', dialog).addEventListener('submit', e => {
+    e.preventDefault();
+    const button = e.submitter;
+    button.textContent = 'Import en cours…';
+    attempt(async () => {
+      try {
+        const { id, warnings } = await api('/reports/import', { method: 'POST', body: { url: e.target.elements.url.value } });
+        if (!warnings.length) {
+          dialog.close();
+          toast('Bordereau importé : relisez le brouillon');
+          return navigate(`/rapports/${id}/modifier`);
+        }
+        mount($('[data-import-form]', dialog), html`
+          <div class="span-2 alert alert-warn"><strong>Brouillon créé, points à vérifier</strong>${warnings.map(w => html`<small>• ${w}</small>`)}</div>
+          <div class="span-2 form-actions"><a class="btn btn-primary" href="#/rapports/${id}/modifier" data-close>Ouvrir le brouillon</a></div>`);
+      } finally {
+        button.textContent = 'Importer';
+      }
+    }, button);
+  });
+}
+
 export async function render(main, params, query) {
   mount(main, html`
     <div class="page-head">
       <h1>Rapports d'arrestation</h1>
-      ${isJustice() ? '' : html`<div class="actions"><a class="btn btn-primary" href="#/rapports/nouveau">${icon('plus')} Nouveau rapport</a></div>`}
+      ${isJustice() ? '' : html`<div class="actions">
+        <button type="button" class="btn" data-import>${icon('copy')} Importer un bordereau</button>
+        <a class="btn btn-primary" href="#/rapports/nouveau">${icon('plus')} Nouveau rapport</a></div>`}
     </div>
     <div class="toolbar">
       <div class="search-box grow">${icon('search')}<input type="search" class="input" data-q placeholder="N° de rapport ou nom du suspect…"></div>
@@ -45,6 +80,7 @@ export async function render(main, params, query) {
   $('[data-statut]', main).addEventListener('change', reload);
   $('[data-mine]', main).addEventListener('change', reload);
   main.addEventListener('click', e => {
+    if (e.target.closest('[data-import]')) openImport();
     if (e.target.closest('[data-more]')) { limit += PAGE; attempt(load); }
     const tr = e.target.closest('tr[data-href]');
     if (tr) location.hash = tr.dataset.href;

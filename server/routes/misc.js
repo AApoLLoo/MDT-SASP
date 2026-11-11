@@ -10,7 +10,7 @@ import { WARRANT_SELECT } from './warrants.js';
 const r = Router();
 
 // Type déterminé par la signature du fichier, pas par l'en-tête envoyé
-function imageExtension(buf) {
+export function imageExtension(buf) {
   if (buf.length < 12) return null;
   if (buf[0] === 0x89 && buf.toString('ascii', 1, 4) === 'PNG') return 'png';
   if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
