@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson, transaction, getDefcon } from '../db.js';
 import { hasRole, canJudge, requireJudge } from '../auth.js';
-import { cleanAvocatId, blanchirRapports } from '../justice.js';
+import { cleanAvocatId, blanchirRapports, logAvocatChange } from '../justice.js';
 import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
@@ -158,6 +158,7 @@ r.put('/:id', (req, res) => {
       fields.suspect = JSON.stringify(snapshot);
     }
     updateRow('arrest_reports', id, fields);
+    if ('avocat_id' in fields) logAvocatChange(req.user, 'report', id, rep.numero, [rep.avocat_id].filter(Boolean), [fields.avocat_id].filter(Boolean));
   });
   res.json(loadReport(id, req.user));
 });
@@ -189,10 +190,16 @@ r.put('/:id/jugement', requireJudge, (req, res) => {
     fields.calc_input = JSON.stringify(calcInput);
     fields.calc_result = JSON.stringify(compute(calcInput, getCode));
   }
-  updateRow('arrest_reports', id, fields);
-  const before = rep.calc_result?.amende ?? 0;
-  const after = fields.calc_result ? JSON.parse(fields.calc_result).amende : before;
-  logAction(req.user, 'Jugement modifié', 'report', id, rep.numero, after !== before ? `Amende : ${formatDollars(before)} → ${formatDollars(after)}` : '');
+  transaction(() => {
+    updateRow('arrest_reports', id, fields);
+    if ('avocat_id' in fields) logAvocatChange(req.user, 'report', id, rep.numero, [rep.avocat_id].filter(Boolean), [fields.avocat_id].filter(Boolean));
+    // Journalisé seulement si les charges changent (la page de jugement enregistre aussi avant de finaliser)
+    if (fields.calc_input && fields.calc_input !== JSON.stringify(rep.calc_input)) {
+      const before = rep.calc_result?.amende ?? 0;
+      const after = JSON.parse(fields.calc_result).amende;
+      logAction(req.user, 'Jugement modifié', 'report', id, rep.numero, after !== before ? `Amende : ${formatDollars(before)} → ${formatDollars(after)}` : "Chefs d'accusation modifiés");
+    }
+  });
   res.json(loadReport(id, req.user));
 });
 
@@ -233,7 +240,9 @@ r.post('/:id/send-back', requireJudge, (req, res) => {
 // Réouverture d'un rapport jugé : retiré du casier, de nouveau en attente de jugement
 r.post('/:id/reopen', requireJudge, (req, res) => {
   const id = intParam(req.params.id);
-  const rep = db.prepare('SELECT numero FROM arrest_reports WHERE id = ?').get(id);
+  const rep = db.prepare('SELECT numero, blanchi_at FROM arrest_reports WHERE id = ?').get(id);
+  // Un rapport blanchi rouvert resterait blanchi, et renvoyé à l'agent il lui deviendrait introuvable
+  if (rep?.blanchi_at) fail(400, "Annulez d'abord le blanchiment de ce rapport");
   const { changes } = db.prepare(`UPDATE arrest_reports SET statut = 'en_attente', finalized_at = NULL, juge_id = NULL, updated_at = datetime('now')
     WHERE id = ? AND statut = 'finalise'`).run(id);
   if (!changes) fail(404, 'Rapport introuvable ou non finalisé');

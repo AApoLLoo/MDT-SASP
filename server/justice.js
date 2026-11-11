@@ -38,6 +38,17 @@ export function cleanAvocatId(value) {
   return id;
 }
 
+// L'inscription d'un avocat ouvre l'accès au dossier : chaque changement est journalisé (listes d'identifiants)
+export function logAvocatChange(user, entity, entityId, numero, before, after) {
+  const same = before.length === after.length && before.every(id => after.includes(id));
+  if (same) return;
+  const label = ids => ids.map(id => {
+    const u = db.prepare('SELECT matricule, nom, prenom FROM users WHERE id = ?').get(id);
+    return u ? `${[u.prenom, u.nom].filter(Boolean).join(' ')} (${u.matricule})` : `#${id}`;
+  }).join(', ') || '—';
+  logAction(user, 'Avocat du dossier modifié', entity, entityId, numero, `Avocat : ${label(before)} → ${label(after)}`);
+}
+
 // Plusieurs avocats (plaintes) : JSON d'identifiants uniques, quatre au plus
 export function cleanAvocatIds(values) {
   const ids = (Array.isArray(values) ? values : []).map(cleanAvocatId).filter(id => id !== null);
@@ -70,7 +81,7 @@ r.get('/mes-dossiers', (req, res) => {
   res.json({
     reports: db.prepare(`
       SELECT id, numero, statut, date_faits, json_extract(suspect, '$.nom') AS suspect_nom, json_extract(suspect, '$.prenom') AS suspect_prenom
-      FROM arrest_reports WHERE avocat_id = ? ORDER BY updated_at DESC`).all(req.user.id),
+      FROM arrest_reports WHERE avocat_id = ? AND blanchi_at IS NULL ORDER BY updated_at DESC`).all(req.user.id),
     complaints: db.prepare(`
       SELECT id, numero, statut, date_depot FROM complaints c
       WHERE EXISTS (SELECT 1 FROM json_each(c.avocat_ids) j WHERE j.value = ?) ORDER BY date_depot DESC, id DESC`).all(req.user.id),

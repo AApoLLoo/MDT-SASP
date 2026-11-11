@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson, transaction } from '../db.js';
 import { requireRole, requireJudge } from '../auth.js';
-import { cleanAvocatIds } from '../justice.js';
+import { cleanAvocatIds, logAvocatChange } from '../justice.js';
 import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { createReport } from './reports.js';
@@ -113,6 +113,7 @@ r.post('/', (req, res) => {
   });
   const c = load(id);
   logAction(req.user, 'Plainte enregistrée', 'complaint', id, c.numero, `Plaignant : ${fullName(c.plaignant)}`);
+  logAvocatChange(req.user, 'complaint', id, c.numero, [], c.avocat_ids);
   res.status(201).json(c);
 });
 
@@ -125,6 +126,7 @@ r.put('/:id', (req, res) => {
   transaction(() => {
     applyPersons(b, f);
     updateRow('complaints', id, f);
+    if (f.avocat_ids) logAvocatChange(req.user, 'complaint', id, current.numero, current.avocat_ids, JSON.parse(f.avocat_ids));
     logAction(req.user, 'Plainte modifiée', 'complaint', id, current.numero,
       f.statut && f.statut !== current.statut ? `Statut : ${STATUT_LABELS[current.statut]} → ${STATUT_LABELS[f.statut]}` : '');
   });

@@ -92,7 +92,7 @@ function loadProfile(id) {
   u.reports = db.prepare(`
     SELECT id, numero, date_faits, json_extract(suspect, '$.nom') AS suspect_nom, json_extract(suspect, '$.prenom') AS suspect_prenom,
       json_extract(calc_result, '$.nbChefs') AS nb_chefs, json_extract(calc_result, '$.amende') AS amende
-    FROM arrest_reports WHERE redacteur_id = ? AND statut = 'finalise'
+    FROM arrest_reports WHERE redacteur_id = ? AND statut = 'finalise' AND blanchi_at IS NULL
     ORDER BY finalized_at DESC LIMIT 10`).all(id);
   return u;
 }
@@ -104,6 +104,10 @@ const r = Router();
 r.get('/', (req, res) => {
   const justice = req.query.justice === '1';
   if (justice && !hasRole(req.user, 'admin')) fail(403, 'Droits insuffisants');
+  // Un magistrat n'a besoin que de l'identité des agents (noms sur les rapports), pas de leurs coordonnées
+  if (isJustice(req.user)) {
+    return res.json(db.prepare(`SELECT id, matricule, nom, prenom, grade FROM users WHERE role NOT IN (${JUSTICE_SQL}) ORDER BY actif DESC, matricule`).all());
+  }
   res.json(db.prepare(`SELECT ${PUBLIC_COLUMNS} FROM users WHERE (role IN (${JUSTICE_SQL})) = ? ORDER BY actif DESC, matricule`)
     .all(justice ? 1 : 0).map(parseUser));
 });

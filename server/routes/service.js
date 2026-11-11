@@ -214,14 +214,14 @@ function shown(rec, user) {
 
 // Documents du MDT cités par leur numéro (préfixe → requête) ; un dossier numéroté peut aussi en citer un autre
 const DOCUMENTS = {
-  SASP: `SELECT 'rapport' AS doc, id, numero, statut, TRIM(COALESCE(json_extract(suspect, '$.prenom'), '') || ' ' || COALESCE(json_extract(suspect, '$.nom'), '')) AS label, date_faits AS date FROM arrest_reports WHERE numero = ?`,
+  SASP: `SELECT 'rapport' AS doc, id, numero, statut, TRIM(COALESCE(json_extract(suspect, '$.prenom'), '') || ' ' || COALESCE(json_extract(suspect, '$.nom'), '')) AS label, date_faits AS date FROM arrest_reports WHERE numero = ? AND blanchi_at IS NULL`,
   PLT: `SELECT 'plainte' AS doc, id, numero, statut, TRIM(COALESCE(json_extract(plaignant, '$.prenom'), '') || ' ' || COALESCE(json_extract(plaignant, '$.nom'), '')) AS label, date_depot AS date FROM complaints WHERE numero = ?`,
   INC: `SELECT 'incident' AS doc, id, numero, statut, type, lieu AS label, date_faits AS date FROM incident_reports WHERE numero = ?`,
   PRV: `SELECT 'scelle' AS doc, id, numero, statut, description AS label, '' AS date FROM evidence WHERE numero = ?`,
 };
 const NUMEROTES = Object.entries(ALL_KINDS).filter(([, k]) => k.numero);
 
-function findDocument(numero, user) {
+export function findDocument(numero, user) {
   const prefix = numero.split('-')[0];
   const sql = DOCUMENTS[prefix];
   if (sql) return db.prepare(sql).get(numero) ?? { numero, introuvable: true };
@@ -243,7 +243,7 @@ function liensOf(kindName, kind, rec, user) {
     .flatMap(f => f.columns.filter(c => c[flag]).flatMap(c => (rec.data[f.key] ?? []).map(row => row[c.key]))).filter(Boolean))];
   const citoyens = db.prepare(`SELECT c.id, c.nom, c.prenom, c.photo_url,
       (SELECT COUNT(*) FROM warrants w WHERE w.citizen_id = c.id AND w.statut = 'actif') AS mandats_actifs,
-      (SELECT COUNT(*) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise') AS nb_arrestations
+      (SELECT COUNT(*) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise' AND a.blanchi_at IS NULL) AS nb_arrestations
     FROM citizens c WHERE c.id IN (SELECT value FROM json_each(?))`).all(JSON.stringify(cells('citizen').map(Number)));
   return {
     dossier: cible ? shown(cible, user) : null,

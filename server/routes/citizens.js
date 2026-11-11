@@ -39,15 +39,15 @@ r.get('/', (req, res) => {
     SELECT * FROM (
       SELECT c.*,
         (SELECT COUNT(*) FROM warrants w WHERE w.citizen_id = c.id AND w.statut = 'actif') AS mandats_actifs,
-        (SELECT COUNT(*) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise') AS nb_arrestations,
-        (SELECT MAX(a.date_faits) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise') AS derniere_arrestation
+        (SELECT COUNT(*) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise' AND (:judge OR a.blanchi_at IS NULL)) AS nb_arrestations,
+        (SELECT MAX(a.date_faits) FROM arrest_reports a WHERE a.citizen_id = c.id AND a.statut = 'finalise' AND (:judge OR a.blanchi_at IS NULL)) AS derniere_arrestation
       FROM citizens c
-      WHERE c.nom || ' ' || c.prenom LIKE ? OR c.prenom || ' ' || c.nom LIKE ?
-         OR IFNULL(c.id_unique, '') LIKE ? OR c.telephone LIKE ?
+      WHERE c.nom || ' ' || c.prenom LIKE :q OR c.prenom || ' ' || c.nom LIKE :q
+         OR IFNULL(c.id_unique, '') LIKE :q OR c.telephone LIKE :q
     )
-    WHERE ? = 0 OR nb_arrestations > 0
+    WHERE :casier = 0 OR nb_arrestations > 0
     ORDER BY ${casier ? 'derniere_arrestation DESC,' : ''} nom, prenom
-    LIMIT ?`).all(q, q, q, q, casier, listLimit(req)));
+    LIMIT :limit`).all({ judge: canJudge(req.user) ? 1 : 0, q, casier, limit: listLimit(req) }));
 });
 
 r.get('/:id', (req, res) => {

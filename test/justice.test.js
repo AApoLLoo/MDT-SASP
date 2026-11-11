@@ -10,6 +10,7 @@ process.env.DATA_DIR = mkdtempSync(path.join(tmpdir(), 'mdt-justice-'));
 const { db } = await import('../server/db.js');
 const { siteAuth } = await import('../server/auth.js');
 const { justiceGate, default: justice } = await import('../server/justice.js');
+const { findDocument } = await import('../server/routes/service.js');
 const routes = Object.fromEntries(await Promise.all(
   ['citizens', 'vehicles', 'warrants', 'reports', 'incidents', 'evidence', 'complaints', 'service', 'announcements', 'users', 'reference', 'misc']
     .map(async name => [name, (await import(`../server/routes/${name}.js`)).default]),
@@ -83,8 +84,8 @@ test('comptes justice : fonction contrôlée, site public refusé', async () => 
 
 // Rapport prêt à déposer : suspect fiché et un chef d'accusation
 const chargesInitiales = { charges: [{ code_id: 1, quantite: 1 }] };
-async function rapportPret(user) {
-  const { id: citizen_id } = (await req('POST', '/citizens', user, { nom: 'Doe', prenom: 'John' })).body;
+async function rapportPret(user, nom = 'Doe') {
+  const { id: citizen_id } = (await req('POST', '/citizens', user, { nom, prenom: 'John' })).body;
   return (await req('POST', '/reports', user, { citizen_id, calc_input: chargesInitiales })).body.id;
 }
 
@@ -195,4 +196,48 @@ test("code pénal modifiable par le magistrat, pas par l'agent", async () => {
   assert.equal((await req('PUT', '/penal-code/1', agent, { amende: 10 })).status, 403);
   assert.equal((await req('PUT', '/penal-code/1', magistrat, { amende: 10 })).status, 200);
   assert.equal((await req('POST', '/penal-code', magistrat, { infraction: 'Outrage à magistrat', categorie: 'Délit mineur', amende: 500, peine_minutes: 5 })).status, 201);
+});
+
+// ---------- Relecture finale ----------
+
+test('blanchiment : aucune trace côté police (liste des casiers, profil, liens BCI), ni dans les dossiers avocat', async () => {
+  const id = await rapportPret(agent, 'Effacé');
+  await req('PUT', `/reports/${id}`, agent, { avocat_id: avocat });
+  await req('POST', `/reports/${id}/submit`, agent);
+  const { citizen_id: citizenId, numero } = (await req('POST', `/reports/${id}/finalize`, magistrat)).body;
+  await req('POST', `/reports/${id}/blanchir`, magistrat, { motif: 'Réhabilitation' });
+  assert.ok(!(await req('GET', '/citizens?casier=1', agent)).body.some(c => c.id === citizenId), 'liste des casiers');
+  assert.equal((await req('GET', '/citizens?q=Effac', agent)).body.find(c => c.id === citizenId).nb_arrestations, 0, 'compteur');
+  assert.equal((await req('GET', '/citizens?q=Effac', magistrat)).body.find(c => c.id === citizenId).nb_arrestations, 1, 'la justice le voit');
+  assert.ok(!(await req('GET', `/users/${agent}`, agent)).body.reports.some(r => r.id === id), 'profil du rédacteur');
+  assert.equal(findDocument(numero, { role: 'agent' }).introuvable, true, 'liens BCI');
+  assert.ok(!(await req('GET', '/justice/mes-dossiers', avocat)).body.reports.some(r => r.id === id), 'dossiers avocat');
+});
+
+test('un rapport blanchi ne se rouvre pas avant annulation du blanchiment', async () => {
+  const { id } = await rapportFinalise();
+  await req('POST', `/reports/${id}/blanchir`, magistrat, { motif: 'x' });
+  assert.equal((await req('POST', `/reports/${id}/reopen`, magistrat)).status, 400);
+  await req('POST', `/reports/${id}/unblanchir`, magistrat, { motif: 'y' });
+  assert.equal((await req('POST', `/reports/${id}/reopen`, magistrat)).status, 200);
+});
+
+test("journal : l'inscription d'un avocat est tracée, un jugement inchangé ne l'est pas", async () => {
+  const logs = (action, entity, id) => db.prepare('SELECT details FROM audit_log WHERE action = ? AND entity = ? AND entity_id = ?').all(action, entity, id);
+  const id = await rapportPret(agent);
+  await req('PUT', `/reports/${id}`, agent, { avocat_id: avocat });
+  assert.match(logs('Avocat du dossier modifié', 'report', id)[0]?.details ?? '', /L1/);
+  await req('POST', `/reports/${id}/submit`, agent);
+  await req('PUT', `/reports/${id}/jugement`, magistrat, { avocat_id: avocat2 });
+  assert.equal(logs('Avocat du dossier modifié', 'report', id).length, 2);
+  await req('PUT', `/reports/${id}/jugement`, magistrat, { calc_input: chargesInitiales, avocat_id: avocat2 });
+  assert.equal(logs('Jugement modifié', 'report', id).length, 0, 'rien de changé : pas de ligne');
+  const { id: plainte } = (await req('POST', '/complaints', agent, { plaignant: { nom: 'Doe' } })).body;
+  await req('PUT', `/complaints/${plainte}`, agent, { avocat_ids: [avocat] });
+  assert.equal(logs('Avocat du dossier modifié', 'complaint', plainte).length, 1);
+});
+
+test("annuaire : le magistrat ne voit que l'identité des agents", async () => {
+  const u = (await req('GET', '/users', magistrat)).body[0];
+  assert.deepEqual(Object.keys(u).sort(), ['grade', 'id', 'matricule', 'nom', 'prenom']);
 });
