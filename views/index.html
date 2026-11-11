@@ -1,0 +1,189 @@
+{{> header}}
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__lights" aria-hidden="true"><span class="hero__light hero__light--red"></span><span class="hero__light hero__light--blue"></span></div>
+      <div class="wrap hero__inner">
+        <div class="hero__text">
+          <h1 id="hero-title" class="hero__title"><span class="hero__line">San Andreas</span> <span class="hero__line hero__line--brass">State Police</span></h1>
+          <p class="hero__lead">Protéger les habitants de l'État de San Andreas, de jour comme de nuit, des rues de Los Santos aux étendues de Blaine County.</p>
+          <div class="hero__cta">
+            <a class="btn btn--gold btn--lg" href="/contact" data-magnetic>Contacter la SASP</a>
+            <a class="btn btn--outline-light btn--lg" href="/suivi">Suivre ma demande</a>
+          </div>
+          {{{notice}}}
+        </div>
+        <div class="hero__seal" data-tilt aria-hidden="true">
+          <img class="hero__badge" src="/img/logo-512.webp" alt="" decoding="async" fetchpriority="high">
+          <span class="hero__sheen"></span>
+        </div>
+      </div>
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker__track">
+          <span>Intégrité</span><span>Respect</span><span>Professionnalisme</span><span>Protection de la vie</span><span>Esprit d'équipe</span><span>De jour comme de nuit</span>
+          <span>Intégrité</span><span>Respect</span><span>Professionnalisme</span><span>Protection de la vie</span><span>Esprit d'équipe</span><span>De jour comme de nuit</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section tasks" aria-labelledby="tasks-title">
+      <div class="wrap tasks__grid">
+        <div class="tasks__main">
+          <h2 id="tasks-title">Que souhaitez-vous faire ?</h2>
+          <ul class="task-list">
+            <li><a class="task" href="/contact?type=Rendez-vous">
+              <span class="task__title">Prendre rendez-vous</span>
+              <span class="task__text">Rencontrez un agent : choisissez une date et un créneau, la SASP vous confirme le rendez-vous en ligne.</span>
+              <svg class="icon task__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a></li>
+            <li><a class="task" href="/contact?type=Signalement">
+              <span class="task__title">Faire un signalement</span>
+              <span class="task__text">Activité suspecte, conduite dangereuse, véhicule abandonné, partout dans l'État.</span>
+              <svg class="icon task__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a></li>
+            <li><a class="task" href="/contact?type=Question">
+              <span class="task__title">Poser une question</span>
+              <span class="task__text">Amende, fourrière, permis, procédure en cours : la SASP vous renseigne.</span>
+              <svg class="icon task__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a></li>
+          </ul>
+          <p class="tasks__note">Aucun compte n'est nécessaire. À l'envoi, vous recevez un code pour suivre la réponse.</p>
+        </div>
+
+        <aside class="tasks__side" aria-label="Autres démarches">
+          <div class="urgent">
+            <p class="urgent__label">Urgence ou danger immédiat</p>
+            <p class="urgent__number">911</p>
+            <p>Composez le 911. Les demandes en ligne ne sont pas traitées en temps réel.</p>
+          </div>
+          <div class="side-panel">
+            <h3>Vous avez déjà écrit à la SASP ?</h3>
+            <p>Munissez-vous de votre code de suivi <span class="code-sample" data-scramble>SASP-XXXX-XXXX-XXXX</span> pour lire la réponse d'un agent.</p>
+            <a class="btn btn--primary" href="/suivi">Suivre ma demande</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section section--alt newsroom" id="actualites" aria-labelledby="news-title">
+      <div class="wrap">
+        <header class="newsroom__head">
+          <h2 id="news-title">Salle de presse</h2>
+          <a href="/actualites">Tous les communiqués</a>
+        </header>
+        <div class="newsroom__grid">
+          {{{leadStory}}}
+          <ul class="headlines" aria-label="Autres communiqués">{{{headlines}}}</ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="join" id="recrutement" aria-labelledby="join-title">
+      <img class="join__photo" src="/img/recrutement.webp" alt="Deux agents de l'unité d'intervention devant un véhicule blindé, au pied des montagnes" width="1136" height="912" loading="lazy" decoding="async">
+      <div class="join__content">
+        <h2 id="join-title">Rejoignez la State Police</h2>
+        <p class="join__lead">Une formation complète à la Police Academy, un encadrement sur le terrain, puis la possibilité de rejoindre le S.W.A.T. ou le BCI. Les candidatures pour la prochaine promotion sont ouvertes.</p>
+        <ol class="steps">
+          <li><strong>Candidature</strong> en ligne, réponse sous 72&nbsp;h</li>
+          <li><strong>Police Academy</strong> : procédures, conduite et MDT</li>
+          <li><strong>Probation</strong> d'un mois, encadrée sur le terrain</li>
+        </ol>
+        <a class="btn btn--gold btn--lg" href="#postuler">Déposer ma candidature</a>
+      </div>
+    </section>
+
+    <section class="section divisions" id="divisions" aria-labelledby="service-title">
+      <div class="wrap divisions__grid">
+        <div class="divisions__intro">
+          <h2 id="service-title">Nos divisions</h2>
+          <p>La SASP intervient sur l'ensemble de l'État de San Andreas, des grandes villes aux zones rurales. Chaque recrue commence à la Police Academy, puis peut rejoindre une unité spécialisée.</p>
+          <p><a href="/service">Grades, divisions et carrière : découvrir le service</a></p>
+        </div>
+        <dl class="division-list">{{{divisions}}}</dl>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="postuler" aria-labelledby="apply-title">
+      <div class="wrap apply-layout">
+        <aside class="apply-aside">
+          <h2>Avant de postuler</h2>
+          <p>Comptez une quinzaine de minutes, de préférence sur ordinateur. Répondez avec soin : chaque candidature est lue par le commandement.</p>
+          <ul class="checks">
+            <li>Être motivé et discipliné</li>
+            <li>Disponible plusieurs soirs par semaine</li>
+            <li>Avoir rejoint l'intranet de la SASP</li>
+            <li>Code de conduite de la SASP accepté</li>
+          </ul>
+          <p class="hint">Si nous ne trouvons pas votre pseudo Discord, la candidature ne sera pas traitée.</p>        </aside>
+        <div class="apply">
+          <div class="apply__head" id="apply-head">
+            <h2 id="apply-title">Postuler</h2>
+            <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+            <ol class="stepper" id="stepper">
+              <li class="is-active">Identité</li><li>Profil</li><li>Motivation</li>
+            </ol>
+          </div>
+
+          <form class="form" id="apply-form" novalidate>
+            <div class="hp" aria-hidden="true"><label for="f-website">Site web</label><input id="f-website" name="website" tabindex="-1" autocomplete="off"></div>
+
+            <fieldset class="step is-active" data-step="0">
+              <legend class="sr-only">Identité</legend>
+              <div class="field" data-field="discord"><label for="f-discord">Pseudo Discord</label><input id="f-discord" name="discord" required pattern="[a-z0-9_.]{2,32}" maxlength="32" placeholder="ex. jdoe" autocapitalize="none" autocomplete="off"><p class="hint">Votre pseudo complet (minuscules, chiffres, « _ » et « . »).</p><p class="error"></p></div>
+              <div class="row">
+                <div class="field" data-field="fullname"><label for="f-name">Nom et prénom</label><input id="f-name" name="fullname" required minlength="3" maxlength="60" autocomplete="off" placeholder="ex. Doe John"><p class="error"></p></div>
+                <div class="field" data-field="birth"><label for="f-birth">Date de naissance et âge</label><input id="f-birth" name="birth" required minlength="2" maxlength="60" autocomplete="off" placeholder="ex. 14/03/1998, 28 ans"><p class="error"></p></div>
+              </div>
+              <div class="row">
+                <div class="field" data-field="phone"><label for="f-phone">Numéro de téléphone</label><input id="f-phone" name="phone" required minlength="2" maxlength="20" autocomplete="off" placeholder="ex. 555-0142"><p class="error"></p></div>
+                <div class="field" data-field="nationality"><label for="f-nat">Nationalité</label><input id="f-nat" name="nationality" required minlength="2" maxlength="40" autocomplete="off"><p class="error"></p></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="step" data-step="1">
+              <legend class="sr-only">Profil</legend>
+              <div class="field" data-field="service" data-required="Choisissez un service."><span class="label" id="svc-label">Quel service voulez-vous intégrer ?</span>
+                <div class="choices" role="radiogroup" aria-labelledby="svc-label">
+                  {{{serviceChoices}}}
+                </div>
+                <p class="error"></p>
+              </div>
+              <div class="field" data-field="goal"><label for="f-goal">Quel objectif visez-vous au sein de nos rangs ?</label><input id="f-goal" name="goal" required minlength="3" maxlength="300" autocomplete="off"><p class="error"></p></div>
+              <div class="field" data-field="availability"><label for="f-avail">Vos disponibilités horaires, du lundi au dimanche</label><input id="f-avail" name="availability" required minlength="3" maxlength="300" autocomplete="off" placeholder="ex. En semaine de 20 h à minuit, le week-end l'après-midi"><p class="error"></p></div>
+              <div class="field" data-field="record"><span class="label" id="rec-label">Casier judiciaire vierge ? <span class="optional">facultatif</span></span>
+                <div class="choices choices--4" role="radiogroup" aria-labelledby="rec-label">
+                  <label class="choice"><input type="radio" name="record" value="Oui"><span>Oui</span></label>
+                  <label class="choice"><input type="radio" name="record" value="Non"><span>Non</span></label>
+                </div>
+                <p class="error"></p>
+              </div>
+              <div class="field" data-field="traits"><label for="f-traits">Vos qualités (3) et vos défauts (2)</label><textarea id="f-traits" name="traits" rows="3" required minlength="10" maxlength="600"></textarea><p class="error"></p></div>
+              <div class="field" data-field="career"><label for="f-career">Parcours professionnel</label><textarea id="f-career" name="career" rows="3" required minlength="3" maxlength="1500" placeholder="Vos emplois et expériences précédentes"></textarea><p class="error"></p></div>
+            </fieldset>
+
+            <fieldset class="step" data-step="2">
+              <legend class="sr-only">Motivation</legend>
+              <div class="field" data-field="whyYou"><label for="f-why">Pourquoi vous plutôt qu'un autre ?</label><textarea id="f-why" name="whyYou" rows="5" required minlength="200" maxlength="3000"></textarea><p class="hint"><span data-count-for="f-why">0</span> / 200 caractères minimum (environ 3 lignes)</p><p class="error"></p></div>
+              <div class="field" data-field="motivation"><label for="f-motiv">Lettre de motivation</label><textarea id="f-motiv" name="motivation" rows="8" required minlength="350" maxlength="5000"></textarea><p class="hint"><span data-count-for="f-motiv">0</span> / 350 caractères minimum (environ 5 lignes)</p><p class="error"></p></div>
+              <div class="field" data-field="lastWord"><label for="f-last">Un dernier mot à nous dire ? <span class="optional">facultatif</span></label><input id="f-last" name="lastWord" maxlength="600" autocomplete="off"><p class="error"></p></div>
+              <p class="hint">Vos réponses sont utilisées uniquement pour étudier votre candidature. <a href="/mentions-legales#confidentialite">En savoir plus</a></p>
+            </fieldset>
+
+            <p class="form__alert" id="form-alert" role="alert"></p>
+
+            <div class="form__nav">
+              <button class="btn btn--ghost" type="button" id="prev" hidden>Retour</button>
+              <button class="btn btn--primary btn--lg" type="button" id="next">Continuer</button>
+              <button class="btn btn--primary btn--lg" type="submit" id="submit" hidden>Envoyer ma candidature</button>
+            </div>
+          </form>
+
+          <div class="success" id="success" hidden tabindex="-1">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
+            <h3>Candidature envoyée</h3>
+            <p>Le commandement vous contactera sur Discord sous 72&nbsp;h. Gardez vos messages privés ouverts.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+{{> footer}}

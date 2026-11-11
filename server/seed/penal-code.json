@@ -1,0 +1,1450 @@
+[
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Non-respect d'une distance de sécurité",
+  "amende": 1000,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Conduite dangereuse (Drift, Wheeling...)",
+  "amende": 1000,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Conduite en contre-sens",
+  "amende": 1500,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Excès de vitesse 1-20km/h",
+  "amende": 800,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Excès de vitesse 21-49 km/h",
+  "amende": 1200,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Excès de vitesse > 50 KM/H",
+  "amende": 1500,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Contravention",
+  "infraction": "Insulte envers un civil",
+  "amende": 500,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Contravention",
+  "infraction": "Mendicité en lieu public",
+  "amende": 1350,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Non respect d'un feu rouge (Stop & GO)",
+  "amende": 500,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Non respect d'un véhicule prioritaire",
+  "amende": 2500,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Contravention",
+  "infraction": "Non présentation des papiers d'identité",
+  "amende": 1000,
+  "supplements": "Convocation dans les 48h pour présenter ses papiers",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Contravention",
+  "infraction": "Occupation illégale de l'espace public",
+  "amende": 700,
+  "supplements": "intervention policiere",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Contravention",
+  "infraction": "Participation à une manifestation illégale",
+  "amende": 1500,
+  "supplements": "intervention policiere",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Contravention",
+  "infraction": "Pêche sur un lieu illégal",
+  "amende": 900,
+  "supplements": "totalite desespeces protegees a saisir",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Présence piétonne sur une autoroute",
+  "amende": 500,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Contravention",
+  "infraction": "Tapage nocturne",
+  "amende": 360,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Usage abusif du Klaxon",
+  "amende": 450,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Dissimulation du visage",
+  "amende": 1000,
+  "supplements": "",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Droit du Travail",
+  "categorie": "Contravention",
+  "infraction": "Non présentation du contrat de travail",
+  "amende": 8000,
+  "supplements": "X EMPLOYE SANS CONTRAT",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte à l'ordre public, Infractions liées au terrorisme et aux situations exceptionnelles",
+  "categorie": "Contravention",
+  "infraction": "Faux Appels (Canulars)",
+  "amende": 2000,
+  "supplements": "EN FONCTION DE LA GRAVITE PEUT MONTER JUSQU A 50 000 $ ET 60 MN DE DETENTION",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Agression sur citoyen",
+  "amende": 10000,
+  "supplements": "Saisie armes + retrait ppa",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "maltraitance animal",
+  "amende": 10000,
+  "supplements": "Saisie armes + retrait ppa",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Délit mineur",
+  "infraction": "Survol de zone restreintes classé zones d'exclusions aériennes",
+  "amende": 40000,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de poisson illégaux (tortues, requins et espadons...)",
+  "amende": 350,
+  "supplements": "x quantité + relacher les poissons et/ou destruction",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Délit mineur",
+  "infraction": "Atterrissage d'un avion ou hélicoptère sur un site gouvernemental",
+  "amende": 30000,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Délit mineur",
+  "infraction": "Survol d'un avion ou hélicoptère au dessus d'un site gouvernemental",
+  "amende": 10000,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Outrage à agent (de base)",
+  "amende": 5000,
+  "supplements": "les outrages ne sont pas cumulables - 50 TIG",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Appel abusif service publics",
+  "amende": 5000,
+  "supplements": "",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Arme DE CATGORIE D sortie en public",
+  "amende": 3000,
+  "supplements": "Confiscation de l'arme",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit mineur",
+  "infraction": "Braconnage - Chasse",
+  "amende": 350,
+  "supplements": "x quantité + relacher les PROIES et/ou destruction",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Braquage de Citoyens",
+  "amende": 5600,
+  "supplements": "Saisie armes / argent",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Braquage de Supérette",
+  "amende": 3250,
+  "supplements": "Saisie armes / argent",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Braquage d'ATM / Piratage d'ATM",
+  "amende": 4000,
+  "supplements": "Saisie armes / argent",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Cambriolage",
+  "amende": 4500,
+  "supplements": "Saisie du vol",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Contravention",
+  "infraction": "Conduite sans permis",
+  "amende": 1500,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit majeur",
+  "infraction": "FALSIFICATION DE DOCUMENTS",
+  "amende": 12000,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Conduite d'un véhicule volé",
+  "amende": 5000,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "ivresse manifeste et/ou Consommation d alcool/stuPefiants sur la voie publique",
+  "amende": 1000,
+  "supplements": "Saisie + dégrisement",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Délit mineur",
+  "infraction": "Course de rue illegale (par conducteur)",
+  "amende": 2000,
+  "supplements": "Mise en fourrière",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Dégradation de biens privés",
+  "amende": 2500,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Dégradation de biens publics",
+  "amende": 2500,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Dégradation de matériels publics (Ex: Veh LSPD)",
+  "amende": 5500,
+  "supplements": "AmEnde + TIG",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infraction au code de la circulation",
+  "categorie": "Délit mineur",
+  "infraction": "Délit de fuite",
+  "amende": 3000,
+  "supplements": "MISE EN FOURRIERE",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Dissimulation du visage sur la voie publique",
+  "amende": 1350,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Entrave à une opération/enquête (police)",
+  "amende": 5000,
+  "supplements": "",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Exhibition d’armes CATEGORIE b ET c",
+  "amende": 10000,
+  "supplements": "Saisie armes",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Exhibition d’armes CATEGORIE A",
+  "amende": 15000,
+  "supplements": "Ajout de la Possession + Saisie armes",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Go fast",
+  "amende": 8000,
+  "supplements": "Mise en fourrière du véhicule",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Organisation d'une manifestation illégale (par personne)",
+  "amende": 14500,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit mineur",
+  "infraction": "Intrusion dans un bâtiment officiel de l'état",
+  "amende": 45000,
+  "supplements": "TIG x 50",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Menace et/ou intimidation envers un civil",
+  "amende": 9000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Mise en danger de la vie d’autrui",
+  "amende": 3500,
+  "supplements": "Dédomagement",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Non assistance a personne en danger",
+  "amende": 4000,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Non dénonciation d’un crime",
+  "amende": 8000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Non présentation à une convocation de police",
+  "amende": 3000,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Non respect de l'assignation géographique",
+  "amende": 18000,
+  "supplements": "Bracelet électronique",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Droit du Travail",
+  "categorie": "Délit mineur",
+  "infraction": "Non respect du code du travail",
+  "amende": 7000,
+  "supplements": "Dédomagement si atteinte aux salaries",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Non respect du contrôle judiciaire",
+  "amende": 6000,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit mineur",
+  "infraction": "Possession boîtier de piratage",
+  "amende": 1000,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de carte fleeca / banque",
+  "amende": 3000,
+  "supplements": "Saisie",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Violences commises à mains nues",
+  "amende": 2000,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "usage d'un objet de la vie quotidienne utilisee comme arme par destination",
+  "amende": 8000,
+  "supplements": "Saisie si utilisation",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "possession d'une arme de catégorie d sans ppa",
+  "amende": 2000,
+  "supplements": "Saisie si utilisation",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession ILLEGALE de Munition de pistolet",
+  "amende": 100,
+  "supplements": "X PAR munitions",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Munition de SMG",
+  "amende": 230,
+  "supplements": "X PAR munitions",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Munition de fusil à pompe",
+  "amende": 300,
+  "supplements": "X PAR munitions",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Munitions fusil d'assaut",
+  "amende": 300,
+  "supplements": "X PAR munitions",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Munitions machine gun",
+  "amende": 250,
+  "supplements": "X PAR munitions",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de kit de fabrication de meth",
+  "amende": 5000,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Gaz BZ",
+  "amende": 1250,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Kevlar / Gilet par Balle",
+  "amende": 300,
+  "supplements": "Saisie",
+  "peine_minutes": 5
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Poudre à canon",
+  "amende": 120,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Cannabis ≥ 5 Kg",
+  "amende": 30,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Cocaïne ≥ 1 Kg",
+  "amende": 45,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Crack ≥ 1 Kg",
+  "amende": 90,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession d'Ecstasy ≥ 1 Kg",
+  "amende": 90,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession d'Opium ≥ 5 Kg",
+  "amende": 90,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Fentanyl ≥ 2 Kg",
+  "amende": 90,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession d'Héroïne ≥ 2 Kg",
+  "amende": 70,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit mineur",
+  "infraction": "Possession d'Acide (tout types) ≥ 10 Kg",
+  "amende": 40,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "POSSession de méthamphétamine ≥ 1 Kg",
+  "amende": 45,
+  "supplements": "saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Possession de Feuilles de salvia ≥ 10 Kg",
+  "amende": 20,
+  "supplements": "Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Vente de Drogue 1 qté < 75 unités",
+  "amende": 4000,
+  "supplements": "1 qté < 75 unités",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Possession ou prise en flagrant délit de crochetage",
+  "amende": 2000,
+  "supplements": "Confiscation des crochetages",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Recel de véhicule volé",
+  "amende": 2000,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Recel de vol (objets + armes légales)",
+  "amende": 150,
+  "supplements": "x qté",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Refus d’obtempérer",
+  "amende": 5000,
+  "supplements": "Retrait de 6 points",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Refus de comparaitre",
+  "amende": 18000,
+  "supplements": "Multiplication par 2 de la peine finale",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit mineur",
+  "infraction": "Refus de se soumettre à une injonction",
+  "amende": 5000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit mineur",
+  "infraction": "Trafic de Stupéfiant 1 qté > 75 unités ou preuve du trafic",
+  "amende": 16000,
+  "supplements": "1 qté > 75 unités ou preuve du trafic",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit mineur",
+  "infraction": "Troubles à l’ordre public",
+  "amende": 2000,
+  "supplements": "",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit mineur",
+  "infraction": "Usurpation d'identité / fonction",
+  "amende": 22500,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Violation de propriété privée (Entreprise,logement ...)",
+  "amende": 1500,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol",
+  "amende": 1350,
+  "supplements": "Restitution",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol d'équipements d'entreprise",
+  "amende": 450,
+  "supplements": "x qté",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol de produits d'entreprise",
+  "amende": 45,
+  "supplements": "x qté",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol de véhicule entreprise",
+  "amende": 1350,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol de véhicule service public",
+  "amende": 15000,
+  "supplements": "Tig x50",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit mineur",
+  "infraction": "Vol de véhicule",
+  "amende": 2250,
+  "supplements": "",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit mineur",
+  "infraction": "Chantage ET/OU INTIMIDATION",
+  "amende": 3000,
+  "supplements": "",
+  "peine_minutes": 5
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit majeur",
+  "infraction": "Attaque convoi de fonds (Convoi LSPD/BCSO/Gouvernement)",
+  "amende": 50000,
+  "supplements": "Saisie armes et munitions + argent",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Contravention",
+  "infraction": "ABUS DE POUVOIR",
+  "amende": 30000,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteinte à l'ordre public",
+  "categorie": "Délit majeur",
+  "infraction": "Sollicitation ou incitation à la prostitution",
+  "amende": 10000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Entrave à une opération/enquête (JUSTICE)",
+  "amende": 25000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Discrimination",
+  "amende": 2000,
+  "supplements": "Dédomagement",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Entrave aux Services Publics",
+  "amende": 12000,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Agression sur agent (employé d'état ou police)",
+  "amende": 20000,
+  "supplements": "Saisie armes",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Outrage à employé d'état",
+  "amende": 15000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Menaces de Mort et ou Menaces graves",
+  "amende": 25000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Harcèlement",
+  "amende": 10000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Criminalité organisée",
+  "categorie": "Délit majeur",
+  "infraction": "Association de malfaiteurs",
+  "amende": 5000,
+  "supplements": "Dossier antigang",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Port de Kevlar / Gilet par Balle",
+  "amende": 1000,
+  "supplements": "Dossier antigang",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Blanchiment",
+  "amende": 5,
+  "supplements": "x $ blanchi",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteinte aux Biens, Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Braquage d'armurerie",
+  "amende": 15000,
+  "supplements": "Saisie armes et munitions + argent",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Atteinte aux Biens, Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Braquage à main armée bijouterie",
+  "amende": 15000,
+  "supplements": "Saisie armes et munitions + argent",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes, Criminalité organisée, Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Braquage de banque centrale (Pacifique banque)",
+  "amende": 500000,
+  "supplements": "Saisie du butin + Retrait PPA",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes aux Personnes, Atteinte aux Biens, Criminalité organisée",
+  "categorie": "Délit majeur",
+  "infraction": "Braquage fleeca",
+  "amende": 15000,
+  "supplements": "Saisie armes et munitions + argent",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Achat OU VENTE d'armes illégales",
+  "amende": 12500,
+  "supplements": "x qté + saisie",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Divulgation d'informations confidentielles",
+  "amende": 10000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Diffamation",
+  "amende": 2000,
+  "supplements": "Dédomagement",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Entreposage d'armes illégales (≥ 3)",
+  "amende": 10000,
+  "supplements": "x qté",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Escroquerie à l'entreprise",
+  "amende": 10000,
+  "supplements": "Restitution à hauteur du préjudice",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteinte aux Biens, Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Extorsion/Escroquerie",
+  "amende": 8500,
+  "supplements": "Saisie biens/argent",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Faux témoignage",
+  "amende": 20000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Intimidation/Chantage envers Magistrat",
+  "amende": 35000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Menace et/ou intimidation envers un représentant de l'état",
+  "amende": 7500,
+  "supplements": "",
+  "peine_minutes": 20
+ },
+ {
+  "classification": "Infractions liées au terrorisme et aux situations exceptionnelles",
+  "categorie": "Délit majeur",
+  "infraction": "Non respect des consignes de l'État d'Urgence",
+  "amende": 5000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Non respect d'une décision de justice d'un citoyen",
+  "amende": 10000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Non respect d'une décision de justice d'une entreprise",
+  "amende": 18000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Obstruction à la Justice",
+  "amende": 35000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Organisation d'insolvabilité",
+  "amende": 15000,
+  "supplements": "Saisies des biens et de l'argent dissimulés",
+  "peine_minutes": 0
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Outrage à magistrat",
+  "amende": 20000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Parjure",
+  "amende": 55000,
+  "supplements": "Si fait sous serment",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit majeur",
+  "infraction": "Appropriation frauduleuse de biens sinistrés",
+  "amende": 12000,
+  "supplements": "Destruction des biens",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Participation à une fusillade (par personne)",
+  "amende": 15000,
+  "supplements": "Confiscation de l'arme + retrait du PPA",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Possession d'ARME DE CATEGORIE A SANS PPA ou illégale",
+  "amende": 50000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Possession d'ARME DE CATEGORIE b SANS PPA ou illégale",
+  "amende": 40000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Possession d'ARME DE CATEGORIE c SANS PPA ou illégale",
+  "amende": 50000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "utilisation d'ARME DE CATEGORIE A",
+  "amende": 100000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "utilisation d'ARME DE CATEGORIE b",
+  "amende": 40000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "utilisation d'ARME DE CATEGORIE c",
+  "amende": 50000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "usage d'une arme de categorie d contre autrui",
+  "amende": 8000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "usage d'une arme par destination contre autrui",
+  "amende": 8000,
+  "supplements": "Saisie + retrait PPA",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Possession d’argent liquide > 10000$ sans justificatifs",
+  "amende": 2,
+  "supplements": "x qté ($) + Saisie",
+  "peine_minutes": 10
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Prise d'otage sur un civil",
+  "amende": 8000,
+  "supplements": "X Par otage",
+  "peine_minutes": 15
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Recel de malfaiteurs",
+  "amende": 2000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux stupéfiants",
+  "categorie": "Délit majeur",
+  "infraction": "Trafic de drogue dure x50 minimum",
+  "amende": 12000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Délit majeur",
+  "infraction": "Usage de Faux",
+  "amende": 3000,
+  "supplements": "Saisie des documents",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Utilisation de sa fonction à des fins personnelles",
+  "amende": 10000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteinte aux Biens, Infractions liées aux armes",
+  "categorie": "Délit majeur",
+  "infraction": "Vol à main armée",
+  "amende": 5000,
+  "supplements": "Confiscation de l'arme + Retrait du PPA + Restitution du vol",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit majeur",
+  "infraction": "Non respect des licences et des papiers officiels",
+  "amende": 75000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Délit majeur",
+  "infraction": "Usurpation d’uniforme fonction public",
+  "amende": 65000,
+  "supplements": "CONFISCATION DE L UNIFORME",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteinte aux Biens",
+  "categorie": "Délit majeur",
+  "infraction": "Incendie criminel",
+  "amende": 40000,
+  "supplements": "Suivi psychologique obligatoire",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Délit majeur",
+  "infraction": "Destruction/Cacher une preuve",
+  "amende": 50000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Délit majeur",
+  "infraction": "recidive",
+  "amende": 1000,
+  "supplements": "a adapter à a la situation/se referer aux anciennes ci et jugements",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Crime",
+  "infraction": "Fraude Fiscale",
+  "amende": 90000,
+  "supplements": "IMPOSSIBILITE DE DETENIR UNE ENTREPRISE DURANT 60 JOURS",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Meurtre sur représentant de l'état",
+  "amende": 300000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Tentative de Meurtre sur représentant de l'état",
+  "amende": 130000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Tentative de Meurtre",
+  "amende": 100000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Délit majeur",
+  "infraction": "Homicide involontaire",
+  "amende": 50000,
+  "supplements": "",
+  "peine_minutes": 25
+ },
+ {
+  "classification": "Atteintes aux Personnes, Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Prise d'otage sur représentant de l'état",
+  "amende": 20000,
+  "supplements": "Possibilité d'interdire la suppression du casier",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Criminalité organisée, Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Séquestration",
+  "amende": 15000,
+  "supplements": "x Nb personnes",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Trafic d'organe",
+  "amende": 100000,
+  "supplements": "",
+  "peine_minutes": 45
+ },
+ {
+  "classification": "Infractions liées aux armes, Criminalité organisée",
+  "categorie": "Crime",
+  "infraction": "Trafic d’armes à grande échelle",
+  "amende": 300000,
+  "supplements": "Saisie armes",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Torture",
+  "amende": 100000,
+  "supplements": "x Nb personnes",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Violation d'un ordre/décret gouvernemental",
+  "amende": 40000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à l'administration publique, Infractions liées au terrorisme et aux situations exceptionnelles",
+  "categorie": "Crime",
+  "infraction": "Atteintes aux intérêts fondamentaux de la nation",
+  "amende": 300000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Infractions liées au terrorisme et aux situations exceptionnelles, Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Atteintes aux institution de la nation",
+  "amende": 180000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Violation du Secret Profesionnel",
+  "amende": 50000,
+  "supplements": "Commission disciplinaire (doj, eMS,GOUV...)",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées au terrorisme et aux situations exceptionnelles",
+  "categorie": "Crime",
+  "infraction": "Acte lié au terrorisme",
+  "amende": 300000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Assassinat",
+  "amende": 250000,
+  "supplements": "Saisie compte en banque + Retrait PPA",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Infractions réglementaires",
+  "categorie": "Crime",
+  "infraction": "Pratique illégale de la médecine",
+  "amende": 10000,
+  "supplements": "Commission disciplinaire+interdiction emploi ems",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions liées aux armes",
+  "categorie": "Crime",
+  "infraction": "Vente illégale d'armes",
+  "amende": 125000,
+  "supplements": "Confiscation des armes + saisie de la monnaie d'échange",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes aux Personnes",
+  "categorie": "Crime",
+  "infraction": "Meurtre",
+  "amende": 200000,
+  "supplements": "Homicide volontaire non prémédité + Retrait PPA",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Procurer frauduleusement à un tiers un document délivré par une administration publique",
+  "amende": 25000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Atteinte à la sécurité intérieure",
+  "amende": 125000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à la justice",
+  "categorie": "Crime",
+  "infraction": "Cavale",
+  "amende": 30000,
+  "supplements": "",
+  "peine_minutes": 60
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Corruption",
+  "amende": 70000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Infractions économiques et financières",
+  "categorie": "Crime",
+  "infraction": "Détournement de fonds",
+  "amende": 60000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Atteintes à l'administration publique",
+  "categorie": "Crime",
+  "infraction": "Espionnage",
+  "amende": 20000,
+  "supplements": "",
+  "peine_minutes": 30
+ },
+ {
+  "classification": "Criminalité organisée, Atteintes à la justice",
+  "categorie": "Crime",
+  "infraction": "Evasion/Organisation d’Evasion",
+  "amende": 135000,
+  "supplements": "",
+  "peine_minutes": 30
+ }
+]

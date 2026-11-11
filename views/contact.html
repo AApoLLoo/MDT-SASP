@@ -1,0 +1,78 @@
+{{> header}}
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap wrap--narrow">
+        <h1>Contacter la SASP</h1>
+        <p class="muted">Décrivez votre situation. Vous recevrez un code de suivi pour lire la réponse d'un agent et lui répondre, sans créer de compte.</p>
+      </div>
+    </header>
+
+    <div class="wrap wrap--narrow section--tight contact">
+      <p class="notice notice--alert" role="note">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+        <span><strong>Urgence en cours ?</strong> Ce formulaire n'est pas surveillé en temps réel. Composez le 911.</span>
+      </p>
+
+      <form class="form card-form" id="ticket-form" novalidate>
+        <div class="hp" aria-hidden="true"><label for="t-website">Site web</label><input id="t-website" name="website" tabindex="-1" autocomplete="off"></div>
+
+        <div class="field" data-field="category" data-required="Choisissez le type de demande."><span class="label" id="cat-label">Type de demande</span>
+          <div class="choices choices--4" role="radiogroup" aria-labelledby="cat-label">
+            <label class="choice"><input type="radio" name="category" value="Rendez-vous" required><span>Rendez-vous</span></label>
+            <label class="choice"><input type="radio" name="category" value="Signalement"><span>Signalement</span></label>
+            <label class="choice"><input type="radio" name="category" value="Question"><span>Question</span></label>
+            <label class="choice"><input type="radio" name="category" value="Autre"><span>Autre</span></label>
+          </div>
+          <p class="error"></p>
+        </div>
+
+        <fieldset class="appointment" id="appointment" hidden>
+          <legend>Votre rendez-vous</legend>
+          <p class="hint">Indiquez vos préférences : un agent vous confirme le rendez-vous, ou vous propose un autre horaire, dans votre suivi de demande.</p>
+          <div class="row">
+            <div class="field" data-field="appointmentDate" data-required="Choisissez une date."><label for="t-date">Date souhaitée</label><input id="t-date" name="appointmentDate" type="date"><p class="error"></p></div>
+            <div class="field" data-field="appointmentSlot" data-required="Choisissez un créneau."><span class="label" id="slot-label">Créneau</span>
+              <div class="choices choices--3" role="radiogroup" aria-labelledby="slot-label">
+                <label class="choice"><input type="radio" name="appointmentSlot" value="Matin"><span>Matin</span></label>
+                <label class="choice"><input type="radio" name="appointmentSlot" value="Après-midi"><span>Après-midi</span></label>
+                <label class="choice"><input type="radio" name="appointmentSlot" value="Soir"><span>Soir</span></label>
+              </div>
+              <p class="error"></p>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="row">
+          <div class="field" data-field="name"><label for="t-name">Vos nom et prénom</label><input id="t-name" name="name" required minlength="2" maxlength="60" autocomplete="off" placeholder="Prénom Nom"><p class="error"></p></div>
+          <div class="field" data-field="contact"><label for="t-contact">Vous joindre <span class="optional">facultatif</span></label><input id="t-contact" name="contact" maxlength="60" autocomplete="off" placeholder="Numéro de téléphone"><p class="error"></p></div>
+        </div>
+
+        <div class="field" data-field="subject"><label for="t-subject">Objet</label><input id="t-subject" name="subject" required minlength="3" maxlength="120" placeholder="ex. Déclaration de perte de papiers"><p class="error"></p></div>
+
+        <div class="field" data-field="body"><label for="t-body">Votre message</label>
+          <textarea id="t-body" name="body" rows="8" required minlength="20" maxlength="4000" placeholder="Précisez votre demande : motif du rendez-vous, faits observés (où, quand, qui), ou votre question…"></textarea>
+          <p class="hint"><span data-count-for="t-body">0</span> / 20 caractères minimum</p><p class="error"></p>
+        </div>
+
+        <p class="hint">Votre demande est lue uniquement par les agents de la SASP. <a href="/mentions-legales#confidentialite">Confidentialité</a></p>
+        <p class="form__alert" role="alert"></p>
+        <div class="form__nav"><button class="btn btn--primary btn--lg" type="submit">Envoyer ma demande</button></div>
+      </form>
+
+      <section class="card-form receipt" id="receipt" hidden tabindex="-1" aria-labelledby="receipt-title">
+        <svg class="receipt__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg>
+        <h2 id="receipt-title">Demande envoyée</h2>
+        <p class="muted">Notez votre code de suivi. Il est le seul moyen de retrouver votre demande : il ne pourra pas vous être renvoyé.</p>
+        <div class="code-box">
+          <output id="receipt-code" class="code"></output>
+          <button class="btn btn--outline" type="button" id="copy-code">Copier le code</button>
+        </div>
+        <div class="hero__cta">
+          <a class="btn btn--primary btn--lg" href="/suivi" id="go-suivi">Suivre ma demande</a>
+          <a class="btn btn--ghost btn--lg" href="/">Retour à l'accueil</a>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="/civil.js?v={{v}}" defer></script>
+{{> footer}}

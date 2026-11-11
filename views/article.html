@@ -1,0 +1,19 @@
+{{> header}}
+  {{{banner}}}
+  <main id="main">
+    <article class="article-page">
+      <header class="page-hero">
+        <div class="wrap wrap--narrow">
+          <a class="back" href="/actualites">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            Toutes les actualités
+          </a>
+          <p class="article__meta">{{{tag}}}<time>{{date}}</time></p>
+          <h1>{{postTitle}}</h1>
+          <p class="article__lead">{{description}}</p>
+        </div>
+      </header>
+      <div class="wrap wrap--narrow prose">{{{figure}}}{{{body}}}</div>
+    </article>
+  </main>
+{{> footer}}

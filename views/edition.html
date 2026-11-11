@@ -1,0 +1,27 @@
+{{> header}}
+  {{{banner}}}
+  <main id="main">
+    <article class="edition">
+      <div class="wrap">
+        <a class="back" href="/actualites">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Toutes les actualités
+        </a>
+        <div class="edition__paper">
+          <header class="edition__mast">
+            <img class="edition__badge" src="/img/logo-512.webp" alt="" decoding="async">
+            <div class="edition__name">{{{kicker}}}{{{name}}}{{{slogan}}}</div>
+            {{{motto}}}
+          </header>
+          <div class="edition__bar">
+            {{{edition}}}
+            <h1>{{postTitle}}</h1>
+            <time>{{date}}</time>
+          </div>
+          <div class="edition__grid">{{{body}}}</div>
+          {{{foot}}}
+        </div>
+      </div>
+    </article>
+  </main>
+{{> footer}}

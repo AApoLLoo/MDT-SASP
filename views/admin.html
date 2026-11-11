@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Administration — SASP</title>
+  <meta name="theme-color" content="#071226">
+  <link rel="icon" href="/img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <script src="/theme.js?v={{v}}"></script>
+  <link rel="stylesheet" href="/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/admin.css?v={{v}}">
+  <script src="/admin.js?v={{v}}" defer></script>
+</head>
+<body class="admin">
+  <!-- Login -->
+  <main class="login" id="login" hidden>
+    <form class="login__card" id="login-form" novalidate>
+      <img class="brand__badge login__badge" src="/img/logo-512.webp" alt="" decoding="async">
+      <h1>Administration</h1>
+      <p class="muted">Réservé au commandement de la SASP.</p>
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="form__alert" id="login-alert" role="alert"></p>
+      <button class="btn btn--primary btn--lg" type="submit">Se connecter</button>
+      <a class="login__back" href="/">Retour au site</a>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div class="shell" id="app" hidden>
+    <header class="shell__bar">
+      <div class="shell__brand">
+        <img class="brand__badge" src="/img/logo-128.webp" alt="" decoding="async">
+        <span>SASP <small>Admin</small></span>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" id="tab-apps" aria-controls="panel-apps" aria-selected="true">Candidatures <span class="count" id="pending-count"></span></button>
+        <button role="tab" id="tab-news" aria-controls="panel-news" aria-selected="false" tabindex="-1">Actualités</button>
+        <button role="tab" id="tab-perms" aria-controls="panel-perms" aria-selected="false" tabindex="-1">Accès PR</button>
+      </nav>
+      <div class="shell__actions">
+        <a class="btn btn--ghost" id="back-agent" href="/agent" hidden>Espace agent</a>
+        <a class="btn btn--ghost" href="/" target="_blank" rel="noopener">Voir le site</a>
+        <button class="btn btn--ghost" type="button" data-theme-toggle aria-pressed="false">Mode sombre</button>
+        <button class="btn btn--ghost" id="logout" type="button">Déconnexion</button>
+      </div>
+    </header>
+
+    <!-- Applications -->
+    <section class="panel" id="panel-apps" role="tabpanel" aria-labelledby="tab-apps">
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filtrer par statut" id="status-filters">
+          <button type="button" class="chip" data-status="pending" aria-pressed="true">En attente</button>
+          <button type="button" class="chip" data-status="accepted" aria-pressed="false">Acceptées</button>
+          <button type="button" class="chip" data-status="refused" aria-pressed="false">Refusées</button>
+          <button type="button" class="chip" data-status="all" aria-pressed="false">Toutes</button>
+        </div>
+        <label class="search"><span class="sr-only">Rechercher</span>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="app-search" placeholder="Nom, Discord, service, téléphone…">
+        </label>
+      </div>
+      <div class="master">
+        <ul class="app-list" id="app-list" aria-label="Candidatures"></ul>
+        <article class="app-detail" id="app-detail" aria-live="polite">
+          <p class="empty">Sélectionnez une candidature pour l'afficher.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- News -->
+    <section class="panel" id="panel-news" role="tabpanel" aria-labelledby="tab-news" hidden>
+      <div class="toolbar">
+        <h2>Actualités</h2>
+        <a class="btn btn--primary" id="new-post" href="/admin/actualites/editer">Nouvelle actualité</a>
+      </div>
+      <ul class="post-list" id="post-list" aria-label="Actualités"></ul>
+    </section>
+
+    <!-- PR rights -->
+    <section class="panel" id="panel-perms" role="tabpanel" aria-labelledby="tab-perms" hidden>
+      <div class="toolbar"><h2>Accès PR</h2></div>
+      <p class="perms__intro">Les agents PR peuvent créer, modifier et supprimer les actualités publiques depuis leur espace agent. Ils n'ont accès ni aux candidatures, ni à cette page.</p>
+      <form class="perms__form" id="perm-form" novalidate>
+        <div class="field" data-field="matricule">
+          <label for="perm-matricule">Matricule de l'agent</label>
+          <input id="perm-matricule" name="matricule" autocomplete="off" required placeholder="ex. 1003">
+          <p class="error"></p>
+        </div>
+        <button class="btn btn--primary" type="submit">Accorder le droit PR</button>
+      </form>
+      <ul class="post-list" id="perm-list" aria-label="Agents PR"></ul>
+    </section>
+  </div>
+
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,890 @@
+[
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Poings",
+  "amende_detention": 0,
+  "amende_utilisation": 2000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Couteau",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Matraque",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Marteau",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Batte de baseball",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Club de golf",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Pied-de-biche",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Bouteille brisée",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Dague",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Machette",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Katana",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Poing américain",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Machette",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Lampe torche",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Couteau papillon",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Queue de billard",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Clé à molette",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Hache",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Armes tranchantes de lancer",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Objet lancé dans le but de blesser",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Massues",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Hachette",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "DESTINATION",
+  "type": "MÊLÉE",
+  "nom": "Canne en sucre",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "D",
+  "type": "MÊLÉE",
+  "nom": "Bâton électrique",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes Blanches ou par destination",
+  "categorie": "A",
+  "type": "ARBALETE",
+  "nom": "Arbalète",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet Beretta",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet Mk II",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet de combat",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet AP",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet .50",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet SNS",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet SNS Mk II",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet vintage",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet de précision",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "A",
+  "type": "PISTOLETS",
+  "nom": "Revolver lourd",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "A",
+  "type": "PISTOLETS",
+  "nom": "Revolver python",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "A",
+  "type": "PISTOLETS",
+  "nom": "Revolver lourd Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "A",
+  "type": "PISTOLETS",
+  "nom": "Revolver double action",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "A",
+  "type": "PISTOLETS",
+  "nom": "Revolver Navy",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet céramique",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Pistolet Perico",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "WM 29 Pistolet",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "D",
+  "type": "PISTOLETS",
+  "nom": "Taser",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "D",
+  "type": "PISTOLETS",
+  "nom": "Pistolet de détresse",
+  "amende_detention": 2000,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Up-n-Atomizer",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes de poing",
+  "categorie": "B",
+  "type": "PISTOLETS",
+  "nom": "Tactical SMG (pistolet)",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "C",
+  "type": "SMG",
+  "nom": "Micro SMG",
+  "amende_detention": 25000,
+  "amende_utilisation": 50000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "A",
+  "type": "SMG",
+  "nom": "SMG",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "A",
+  "type": "SMG",
+  "nom": "SMG Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "A",
+  "type": "SMG",
+  "nom": "SMG d'assaut",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "C",
+  "type": "SMG",
+  "nom": "Combat PDW",
+  "amende_detention": 25000,
+  "amende_utilisation": 50000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "C",
+  "type": "SMG",
+  "nom": "Pistolet mitrailleur",
+  "amende_detention": 25000,
+  "amende_utilisation": 50000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "C",
+  "type": "SMG",
+  "nom": "Mini SMG",
+  "amende_detention": 25000,
+  "amende_utilisation": 50000
+ },
+ {
+  "groupe": "Armes automatiques",
+  "categorie": "A",
+  "type": "SMG",
+  "nom": "Unholy Hellbringer",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil à pompe",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil à pompe Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Canon scié",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil d'assaut à pompe",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Bullpup Shotgun",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "B",
+  "type": "FUSILS À POMPE",
+  "nom": "Mousquet",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil à pompe lourd",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Double canon",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil à pompe auto",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS À POMPE",
+  "nom": "Fusil de combat",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil d'assaut",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil d'assaut Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Carabine",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Carabine Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil avancé",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Carabine spéciale",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Carabine spéciale Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil Bullpup",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil Bullpup Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil compact",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil militaire",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Fusil lourd",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Battle Rifle",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "FUSILS D'ASSAUT",
+  "nom": "Service Carbine",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "MITRAILLEUSES",
+  "nom": "Mitrailleuse",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "MITRAILLEUSES",
+  "nom": "Mitrailleuse de combat",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "MITRAILLEUSES",
+  "nom": "Mitrailleuse de combat Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "MITRAILLEUSES",
+  "nom": "Gusenberg Sweeper",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Fusil de sniper",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Sniper lourd",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Sniper lourd Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Fusil de précision",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Fusil de précision Mk II",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes d'épaule",
+  "categorie": "A",
+  "type": "SNIPERS",
+  "nom": "Fusil de précision (Drug Wars)",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-roquettes (RPG)",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-grenades",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-grenades fumigènes",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Minigun",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "C",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-feux d'artifice",
+  "amende_detention": 25000,
+  "amende_utilisation": 50000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Railgun",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-missiles à tête chercheuse",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-grenades compact",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Widowmaker",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Armes Lourdes",
+  "categorie": "A",
+  "type": "ARMES LOURDES",
+  "nom": "Lance-EMP",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Grenade",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "C4 / Bombe collante",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Mine de proximité",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Bombe artisanale",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Cocktail Molotov",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "B",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Grenade fumigène (gaz lacrymo)",
+  "amende_detention": 20000,
+  "amende_utilisation": 40000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "A",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Gaz BZ",
+  "amende_detention": 50000,
+  "amende_utilisation": 100000
+ },
+ {
+  "groupe": "Explosifs",
+  "categorie": "D",
+  "type": "EXPLOSIFS / JETABLES",
+  "nom": "Fusée éclairante",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Autres",
+  "categorie": "DESTINATION",
+  "type": "AUTRES",
+  "nom": "Jerrican d'essence",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Autres",
+  "categorie": "DESTINATION",
+  "type": "AUTRES",
+  "nom": "Extincteur",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Autres",
+  "categorie": "DESTINATION",
+  "type": "AUTRES",
+  "nom": "Bidon de produit dangereux",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ },
+ {
+  "groupe": "Autres",
+  "categorie": "DESTINATION",
+  "type": "AUTRES",
+  "nom": "Bidon d'engrais",
+  "amende_detention": 0,
+  "amende_utilisation": 8000
+ }
+]

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Espace agent — SASP</title>
+  <meta name="theme-color" content="#071226">
+  <link rel="icon" href="/img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <script src="/theme.js?v={{v}}"></script>
+  <link rel="stylesheet" href="/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/admin.css?v={{v}}">
+  <script src="/photo-field.js?v={{v}}" defer></script>
+  <script src="/agent.js?v={{v}}" defer></script>
+</head>
+<body class="admin">
+  <!-- Login -->
+  <main class="login" id="login" hidden>
+    <form class="login__card" id="login-form" novalidate>
+      <img class="brand__badge login__badge" src="/img/logo-512.webp" alt="" decoding="async">
+      <h1>Espace agent</h1>
+      <p class="muted">Connectez-vous avec vos identifiants du MDT.</p>
+      <div class="field">
+        <label for="matricule">Matricule</label>
+        <input id="matricule" name="matricule" autocomplete="username" autocapitalize="characters" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="form__alert" id="login-alert" role="alert"></p>
+      <button class="btn btn--primary btn--lg" type="submit">Se connecter</button>
+      <a class="login__back" href="/">Retour au site</a>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div class="shell" id="app" hidden>
+    <header class="shell__bar">
+      <div class="shell__brand">
+        <img class="brand__badge" src="/img/logo-128.webp" alt="" decoding="async">
+        <span>SASP <small>Agent</small></span>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" id="tab-dash" data-view="dash" aria-controls="panel-dash" aria-selected="true">Tableau de bord</button>
+        <button role="tab" id="tab-civil" data-view="civil" aria-controls="panel" aria-selected="false" tabindex="-1">Demandes civiles <span class="count" id="count-civil"></span></button>
+        <button role="tab" id="tab-internal" data-view="internal" aria-controls="panel" aria-selected="false" tabindex="-1">Interne <span class="count" id="count-internal"></span></button>
+        <button role="tab" id="tab-notes" data-view="notes" aria-controls="panel-notes" aria-selected="false" tabindex="-1">Notes de service</button>
+      </nav>
+      <div class="shell__actions">
+        <span class="whoami" id="whoami"></span>
+        <a class="btn btn--ghost" id="admin-link" href="/admin" hidden>Administration</a>
+        <a class="btn btn--ghost" id="mdt-link" href="#" target="mdt">Ouvrir le MDT</a>
+        <button class="btn btn--ghost" type="button" data-theme-toggle aria-pressed="false">Mode sombre</button>
+        <button class="btn btn--ghost" id="logout" type="button">Déconnexion</button>
+      </div>
+    </header>
+
+    <!-- Dashboard -->
+    <section class="panel dash" role="tabpanel" aria-labelledby="tab-dash" id="panel-dash">
+      <h1 class="dash__hello" id="dash-hello"></h1>
+      <dl class="dash__counts" id="dash-counts"></dl>
+      <div class="dash__grid">
+        <section class="dash__box" aria-labelledby="dash-mine-title">
+          <h2 id="dash-mine-title">Mes demandes en cours</h2>
+          <ul class="dash__list" id="dash-mine"></ul>
+        </section>
+        <section class="dash__box" aria-labelledby="dash-notes-title">
+          <h2 id="dash-notes-title">Dernières notes de service</h2>
+          <ul class="dash__list" id="dash-notes"></ul>
+        </section>
+      </div>
+    </section>
+
+    <!-- Service notes -->
+    <section class="panel" role="tabpanel" aria-labelledby="tab-notes" id="panel-notes" hidden>
+      <div class="toolbar">
+        <h2>Notes de service</h2>
+        <button class="btn btn--primary" id="new-note" type="button" hidden>Publier une note</button>
+      </div>
+      <ul class="notes" id="notes-list" aria-label="Notes de service"></ul>
+    </section>
+
+    <!-- Civil requests & internal messages -->
+    <section class="panel" role="tabpanel" aria-labelledby="tab-civil" id="panel" hidden>
+      <div class="toolbar">
+        <div class="filters" role="group" aria-label="Filtrer" id="status-filters">
+          <button type="button" class="chip" data-status="open" aria-pressed="true">Ouvertes</button>
+          <button type="button" class="chip" data-status="mine" aria-pressed="false">Assignées à moi</button>
+          <button type="button" class="chip" data-status="unassigned" aria-pressed="false">Non assignées</button>
+          <button type="button" class="chip" data-status="closed" aria-pressed="false">Clôturées</button>
+          <button type="button" class="chip" data-status="all" aria-pressed="false">Toutes</button>
+        </div>
+        <label class="search"><span class="sr-only">Rechercher</span>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" id="search" placeholder="Objet, nom, message…">
+        </label>
+        <button class="btn btn--primary" id="new-message" type="button" hidden>Nouveau message</button>
+      </div>
+      <div class="master">
+        <ul class="app-list" id="list" aria-label="Conversations"></ul>
+        <article class="app-detail convo" id="detail" aria-live="polite">
+          <p class="empty">Sélectionnez une conversation.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <dialog class="editor" id="compose" aria-labelledby="compose-title">
+    <form class="form" id="compose-form" novalidate>
+      <h2 id="compose-title">Nouveau message interne</h2>
+      <div class="field" data-field="to"><label for="c-to">Destinataires</label><input id="c-to" name="to" required placeholder="Matricules séparés par des virgules, ex. 1204, 1310" autocomplete="off"><p class="hint" id="c-to-hint">Les matricules sont vérifiés dans le MDT.</p><p class="error"></p></div>
+      <div class="field" data-field="subject"><label for="c-subject">Objet</label><input id="c-subject" name="subject" required maxlength="120"><p class="error"></p></div>
+      <div class="field" data-field="body"><label for="c-body">Message</label><textarea id="c-body" name="body" rows="6" maxlength="4000" required></textarea><p class="error"></p></div>
+      <p class="form__alert" role="alert"></p>
+      <div class="form__nav">
+        <button class="btn btn--ghost" type="button" id="compose-cancel">Annuler</button>
+        <button class="btn btn--primary" type="submit">Envoyer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="editor" id="note-editor" aria-labelledby="note-title">
+    <form class="form" id="note-form" novalidate>
+      <h2 id="note-title">Publier une note de service</h2>
+      <div class="field" data-field="title"><label for="n-title">Titre</label><input id="n-title" name="title" required maxlength="120"><p class="error"></p></div>
+      <div class="field" data-field="body"><label for="n-body">Contenu</label><textarea id="n-body" name="body" rows="8" maxlength="4000" required></textarea><p class="error"></p></div>
+      <div class="field photo-field" data-field="image" data-kind="internal" id="n-photo">
+        <span class="label">Photo <span class="optional">facultatif</span></span>
+        <div class="photo">
+          <img class="photo__preview" alt="Aperçu de la photo" hidden>
+          <div class="photo__actions">
+            <label class="btn btn--outline btn--sm photo__pick"><span class="photo__pick-text">Choisir une photo</span><input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only"></label>
+            <button type="button" class="btn btn--ghost btn--sm photo__remove" hidden>Retirer la photo</button>
+          </div>
+          <input type="hidden" name="image">
+        </div>
+        <p class="hint">JPEG, PNG ou WebP, 3 Mo maximum. Visible uniquement par les agents connectés.</p><p class="error"></p>
+      </div>
+      <label class="check"><input type="checkbox" name="pinned"> Épingler en haut de la liste</label>
+      <p class="form__alert" role="alert"></p>
+      <div class="form__nav">
+        <button class="btn btn--ghost" type="button" id="note-cancel">Annuler</button>
+        <button class="btn btn--primary" type="submit">Publier</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

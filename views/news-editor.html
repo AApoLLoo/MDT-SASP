@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Éditeur d'actualité — SASP</title>
+  <meta name="theme-color" content="#071226">
+  <link rel="icon" href="/img/favicon-64.png" type="image/png">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <script src="/theme.js?v={{v}}"></script>
+  <link rel="stylesheet" href="/styles.css?v={{v}}">
+  <link rel="stylesheet" href="/admin.css?v={{v}}">
+  <script src="/photo-field.js?v={{v}}" defer></script>
+  <script src="/news-editor.js?v={{v}}" defer></script>
+</head>
+<body class="admin ed-page">
+  <header class="ed-bar">
+    <a class="btn btn--ghost" href="/admin" id="ed-back">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Actualités
+    </a>
+    <p class="ed-status" id="ed-status" role="status" aria-live="polite">Nouveau brouillon</p>
+    <div class="ed-bar__actions">
+      <button class="btn btn--ghost" type="button" id="ed-preview">Aperçu</button>
+      <button class="btn btn--ghost" type="button" id="ed-draft">Enregistrer le brouillon</button>
+      <button class="btn btn--gold" type="button" id="ed-publish">Publier</button>
+    </div>
+  </header>
+
+  <div class="ed-denied" id="ed-denied" hidden>
+    <h1>Accès réservé</h1>
+    <p>Seuls le commandement et les agents PR peuvent rédiger des actualités. Connectez-vous depuis l'espace agent.</p>
+    <a class="btn btn--primary" href="/agent">Espace agent</a>
+  </div>
+
+  <main class="ed-canvas" id="ed-canvas" hidden>
+    <div class="wrap wrap--narrow"><div class="form__alert ed-alert" id="ed-alert" role="alert"></div></div>
+
+    <section class="page-hero ed-hero" aria-label="En-tête de l'article">
+      <div class="wrap wrap--narrow">
+        <div class="ed-meta">
+          <label>Catégorie
+            <select id="ed-category">
+              <option>Communiqué</option><option>Opérations</option><option>Recrutement</option><option>Communauté</option><option value="Journal">Journal (SASP TIP)</option>
+            </select>
+          </label>
+          <label>Date <input type="date" id="ed-date"></label>
+        </div>
+        <label class="sr-only" for="ed-title">Titre</label>
+        <textarea class="ed-title" id="ed-title" rows="1" maxlength="120" placeholder="Titre de l'actualité"></textarea>
+        <p class="ed-error" data-error="title"></p>
+        <label class="sr-only" for="ed-excerpt">Chapô</label>
+        <textarea class="ed-lead" id="ed-excerpt" rows="2" maxlength="300" placeholder="Chapô : une ou deux phrases qui résument l'actualité. Affiché sur les cartes, sur l'accueil et dans les aperçus de partage."></textarea>
+        <p class="ed-error" data-error="excerpt"></p>
+      </div>
+    </section>
+
+    <div class="wrap wrap--narrow ed-body">
+      <fieldset class="ed-masthead" data-journal hidden>
+        <legend>En-tête du journal</legend>
+        <p class="hint">Un texte laissé vide n'est pas affiché. Une nouvelle édition reprend les textes de la précédente.</p>
+        <label>Surtitre <input class="ed-input" id="ed-m-kicker" maxlength="80"></label>
+        <label>Nom du journal <input class="ed-input" id="ed-m-name" maxlength="40"></label>
+        <label>Slogan <input class="ed-input" id="ed-m-slogan" maxlength="80"></label>
+        <label>Numéro d'édition <input class="ed-input" id="ed-m-edition" maxlength="40" placeholder="ex. Édition n°12-2026"></label>
+        <label>Devise <textarea class="ed-input" id="ed-m-motto" rows="3" maxlength="80" placeholder="Un mot par ligne"></textarea></label>
+        <label>Phrase de fin <input class="ed-input" id="ed-m-footer" maxlength="120"></label>
+        <p class="ed-error" data-error="masthead"></p>
+      </fieldset>
+
+      <div class="field photo-field ed-cover" data-field="image" data-kind="public" id="ed-cover">
+        <span class="label">Photo de couverture <span class="optional">facultatif</span></span>
+        <div class="photo">
+          <img class="photo__preview" alt="Aperçu de la photo de couverture" hidden>
+          <div class="photo__actions">
+            <label class="btn btn--outline btn--sm photo__pick"><span class="photo__pick-text">Choisir une photo</span><input type="file" accept="image/jpeg,image/png,image/webp" class="sr-only"></label>
+            <button type="button" class="btn btn--ghost btn--sm photo__remove" hidden>Retirer la photo</button>
+          </div>
+          <input type="hidden" name="image">
+        </div>
+        <p class="error"></p>
+        <div class="ed-cover__alt" id="ed-cover-alt" hidden>
+          <label for="ed-image-alt">Description de la photo</label>
+          <input id="ed-image-alt" maxlength="150" placeholder="ex. Deux agents devant le poste de Sandy Shores">
+          <p class="ed-error" data-error="imageAlt"></p>
+        </div>
+      </div>
+
+      <div class="ed-toolbar" role="toolbar" aria-label="Mise en forme du texte">
+        <button type="button" class="btn btn--ghost btn--sm" id="ed-bold" title="Gras (Ctrl+B)"><strong>G</strong> Gras</button>
+        <button type="button" class="btn btn--ghost btn--sm" id="ed-link" title="Lien (Ctrl+K)">Lien</button>
+        <p class="ed-toolbar__hint">Sélectionnez du texte dans un bloc. Ctrl+Entrée ajoute un paragraphe en dessous.</p>
+      </div>
+
+      <ol class="ed-blocks prose" id="ed-blocks" aria-label="Contenu de l'article"></ol>
+      <p class="ed-error" data-error="body"></p>
+
+      <div class="ed-add" role="group" aria-label="Ajouter un bloc">
+        <span>Ajouter :</span>
+        <button type="button" class="btn btn--outline btn--sm" data-add="p">Paragraphe</button>
+        <button type="button" class="btn btn--outline btn--sm" data-add="h2">Intertitre</button>
+        <button type="button" class="btn btn--outline btn--sm" data-add="quote">Citation</button>
+        <button type="button" class="btn btn--outline btn--sm" data-add="list">Liste</button>
+        <button type="button" class="btn btn--outline btn--sm" data-add="image">Photo</button>
+        <button type="button" class="btn btn--outline btn--sm" data-add="section" data-journal hidden>Rubrique</button>
+      </div>
+      <p class="hint ed-journal-hint" data-journal hidden>Journal : chaque <strong>Rubrique</strong> ouvre un encadré (Arrestations, Saisies…). Dans un encadré, l'intertitre devient le titre, les photos se placent à côté du texte et la citation devient le bandeau de fin. La photo de couverture ne sert qu'aux cartes de la liste des actualités.</p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "mdt-sasp",
+  "version": "1.0.0",
+  "description": "Site public et MDT du San Andreas State Police : le site à la racine, le MDT sous /mdt/.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server/index.js",
+    "dev": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning --watch server/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test",
+    "backup": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning server/maintenance.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

@@ -1,0 +1,41 @@
+{{> header}}
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap wrap--narrow">
+        <h1>Suivre ma demande</h1>
+        <p class="muted">Entrez le code reçu lors de l'envoi pour lire la réponse de la SASP et poursuivre l'échange.</p>
+      </div>
+    </header>
+
+    <div class="wrap wrap--narrow section--tight">
+      <form class="card-form lookup" id="lookup-form" novalidate>
+        <div class="field" data-field="code">
+          <label for="code">Code de suivi</label>
+          <input id="code" name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SASP-XXXX-XXXX-XXXX" class="code-input">
+          <p class="error"></p>
+        </div>
+        <button class="btn btn--primary btn--lg" type="submit">Afficher ma demande</button>
+        <p class="hint">Code perdu ? Envoyez une <a href="/contact">nouvelle demande</a> en précisant la précédente.</p>
+      </form>
+
+      <section class="ticket" id="ticket" hidden aria-labelledby="ticket-subject">
+        <header class="ticket__head">
+          <div>
+            <p class="ticket__meta" id="ticket-meta"></p>
+            <h2 id="ticket-subject"></h2>
+          </div>
+          <button class="btn btn--ghost btn--sm" type="button" id="ticket-close-view">Changer de code</button>
+        </header>
+        <ol class="thread" id="ticket-thread" aria-label="Messages"></ol>
+        <p class="notice" id="ticket-closed" hidden>Cette demande est clôturée. Pour un nouveau problème, <a href="/contact">envoyez une nouvelle demande</a>.</p>
+        <form class="composer" id="reply-form" novalidate>
+          <label for="reply-body" class="sr-only">Votre réponse</label>
+          <textarea id="reply-body" name="body" rows="3" maxlength="4000" required placeholder="Répondre à la SASP…"></textarea>
+          <button class="btn btn--primary" type="submit">Envoyer</button>
+          <p class="form__alert" role="alert"></p>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="/civil.js?v={{v}}" defer></script>
+{{> footer}}

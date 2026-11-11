@@ -1,0 +1,91 @@
+{{> header}}
+  <main id="main">
+    <header class="page-hero">
+      <div class="wrap">
+        <h1>Le service</h1>
+        <p class="muted">Mission, grades, divisions et perspectives de carrière : tout ce qu'il faut savoir sur la San Andreas State Police.</p>
+        <div class="hero__cta"><a class="btn btn--gold btn--lg" href="/#postuler">Rejoindre la SASP</a></div>
+      </div>
+    </header>
+
+    <div class="facts-band">
+      <ul class="wrap facts" aria-label="La SASP en bref">{{{facts}}}</ul>
+    </div>
+
+    <section class="section" id="mission" aria-labelledby="mission-title">
+      <div class="wrap divisions__grid">
+        <div class="divisions__intro">
+          <h2 id="mission-title">Notre mission</h2>
+          <p>Garantir la sécurité des citoyens, maintenir l'ordre public et faire respecter les lois de l'État. Chaque officier agit avec discipline, professionnalisme et sens du devoir.</p>
+          <ul class="checks">
+            <li>Protéger la population</li>
+            <li>Maintenir l'ordre et la sécurité publique</li>
+            <li>Prévenir et réprimer la criminalité</li>
+            <li>Faire respecter les lois et règlements</li>
+          </ul>
+        </div>
+        <dl class="division-list" aria-label="Nos valeurs">
+          <div><dt>Intégrité</dt><dd>Agir avec honnêteté et transparence, en toutes circonstances.</dd></div>
+          <div><dt>Respect</dt><dd>Envers les civils comme envers les collègues.</dd></div>
+          <div><dt>Professionnalisme</dt><dd>Sang-froid, discipline et rigueur, même sous pression : un officier annonce ses actions et suit les protocoles.</dd></div>
+          <div><dt>Protection de la vie</dt><dd>Une priorité absolue, celle des civils comme celle des collègues.</dd></div>
+          <div><dt>Esprit d'équipe</dt><dd>Coordination et solidarité, sur le terrain comme au poste.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="grades" aria-labelledby="grades-title">
+      <div class="wrap divisions__grid">
+        <div class="divisions__intro">
+          <h2 id="grades-title">Grades et hiérarchie</h2>
+          <p>Chaque officier commence au grade de Rookie. Les promotions récompensent l'expérience, les formations validées et la confiance de la hiérarchie.</p>
+          <ul>
+            <li>Respect strict de la hiérarchie</li>
+            <li>Les décisions des supérieurs sont obligatoires</li>
+            <li>Les supérieurs agissent avec impartialité et exemplarité</li>
+          </ul>
+          <p class="hint">Un manquement au règlement expose à une sanction graduée : avertissement, mise à pied, rétrogradation, puis licenciement.</p>
+        </div>
+        <div>{{{grades}}}</div>
+      </div>
+    </section>
+
+    <section class="section" id="divisions" aria-labelledby="divisions-title">
+      <div class="wrap divisions__grid">
+        <div class="divisions__intro">
+          <h2 id="divisions-title">Les divisions</h2>
+          <p>Après sa probation, un officier peut rejoindre une unité spécialisée. L'accès se fait sur formation et après validation de la hiérarchie.</p>
+        </div>
+        <dl class="division-list">{{{divisions}}}</dl>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="formations" aria-labelledby="formations-title">
+      <div class="wrap divisions__grid">
+        <div class="divisions__intro">
+          <h2 id="formations-title">Formations et qualifications</h2>
+          <p>La Police Academy forme les officiers tout au long de leur carrière. Chaque formation validée est inscrite au dossier de l'agent et ouvre de nouvelles missions.</p>
+          <p>{{formationsCount}}</p>
+        </div>
+        <dl class="division-list" aria-label="Domaines de formation">{{{formations}}}</dl>
+      </div>
+    </section>
+
+    <section class="join" id="carriere" aria-labelledby="career-title">
+      <img class="join__photo" src="/img/recrutement.webp" alt="Deux agents de l'unité d'intervention devant un véhicule blindé, au pied des montagnes" width="1136" height="912" loading="lazy" decoding="async">
+      <div class="join__content">
+        <h2 id="career-title">Votre carrière à la SASP</h2>
+        <p class="join__lead">Tout le monde part du même point. La suite dépend de votre engagement, de vos formations et de la confiance que vous gagnez sur le terrain.</p>
+        <ol class="steps">
+          <li><strong>Candidature</strong> en ligne, réponse du commandement sous 72&nbsp;h</li>
+          <li><strong>Police Academy</strong> : procédures, conduite d'intervention et MDT</li>
+          <li><strong>Probation</strong> d'un mois au grade de Rookie, aux côtés d'un tuteur</li>
+          <li><strong>Officier</strong> : patrouille en autonomie et nouvelles formations</li>
+          <li><strong>Spécialisation</strong> dans une division, sur formation et validation</li>
+          <li><strong>Encadrement</strong> : diriger les équipes, puis le service</li>
+        </ol>
+        <a class="btn btn--gold btn--lg" href="/#postuler">Déposer ma candidature</a>
+      </div>
+    </section>
+  </main>
+{{> footer}}

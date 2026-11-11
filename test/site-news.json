@@ -1,0 +1,65 @@
+[
+  {
+    "id": "3f6c1a2e-8d4b-4c1e-9a7f-1b2c3d4e5f01",
+    "slug": "session-de-recrutement-d-hiver-ouverte",
+    "title": "Session de recrutement d'hiver ouverte",
+    "category": "Recrutement",
+    "date": "2026-10-27",
+    "excerpt": "Vingt places à la Police Academy pour la promotion de décembre. Candidatures jusqu'au 15 novembre.",
+    "body": "Le commandement ouvre vingt places pour la promotion de décembre de la Police Academy.\n\nLes candidatures sont étudiées dans l'ordre d'arrivée. Les recrues retenues seront contactées dès la semaine prochaine.\n\nLes profils intéressés par le S.W.A.T. et le BCI sont particulièrement recherchés.",
+    "published": true,
+    "createdAt": "2026-10-27T18:00:00.000Z"
+  },
+  {
+    "id": "3f6c1a2e-8d4b-4c1e-9a7f-1b2c3d4e5f02",
+    "slug": "operation-route-68-bilan",
+    "title": "Opération Route 68 : bilan",
+    "category": "Opérations",
+    "date": "2026-10-22",
+    "excerpt": "Trois jours de contrôles renforcés entre Harmony et Grapeseed.",
+    "body": "L'opération Route 68 s'est achevée dimanche soir.\n\nBilan : 41 contrôles, 6 interpellations et 2 véhicules volés retrouvés.",
+    "published": true,
+    "createdAt": "2026-10-22T18:00:00.000Z"
+  },
+  {
+    "id": "3f6c1a2e-8d4b-4c1e-9a7f-1b2c3d4e5f03",
+    "slug": "nouveau-protocole-de-poursuite",
+    "title": "Nouveau protocole de poursuite",
+    "category": "Communiqué",
+    "date": "2026-10-18",
+    "excerpt": "Le protocole PIT est mis à jour. Lecture obligatoire avant votre prochaine patrouille.",
+    "body": "Le protocole d'intervention en poursuite (PIT) évolue.\n\nLa version complète est disponible sur le MDT, rubrique Procédures.",
+    "published": true,
+    "createdAt": "2026-10-18T18:00:00.000Z"
+  },
+  {
+    "id": "3f6c1a2e-8d4b-4c1e-9a7f-1b2c3d4e5f04",
+    "slug": "journee-portes-ouvertes-a-sandy-shores",
+    "title": "Journée portes ouvertes à Sandy Shores",
+    "category": "Communauté",
+    "date": "2026-10-12",
+    "excerpt": "Rencontrez les patrouilleurs et découvrez les véhicules du service.",
+    "body": "Le poste de Sandy Shores ouvre ses portes samedi de 14 h à 18 h.\n\nDémonstrations, présentation des véhicules et échanges avec les officiers.",
+    "published": true,
+    "createdAt": "2026-10-12T18:00:00.000Z"
+  },
+  {
+    "id": "fb8e3c19-2962-4360-b0f3-2df934eef97b",
+    "slug": "tueur",
+    "title": "Tueur",
+    "category": "Communiqué",
+    "date": "2026-10-29",
+    "excerpt": "JE SIAS PS ERCIRE EN WQRERTY",
+    "body": "CEIC EST UNE TEST DE FOU",
+    "published": true,
+    "image": "/uploads/public/cc63408e-30e6-4ab0-9dbb-15a6d8a61faa.png",
+    "imageAlt": "Tueur",
+    "createdAt": "2026-10-29T10:16:16.404Z",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "CEIC EST UNE TEST DE FOU"
+      }
+    ]
+  }
+]
