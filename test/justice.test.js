@@ -174,3 +174,25 @@ test('blanchiment de tout le casier', async () => {
   assert.equal((await req('POST', `/citizens/${citizenId}/blanchir`, magistrat, { motif: 'Amnistie' })).body.count, 1);
   assert.equal((await req('GET', `/citizens/${citizenId}`, agent)).body.reports.length, 0);
 });
+
+test('plaintes : avocats rattachés, clôture par le magistrat', async () => {
+  const created = (await req('POST', '/complaints', agent, { plaignant: { nom: 'Doe' }, avocat_ids: [avocat] })).body;
+  assert.deepEqual(created.avocats.map(a => a.matricule), ['L1']);
+  const { id } = created;
+  assert.equal((await req('GET', `/complaints/${id}`, avocat)).status, 200);
+  assert.equal((await req('GET', `/complaints/${id}`, avocat2)).status, 403);
+  assert.deepEqual((await req('GET', '/justice/mes-dossiers', avocat)).body.complaints.map(c => c.id), [id]);
+  assert.equal((await req('POST', '/complaints', agent, { plaignant: { nom: 'Roe' }, avocat_ids: [agent] })).status, 400);
+  assert.equal((await req('PUT', `/complaints/${id}`, magistrat, { recit: 'x' })).status, 403, 'le magistrat ne modifie pas la plainte');
+  assert.equal((await req('POST', `/complaints/${id}/close`, agent, { statut: 'classee' })).status, 403);
+  assert.equal((await req('POST', `/complaints/${id}/close`, magistrat, { statut: 'ouverte' })).status, 400);
+  const closed = (await req('POST', `/complaints/${id}/close`, magistrat, { statut: 'classee' })).body;
+  assert.equal(closed.statut, 'classee');
+  assert.ok(closed.closed_at);
+});
+
+test("code pénal modifiable par le magistrat, pas par l'agent", async () => {
+  assert.equal((await req('PUT', '/penal-code/1', agent, { amende: 10 })).status, 403);
+  assert.equal((await req('PUT', '/penal-code/1', magistrat, { amende: 10 })).status, 200);
+  assert.equal((await req('POST', '/penal-code', magistrat, { infraction: 'Outrage à magistrat', categorie: 'Délit mineur', amende: 500, peine_minutes: 5 })).status, 201);
+});

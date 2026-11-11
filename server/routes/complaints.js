@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson, transaction } from '../db.js';
-import { requireRole } from '../auth.js';
+import { requireRole, requireJudge } from '../auth.js';
+import { cleanAvocatIds } from '../justice.js';
 import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { createReport } from './reports.js';
@@ -12,7 +13,9 @@ const STATUTS = Object.keys(STATUT_LABELS);
 const CLOSED = ['classee', 'resolue'];
 const PERSON_FIELDS = ['nom', 'prenom', 'date_naissance', 'id_unique', 'telephone'];
 const TEXT_FIELDS = ['date_depot', 'date_faits', 'lieu_faits', 'recit', 'prejudice', 'temoins', 'suivi'];
-const JSON_DEFAULTS = { plaignant: {}, mis_en_cause: {}, qualifications: [], photos: {} };
+const JSON_DEFAULTS = { plaignant: {}, mis_en_cause: {}, qualifications: [], photos: {}, avocat_ids: [] };
+// Date de clôture posée au passage à « classée » ou « résolue », effacée à la réouverture
+const closedAt = statut => (CLOSED.includes(statut) ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null);
 
 const codeStmt = db.prepare('SELECT id, infraction, categorie FROM penal_code WHERE id = ?');
 const personSql = col => `TRIM(COALESCE(json_extract(${col}, '$.prenom'), '') || ' ' || COALESCE(json_extract(${col}, '$.nom'), ''))`;
@@ -25,6 +28,7 @@ function load(id) {
     WHERE p.id = ?`).get(id);
   if (!c) fail(404, 'Plainte introuvable');
   for (const [k, def] of Object.entries(JSON_DEFAULTS)) c[k] = parseJson(c[k], def);
+  c.avocats = c.avocat_ids.map(aid => db.prepare('SELECT id, matricule, nom, prenom FROM users WHERE id = ?').get(aid)).filter(Boolean);
   return c;
 }
 
@@ -41,6 +45,7 @@ function fieldsFrom(b) {
     f.qualifications = JSON.stringify([...new Map(codes.map(c => [c.id, { code_id: c.id, infraction: c.infraction, categorie: c.categorie }])).values()].slice(0, 20));
   }
   if (b.photos !== undefined) f.photos = JSON.stringify(cleanPhotos(b.photos));
+  if (b.avocat_ids !== undefined) f.avocat_ids = cleanAvocatIds(b.avocat_ids);
   return f;
 }
 
@@ -85,7 +90,12 @@ r.get('/', (req, res) => {
     .map(p => ({ ...p, qualifications: parseJson(p.qualifications, []).map(x => x.infraction) })));
 });
 
-r.get('/:id', (req, res) => res.json(load(intParam(req.params.id))));
+r.get('/:id', (req, res) => {
+  const c = load(intParam(req.params.id));
+  // Un avocat ne lit que les plaintes où son compte est inscrit
+  if (req.user.role === 'avocat' && !c.avocat_ids.includes(req.user.id)) fail(403, "Vous n'êtes pas l'avocat inscrit sur ce dossier");
+  res.json(c);
+});
 
 r.post('/', (req, res) => {
   const b = req.body ?? {};
@@ -98,7 +108,7 @@ r.post('/', (req, res) => {
       numero: nextNumero('complaints', 'PLT'),
       date_depot: f.date_depot || localDate(),
       created_by: req.user.id,
-      closed_at: CLOSED.includes(f.statut) ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null,
+      closed_at: closedAt(f.statut),
     });
   });
   const c = load(id);
@@ -111,16 +121,26 @@ r.put('/:id', (req, res) => {
   const current = load(id);
   const b = req.body ?? {};
   const f = fieldsFrom(b);
-  // Date de clôture posée au passage à « classée » ou « résolue », effacée à la réouverture
-  if (f.statut && CLOSED.includes(f.statut) !== CLOSED.includes(current.statut)) {
-    f.closed_at = CLOSED.includes(f.statut) ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null;
-  }
+  if (f.statut && CLOSED.includes(f.statut) !== CLOSED.includes(current.statut)) f.closed_at = closedAt(f.statut);
   transaction(() => {
     applyPersons(b, f);
     updateRow('complaints', id, f);
     logAction(req.user, 'Plainte modifiée', 'complaint', id, current.numero,
       f.statut && f.statut !== current.statut ? `Statut : ${STATUT_LABELS[current.statut]} → ${STATUT_LABELS[f.statut]}` : '');
   });
+  res.json(load(id));
+});
+
+// Clôture par un magistrat : classée sans suite ou résolue, le reste de la plainte reste à la police
+r.post('/:id/close', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const statut = req.body?.statut;
+  if (!CLOSED.includes(statut)) fail(400, 'Statut de clôture invalide : classée ou résolue');
+  const current = load(id);
+  const f = { statut };
+  if (!CLOSED.includes(current.statut)) f.closed_at = closedAt(statut);
+  updateRow('complaints', id, f);
+  logAction(req.user, 'Plainte modifiée', 'complaint', id, current.numero, `Statut : ${STATUT_LABELS[current.statut]} → ${STATUT_LABELS[statut]}`);
   res.json(load(id));
 });
 

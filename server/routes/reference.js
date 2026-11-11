@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { requireRole } from '../auth.js';
+import { requireJudge } from '../auth.js';
 import { fail, pick, str, bool, intParam, insertRow, updateRow, getOr404, logAction } from '../util.js';
 
 const CATEGORIES = ['Contravention', 'Délit mineur', 'Délit majeur', 'Crime'];
@@ -26,7 +26,7 @@ const r = Router();
 
 r.get('/penal-code', (req, res) => res.json(db.prepare('SELECT * FROM penal_code ORDER BY id').all()));
 
-r.post('/penal-code', requireRole('admin'), (req, res) => {
+r.post('/penal-code', requireJudge, (req, res) => {
   const f = cleanCode(req.body);
   if (!f.infraction || !f.categorie) fail(400, 'Infraction et catégorie obligatoires');
   const id = insertRow('penal_code', f);
@@ -34,7 +34,7 @@ r.post('/penal-code', requireRole('admin'), (req, res) => {
   res.status(201).json({ id });
 });
 
-r.put('/penal-code/:id', requireRole('admin'), (req, res) => {
+r.put('/penal-code/:id', requireJudge, (req, res) => {
   const id = intParam(req.params.id);
   const before = getOr404('SELECT * FROM penal_code WHERE id = ?', id, 'Infraction introuvable');
   const f = cleanCode(req.body);
