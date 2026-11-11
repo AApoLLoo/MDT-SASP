@@ -6,6 +6,7 @@ import { mountPerson } from '../components/person.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
 import { picker } from '../components/picker.js';
 import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { copyForDocs } from '../components/gdocs.js';
 
 export const COMPLAINT_STATUTS = { ouverte: 'Ouverte', en_cours: 'Enquête en cours', classee: 'Classée sans suite', resolue: 'Résolue' };
 const STATUT_BADGE = { ouverte: 'badge-info', en_cours: 'badge-warn', classee: '', resolue: 'badge-ok' };
@@ -305,6 +306,7 @@ export async function renderView(main, [id]) {
         <a class="btn" href="#/plaintes/${c.id}/modifier">${icon('edit')} Modifier</a>
         ${canCreateReport ? html`<button class="btn" data-create-report>${icon('report')} Créer le rapport d'arrestation</button>` : ''}
         <button class="btn" data-discord>${icon('copy')} Copier pour Discord</button>
+        <button class="btn" data-gdocs>${icon('copy')} Google Docs</button>
         <button class="btn btn-primary" data-print>${icon('printer')} Imprimer / PDF</button>
       </div>
     </div>
@@ -361,6 +363,7 @@ export async function renderView(main, [id]) {
 
   $('[data-print]', main).addEventListener('click', () => window.print());
   $('[data-discord]', main).addEventListener('click', () => openDiscordModal(discordText(c)));
+  $('[data-gdocs]', main).addEventListener('click', () => copyForDocs($('.paper', main)));
   $('[data-create-report]', main)?.addEventListener('click', e => attempt(async () => {
     const { report_id } = await api(`/complaints/${c.id}/report`, { method: 'POST' });
     toast("Rapport d'arrestation créé à partir de la plainte");

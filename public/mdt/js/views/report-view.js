@@ -6,6 +6,7 @@ import { formatDollars, formatDuree } from '../calc.js';
 import { PHOTO_GROUPS } from '../components/photos.js';
 import { statutBadge } from './reports.js';
 import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { copyForDocs } from '../components/gdocs.js';
 
 const fmtCoef = n => `×${String(n).replace('.', ',')}`;
 
@@ -100,6 +101,7 @@ export async function render(main, [id]) {
         ${rep.can_edit && html`<a class="btn" href="#/rapports/${rep.id}/modifier">${icon('edit')} Modifier</a>`}
         ${rep.statut === 'finalise' && hasRole('superviseur') && html`<button class="btn" data-reopen>Rouvrir en brouillon</button>`}
         <button class="btn" data-discord>${icon('copy')} Copier pour Discord</button>
+        <button class="btn" data-gdocs>${icon('copy')} Google Docs</button>
         <button class="btn btn-primary" data-print>${icon('printer')} Imprimer / PDF</button>
       </div>
     </div>
@@ -171,6 +173,7 @@ export async function render(main, [id]) {
 
   $('[data-print]', main).addEventListener('click', () => window.print());
   $('[data-discord]', main).addEventListener('click', () => openDiscordModal(discordText(rep)));
+  $('[data-gdocs]', main).addEventListener('click', () => copyForDocs($('.paper', main)));
   $('[data-reopen]', main)?.addEventListener('click', e => {
     if (!confirm("Rouvrir ce rapport en brouillon ? Il sera retiré du casier jusqu'à sa nouvelle finalisation.")) return;
     attempt(async () => {

@@ -6,6 +6,7 @@ import { INCIDENT_TYPES, incidentTitre } from '../incident-kinds.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
 import { mountAgentsInput } from '../components/agents-input.js';
 import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { copyForDocs } from '../components/gdocs.js';
 import { statutBadge } from './reports.js';
 import { section } from './report-edit.js';
 import { agentPresent } from './report-view.js';
@@ -229,6 +230,7 @@ export async function renderView(main, [id]) {
         ${inc.statut === 'finalise' && hasRole('superviseur') && html`<button class="btn" data-reopen>Rouvrir en brouillon</button>`}
         <button class="btn" data-evidence>${icon('box')} Mettre une preuve sous scellé</button>
         <button class="btn" data-discord>${icon('copy')} Copier pour Discord</button>
+        <button class="btn" data-gdocs>${icon('copy')} Google Docs</button>
         <button class="btn btn-primary" data-print>${icon('printer')} Imprimer / PDF</button>
       </div>
     </div>
@@ -269,6 +271,7 @@ export async function renderView(main, [id]) {
 
   $('[data-print]', main).addEventListener('click', () => window.print());
   $('[data-discord]', main).addEventListener('click', () => openDiscordModal(discordText(inc)));
+  $('[data-gdocs]', main).addEventListener('click', () => copyForDocs($('.paper', main)));
   $('[data-evidence]', main).addEventListener('click', () => openEvidenceForm({ origine: inc.numero }, rerender));
   $('[data-reopen]', main)?.addEventListener('click', e => {
     if (!confirm('Rouvrir ce rapport en brouillon ?')) return;
