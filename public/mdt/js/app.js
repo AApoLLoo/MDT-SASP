@@ -12,6 +12,7 @@ import * as warrants from './views/warrants.js';
 import * as reports from './views/reports.js';
 import * as reportEdit from './views/report-edit.js';
 import * as reportView from './views/report-view.js';
+import * as reportJudge from './views/report-judge.js';
 import * as complaints from './views/complaints.js';
 import * as calculator from './views/calculator.js';
 import * as penalCode from './views/penal-code.js';
@@ -89,6 +90,7 @@ const ROUTES = [
   [/^\/rapports$/, reports.render],
   [/^\/rapports\/nouveau$/, reportEdit.renderNew],
   [/^\/rapports\/(\d+)\/modifier$/, reportEdit.render],
+  [/^\/rapports\/(\d+)\/juger$/, reportJudge.render],
   [/^\/rapports\/(\d+)$/, reportView.render],
   [/^\/incidents$/, incidents.renderList],
   [/^\/incidents\/nouveau$/, incidents.renderNew],

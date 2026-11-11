@@ -1,5 +1,5 @@
 import { html, mount, $, $$, attempt, toast, fullName, agentLabel, nowTime, fmtDate, openModal } from '../dom.js';
-import { api, state, loadPenalCode, loadUsers, loadWeapons } from '../api.js';
+import { api, state, loadPenalCode, loadUsers, loadWeapons, loadAvocats } from '../api.js';
 import { navigate, setLeaveGuard } from '../router.js';
 import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
@@ -9,6 +9,7 @@ import { citizenPicker } from '../components/picker.js';
 import { mountAgentsInput } from '../components/agents-input.js';
 import { mirandaScript } from '../reference-data.js';
 import { warrantTypeBadge } from './warrants.js';
+import { statutBadge } from './reports.js';
 
 const SUSPECT_FIELDS = [
   ['nom', 'Nom *'], ['prenom', 'Prénom'], ['date_naissance', 'Date de naissance', 'date'],
@@ -29,7 +30,7 @@ export const section = (n, title, body, extra = '') => html`
   </section>`;
 
 export async function render(main, [id]) {
-  const [rep] = await Promise.all([api(`/reports/${id}`), loadPenalCode(), loadUsers(), loadWeapons()]);
+  const [rep, avocats] = await Promise.all([api(`/reports/${id}`), loadAvocats(), loadPenalCode(), loadUsers(), loadWeapons()]);
   if (!rep.can_edit) {
     location.replace(`#/rapports/${id}`);
     return;
@@ -52,9 +53,10 @@ export async function render(main, [id]) {
       <div>
         <a href="#/rapports" class="back">${icon('back')} Rapports</a>
         <h1>Rapport d'arrestation <span class="mono gold">${rep.numero}</span></h1>
-        <p class="muted">${rep.statut === 'finalise' ? html`<span class="badge badge-ok">Finalisé</span> modification superviseur` : html`<span class="badge badge-warn">Brouillon</span>`} · Rédacteur ${agentLabel(redacteur)}</p>
+        <p class="muted">${statutBadge(rep.statut)} · Rédacteur ${agentLabel(redacteur)}</p>
       </div>
     </div>
+    ${rep.renvoi_motif ? html`<div class="alert alert-warn"><strong>Renvoyé par la justice</strong><small>${rep.renvoi_motif}</small></div>` : ''}
 
     <form class="report-form" data-report autocomplete="off" novalidate>
       <datalist id="users-list">${state.users.filter(u => u.actif).map(u => html`<option value="${u.matricule}">${agentLabel(u)}</option>`)}</datalist>
@@ -87,6 +89,10 @@ export async function render(main, [id]) {
             <label class="field">Lus à<input class="input" type="time" name="miranda_heure" value="${rep.miranda_heure}"></label>
             <label class="field">Par (matricule)<input class="input" name="miranda_par" list="users-list" value="${rep.miranda_par}"></label>
             <button type="button" class="btn" data-miranda-now>${icon('check')} Droits lus maintenant</button>
+            <label class="field">Avocat inscrit (accès au dossier)<select class="input" name="avocat_id">
+              <option value="">Aucun</option>
+              ${avocats.map(a => html`<option value="${a.id}" ${a.id === rep.avocat_id ? 'selected' : ''}>${fullName(a)} (${a.matricule})</option>`)}
+            </select></label>
           </div>
         </div>`)}
 
@@ -106,7 +112,7 @@ export async function render(main, [id]) {
         ${rep.statut === 'brouillon' && html`<button type="button" class="btn btn-ghost" data-delete>${icon('trash')} Supprimer</button>`}
         <button type="button" class="btn" data-preview>${icon('printer')} Aperçu</button>
         <button type="button" class="btn" data-save>Enregistrer <kbd>Ctrl+S</kbd></button>
-        ${rep.statut === 'brouillon' && html`<button type="button" class="btn btn-primary" data-finalize>${icon('check')} Finaliser</button>`}
+        <button type="button" class="btn btn-primary" data-submit>${icon('check')} Déposer pour jugement</button>
       </div>
     </div>`);
 
@@ -220,6 +226,7 @@ export async function render(main, [id]) {
         photos: model.photos,
         suspect: model.suspect,
         calc_input: calc.value,
+        avocat_id: field('avocat_id').value || null,
       },
     });
     model.suspect = { ...saved.suspect };
@@ -232,32 +239,29 @@ export async function render(main, [id]) {
     return saved;
   }
 
-  function openFinalize(saved) {
+  function openSubmit(saved) {
     const r = saved.calc_result;
     const warnings = [
       !saved.miranda_heure && "Les droits Miranda ne sont pas notés comme lus.",
       !saved.faits.trim() && 'La section « Faits » est vide.',
       !Object.keys(saved.photos).length && 'Aucune photo jointe.',
+      saved.calc_input.droits?.avocat && !saved.avocat_id && "Le suspect a demandé un avocat, mais aucun compte avocat n'est inscrit : il n'aura pas accès au dossier.",
     ].filter(Boolean);
-    const mandats = suspectWarrants.filter(w => w.type !== 'bolo_vehicule');
-    const dialog = openModal('Finaliser le rapport', html`
-      <p>Une fois finalisé, le rapport est versé au casier de <strong>${fullName(saved.suspect)}</strong> et ne peut plus être modifié (sauf par un superviseur).
-        ${saved.objets_illegaux.length ? html`Les ${saved.objets_illegaux.length} objet(s) saisi(s) seront mis sous scellé.` : ''}</p>
+    const dialog = openModal('Déposer pour jugement', html`
+      <p>Le rapport de <strong>${fullName(saved.suspect)}</strong> part en attente de jugement : un procureur ou un juge le vérifie, ajuste les charges si besoin, puis le verse au casier.
+        Vous ne pourrez plus le modifier, sauf s'il vous est renvoyé.</p>
       <div class="kpis kpis-inline">
         <div class="kpi"><span>Chefs</span><strong>${r.nbChefs}</strong></div>
-        <div class="kpi kpi-gold"><span>Amende</span><strong>${formatDollars(r.amende)}</strong></div>
-        <div class="kpi"><span>GAV</span><strong>${formatDuree(r.gavMinutes)}</strong></div>
+        <div class="kpi kpi-gold"><span>Amende proposée</span><strong>${formatDollars(r.amende)}</strong></div>
+        <div class="kpi"><span>GAV proposée</span><strong>${formatDuree(r.gavMinutes)}</strong></div>
       </div>
       ${warnings.length ? html`<div class="alert alert-warn"><strong>Points à vérifier</strong>${warnings.map(w => html`<small>• ${w}</small>`)}</div>` : ''}
-      ${mandats.length ? html`<fieldset class="opt-group"><legend>Clore les mandats exécutés par cette arrestation</legend>
-        ${mandats.map(w => html`<label class="check"><input type="checkbox" value="${w.id}" checked data-warrant> ${warrantTypeBadge(w.type)} ${w.motif}</label>`)}</fieldset>` : ''}
-      <div class="form-actions"><button type="button" class="btn" data-close>Annuler</button><button type="button" class="btn btn-primary" data-confirm>${icon('check')} Finaliser</button></div>`);
+      <div class="form-actions"><button type="button" class="btn" data-close>Annuler</button><button type="button" class="btn btn-primary" data-confirm>${icon('check')} Déposer</button></div>`);
     $('[data-confirm]', dialog).addEventListener('click', e => attempt(async () => {
-      const close_warrants = $$('input[data-warrant]:checked', dialog).map(i => Number(i.value));
-      await api(`/reports/${id}/finalize`, { method: 'POST', body: { close_warrants } });
+      await api(`/reports/${id}/submit`, { method: 'POST' });
       dirty = false;
       dialog.close();
-      toast('Rapport finalisé et versé au casier');
+      toast('Rapport déposé pour jugement');
       navigate(`/rapports/${id}`);
     }, e.target));
   }
@@ -294,11 +298,11 @@ export async function render(main, [id]) {
         if (dirty) await save({ quiet: true });
         navigate(`/rapports/${id}`);
       }, t);
-    } else if (t.matches('[data-finalize]')) {
+    } else if (t.matches('[data-submit]')) {
       attempt(async () => {
         if (!model.suspect.nom) throw new Error('Renseignez au moins le nom du suspect');
         if (!calc.result().nbChefs) throw new Error("Ajoutez au moins un chef d'accusation");
-        openFinalize(await save({ quiet: true }));
+        openSubmit(await save({ quiet: true }));
       }, t);
     } else if (t.matches('[data-delete]') && confirm('Supprimer définitivement ce brouillon ?')) {
       attempt(async () => {
