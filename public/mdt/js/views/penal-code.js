@@ -1,5 +1,5 @@
 import { html, mount, $, $$, attempt, openModal, formValues, toast, normalize, categorieBadge } from '../dom.js';
-import { api, state, loadPenalCode, hasRole } from '../api.js';
+import { api, state, loadPenalCode, canJudge } from '../api.js';
 import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
 
@@ -33,7 +33,7 @@ function openCodeForm(c = {}, onSaved) {
 
 export async function render(main) {
   await loadPenalCode(true);
-  const admin = hasRole('admin');
+  const admin = canJudge(); // édition du Code pénal : administrateurs et magistrats
   const classifications = [...new Set(state.penalCode.flatMap(c => c.classification.split(', ')).filter(Boolean))].sort();
   mount(main, html`
     <div class="page-head">

@@ -489,6 +489,7 @@ tr.is-muted td, li.is-muted { opacity: 0.5; }
 .alert-danger { --c: var(--danger); }
 .alert-warn { --c: var(--warn); }
 .alert-info { --c: var(--info); }
+.bare-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .alert:is(.alert-danger, .alert-warn, .alert-info) { background: color-mix(in srgb, var(--c) 12%, transparent); border-color: color-mix(in srgb, var(--c) 45%, transparent); border-left-color: var(--c); color: color-mix(in srgb, var(--c) 35%, #fff); }
 .alert:is(.alert-danger, .alert-warn) strong { color: color-mix(in srgb, var(--c) 70%, #fff); }
 

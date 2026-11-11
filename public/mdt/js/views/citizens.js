@@ -1,5 +1,5 @@
 import { html, mount, $, attempt, formValues, toast, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
-import { api, hasRole } from '../api.js';
+import { api, hasRole, canJudge, isJustice } from '../api.js';
 import { navigate, rerender } from '../router.js';
 import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
@@ -81,8 +81,13 @@ export async function renderDetail(main, [id]) {
   // Enquêtes du BCI où la personne apparaît : pour le BCI et les superviseurs seulement
   const enquetes = canManage(DIVISION_KINDS.enquetes) ? await api(`/service/enquetes?citoyen=${c.id}`) : null;
   const actifs = c.warrants.filter(w => w.statut === 'actif');
-  const casier = c.reports.filter(r => r.statut === 'finalise');
+  // Condamnations blanchies : renvoyées par le serveur aux seuls magistrats et administrateurs, hors statistiques
+  const casier = c.reports.filter(r => r.statut === 'finalise' && !r.blanchi_at);
+  const blanchis = c.reports.filter(r => r.statut === 'finalise' && r.blanchi_at);
   const brouillons = c.reports.filter(r => r.statut === 'brouillon');
+  const enAttente = c.reports.filter(r => r.statut === 'en_attente');
+  const judge = canJudge();
+  const justice = isJustice();
   const totalAmendes = casier.reduce((s, r) => s + r.amende, 0);
   const totalGav = casier.reduce((s, r) => s + r.gav_minutes, 0);
 
@@ -94,7 +99,8 @@ export async function renderDetail(main, [id]) {
         <p class="muted">${[c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}</p>
       </div>
       <div class="actions">
-        <a class="btn btn-primary" href="#/rapports/nouveau?citoyen=${c.id}">${icon('report')} Nouveau rapport d'arrestation</a>
+        ${justice ? '' : html`<a class="btn btn-primary" href="#/rapports/nouveau?citoyen=${c.id}">${icon('report')} Nouveau rapport d'arrestation</a>`}
+        ${judge && casier.length ? html`<button class="btn" data-blanchir-casier>Blanchir le casier</button>` : ''}
         ${hasRole('superviseur') && html`<button class="btn btn-ghost" data-delete>${icon('trash')} Supprimer</button>`}
       </div>
     </div>
@@ -118,13 +124,18 @@ export async function renderDetail(main, [id]) {
           <td>${r.charges.length ? html`<ul class="charges-list">${r.charges.map(ch => html`<li>${ch}</li>`)}</ul>` : '—'}</td>
           <td class="num">${formatDollars(r.amende)}</td><td class="num">${formatDuree(r.gav_minutes)}</td>
           <td class="mono">『${r.redacteur_matricule}』</td>
-          <td><a class="btn btn-sm" href="#/rapports/${r.id}">Voir</a></td></tr>`)}</tbody></table></div>`
+          <td class="nowrap"><a class="btn btn-sm" href="#/rapports/${r.id}">Voir</a>
+            ${judge ? html`<button class="btn btn-sm btn-ghost" data-blanchir="${r.id}">Blanchir</button>` : ''}</td></tr>`)}</tbody></table></div>`
         : html`<p class="empty-state">Casier vierge : aucune arrestation finalisée.</p>`}
-      ${brouillons.length ? html`<p class="muted small">Rapports en cours de rédaction : ${brouillons.map(r => html`<a href="#/rapports/${r.id}/modifier" class="mono">${r.numero}</a> `)}</p>` : ''}
+      ${brouillons.length ? html`<p class="muted small">Rapports en cours de rédaction : ${brouillons.map(r => html`<a href="#/rapports/${r.id}${justice ? '' : '/modifier'}" class="mono">${r.numero}</a> `)}</p>` : ''}
+      ${enAttente.length ? html`<p class="muted small">En attente de jugement : ${enAttente.map(r => html`<a href="#/rapports/${r.id}" class="mono">${r.numero}</a> `)}</p>` : ''}
+      ${blanchis.length ? html`<p class="muted small">Condamnations blanchies (visibles de la justice seulement) :
+        ${blanchis.map(r => html`<span class="nowrap"><a href="#/rapports/${r.id}" class="mono" title="${r.blanchi_motif}">${r.numero}</a>
+          <button class="btn btn-sm btn-ghost" data-unblanchir="${r.id}">Annuler le blanchiment</button></span> `)}</p>` : ''}
     </section>
 
     <section class="card">
-      <div class="card-head"><h3>Plaintes</h3><a class="btn btn-sm" href="#/plaintes/nouvelle?mis_en_cause=${c.id}">${icon('plus')} Plainte contre cette personne</a></div>
+      <div class="card-head"><h3>Plaintes</h3>${justice ? '' : html`<a class="btn btn-sm" href="#/plaintes/nouvelle?mis_en_cause=${c.id}">${icon('plus')} Plainte contre cette personne</a>`}</div>
       ${c.complaints.length ? html`<div class="table-wrap"><table class="table table-click">
         <thead><tr><th>N°</th><th>Rôle</th><th>Dépôt</th><th>Qualification</th><th>Statut</th></tr></thead>
         <tbody>${c.complaints.map(p => html`<tr data-href="#/plaintes/${p.id}">
@@ -154,7 +165,7 @@ export async function renderDetail(main, [id]) {
         ${c.warrants.length ? html`<ul class="list">${c.warrants.map(w => html`
           <li class="${w.statut === 'clos' ? 'is-muted' : ''}">${warrantTypeBadge(w.type)}
             <span class="grow">${w.motif}<small class="muted">${w.statut === 'clos' ? `Clos le ${fmtDateTime(w.closed_at)}` : `Émis le ${fmtDateTime(w.created_at)} par 『${w.auteur_matricule ?? '—'}』`}</small></span>
-            ${w.statut === 'actif' && html`<button class="btn btn-sm" data-close-w="${w.id}">Clore</button>`}</li>`)}</ul>`
+            ${w.statut === 'actif' && !justice && html`<button class="btn btn-sm" data-close-w="${w.id}">Clore</button>`}</li>`)}</ul>`
           : html`<p class="empty-state">Aucun mandat.</p>`}
       </section>
 
@@ -162,7 +173,7 @@ export async function renderDetail(main, [id]) {
         <h3>Identité</h3>
         <div class="identity">
           <div data-photo class="identity-photo"></div>
-          <div class="grow">${citizenForm(c)}</div>
+          <div class="grow"><fieldset class="bare-fieldset" ${justice ? 'disabled' : ''}>${citizenForm(c)}</fieldset></div>
         </div>
       </section>
     </div>
@@ -172,12 +183,17 @@ export async function renderDetail(main, [id]) {
       <div data-photos></div>
     </section>`);
 
-  mountPhotos($('[data-photos]', main), c.photos, photos => attempt(async () => {
+  if (!justice) mountPhotos($('[data-photos]', main), c.photos, photos => attempt(async () => {
     await api(`/citizens/${c.id}`, { method: 'PUT', body: { photos } });
     toast('Photos mises à jour');
   }), [{ titre: '', slots: numberedSlots(), extra: true }]);
 
-  mountPhotos($('[data-photo]', main), { photo_url: c.photo_url }, photos => attempt(async () => {
+  if (justice) {
+    mount($('[data-photos]', main), Object.values(c.photos).length
+      ? html`<div class="paper-photos">${Object.values(c.photos).map(url => html`<figure><img src="${url}" alt=""></figure>`)}</div>`
+      : html`<p class="empty-state">Aucune photo.</p>`);
+    if (c.photo_url) mount($('[data-photo]', main), html`<img src="${c.photo_url}" alt="Photo d'identité">`);
+  } else mountPhotos($('[data-photo]', main), { photo_url: c.photo_url }, photos => attempt(async () => {
     await api(`/citizens/${c.id}`, { method: 'PUT', body: { photo_url: photos.photo_url ?? '' } });
     toast('Photo mise à jour');
   }), [{ titre: '', slots: [['photo_url', "Photo d'identité"]] }]);
@@ -196,6 +212,24 @@ export async function renderDetail(main, [id]) {
     if (!t || t.matches('a')) return;
     if (t.matches('tr[data-href]')) { location.hash = t.dataset.href; return; }
     if (t.dataset.closeW) closeWarrant(t.dataset.closeW);
+    if (t.dataset.blanchir || t.matches('[data-blanchir-casier]')) {
+      const motif = prompt(t.dataset.blanchir ? 'Motif du blanchiment de cette condamnation :' : `Motif du blanchiment de tout le casier de ${fullName(c)} :`);
+      if (!motif?.trim()) return;
+      attempt(async () => {
+        await api(t.dataset.blanchir ? `/reports/${t.dataset.blanchir}/blanchir` : `/citizens/${c.id}/blanchir`, { method: 'POST', body: { motif } });
+        toast(t.dataset.blanchir ? 'Condamnation blanchie' : 'Casier blanchi');
+        rerender();
+      }, t);
+    }
+    if (t.dataset.unblanchir) {
+      const motif = prompt("Motif de l'annulation du blanchiment :");
+      if (!motif?.trim()) return;
+      attempt(async () => {
+        await api(`/reports/${t.dataset.unblanchir}/unblanchir`, { method: 'POST', body: { motif } });
+        toast('Blanchiment annulé');
+        rerender();
+      }, t);
+    }
     if (t.matches('[data-new-warrant]')) openWarrantForm({ type: 'mandat', citizen_id: c.id, citizen_nom: c.nom, citizen_prenom: c.prenom });
     if (t.matches('[data-delete]') && confirm(`Supprimer définitivement la fiche de ${fullName(c)} ? Ses mandats seront supprimés.`)) {
       attempt(async () => {

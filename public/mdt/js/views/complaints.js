@@ -1,6 +1,6 @@
 import { html, mount, $, attempt, toast, fullName, agentLabel, fmtDate, fmtDateTime, todayIso, nowTime, normalize, categorieBadge, debounce, PAGE, moreButton } from '../dom.js';
-import { api, state, loadPenalCode, hasRole } from '../api.js';
-import { navigate, setLeaveGuard } from '../router.js';
+import { api, state, loadPenalCode, loadAvocats, hasRole, canJudge, isJustice, isAvocat } from '../api.js';
+import { navigate, setLeaveGuard, rerender } from '../router.js';
 import { icon } from '../icons.js';
 import { mountPerson } from '../components/person.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
@@ -30,7 +30,7 @@ export async function renderList(main, params, query) {
   mount(main, html`
     <div class="page-head">
       <div><h1>Plaintes</h1><p class="muted" data-count></p></div>
-      <div class="actions"><a class="btn btn-primary" href="#/plaintes/nouvelle">${icon('plus')} Nouvelle plainte</a></div>
+      ${isJustice() ? '' : html`<div class="actions"><a class="btn btn-primary" href="#/plaintes/nouvelle">${icon('plus')} Nouvelle plainte</a></div>`}
     </div>
     <div class="toolbar">
       <div class="search-box grow">${icon('search')}<input type="search" class="input" data-q placeholder="N°, plaignant, mis en cause ou lieu…" autofocus></div>
@@ -81,12 +81,12 @@ async function personFromCitizen(id) {
 }
 
 export async function renderEdit(main, [id], query) {
-  await loadPenalCode();
+  const [avocats] = await Promise.all([loadAvocats(), loadPenalCode()]);
   const c = id
     ? await api(`/complaints/${id}`)
     : {
       statut: 'ouverte', date_depot: todayIso(), date_faits: '', lieu_faits: '', recit: '', prejudice: '', temoins: '', suivi: '',
-      qualifications: [], photos: {},
+      qualifications: [], photos: {}, avocat_ids: [],
       plaignant: await personFromCitizen(Number(query.get('plaignant'))),
       mis_en_cause: await personFromCitizen(Number(query.get('mis_en_cause'))),
       agent_matricule: state.user.matricule, agent_nom: state.user.nom, agent_prenom: state.user.prenom, agent_grade: state.user.grade,
@@ -109,6 +109,10 @@ export async function renderEdit(main, [id], query) {
           <label>Date de dépôt<input class="input" type="date" name="date_depot" value="${c.date_depot}"></label>
           <label>Statut<select class="input" name="statut">${Object.entries(COMPLAINT_STATUTS).map(([k, l]) => html`<option value="${k}" ${k === c.statut ? 'selected' : ''}>${l}</option>`)}</select></label>
           <label class="span-2">Agent enregistrant<input class="input" readonly value="${agentLabel(agentOf(c))}"></label>
+          <label class="span-4">Avocat(s) inscrit(s) · accès au dossier (Ctrl+clic pour en choisir plusieurs)
+            <select class="input" name="avocat_ids" multiple size="${Math.min(Math.max(avocats.length, 2), 5)}">
+              ${avocats.map(a => html`<option value="${a.id}" ${c.avocat_ids.includes(a.id) ? 'selected' : ''}>${fullName(a)} (${a.matricule})</option>`)}
+            </select></label>
         </div>`)}
 
       ${section(2, 'Plaignant', html`<div data-plaignant></div>`)}
@@ -190,6 +194,7 @@ export async function renderEdit(main, [id], query) {
       mis_en_cause: model.mis_en_cause,
       qualifications: model.qualifications,
       photos: model.photos,
+      avocat_ids: [...field('avocat_ids').selectedOptions].map(o => Number(o.value)),
     };
     const saved = await api(id ? `/complaints/${id}` : '/complaints', { method: id ? 'PUT' : 'POST', body });
     dirty = false;
@@ -296,14 +301,18 @@ export async function renderView(main, [id]) {
   const c = await api(`/complaints/${id}`);
   const m = c.mis_en_cause;
   const preuves = PREUVES[0].slots.filter(([k]) => c.photos[k]);
-  const canCreateReport = !c.report_id && c.mis_en_cause_id;
+  const justice = isJustice();
+  const canCreateReport = !justice && !c.report_id && c.mis_en_cause_id;
+  const canClose = canJudge() && !['classee', 'resolue'].includes(c.statut);
 
   mount(main, html`
     <div class="report-toolbar no-print">
-      <a href="#/plaintes" class="back">${icon('back')} Plaintes</a>
+      <a href="#/${isAvocat() ? '' : 'plaintes'}" class="back">${icon('back')} ${isAvocat() ? 'Mes dossiers' : 'Plaintes'}</a>
       <div class="actions">
         ${complaintBadge(c.statut)}
-        <a class="btn" href="#/plaintes/${c.id}/modifier">${icon('edit')} Modifier</a>
+        ${justice ? '' : html`<a class="btn" href="#/plaintes/${c.id}/modifier">${icon('edit')} Modifier</a>`}
+        ${canClose ? html`<button class="btn" data-close-as="classee">Classer sans suite</button>
+          <button class="btn" data-close-as="resolue">Résoudre</button>` : ''}
         ${canCreateReport ? html`<button class="btn" data-create-report>${icon('report')} Créer le rapport d'arrestation</button>` : ''}
         <button class="btn" data-discord>${icon('copy')} Copier pour Discord</button>
         <button class="btn" data-gdocs>${icon('copy')} Google Docs</button>
@@ -323,6 +332,7 @@ export async function renderView(main, [id]) {
           <td><strong>Déposée le :</strong> ${fmtDate(c.date_depot)}<br><strong>Statut :</strong> ${COMPLAINT_STATUTS[c.statut]}${c.closed_at ? ` (le ${fmtDateTime(c.closed_at)})` : ''}</td>
         </tr>
         <tr><th>Agent enregistrant :</th><td colspan="2">${agentLabel(agentOf(c))}</td></tr>
+        ${c.avocats.length ? html`<tr><th>Avocat(s) :</th><td colspan="2">${c.avocats.map(fullName).join(', ')}</td></tr>` : ''}
         <tr><th>Date et lieu des faits :</th><td colspan="2">${[c.date_faits && fmtDate(c.date_faits), c.lieu_faits].filter(Boolean).join(' · ') || '—'}</td></tr>
         <tr><th>Qualification des faits :</th><td colspan="2"><ul class="dash-list">${c.qualifications.length ? c.qualifications.map(q => html`<li>${q.infraction} (${q.categorie})</li>`) : html`<li>Non qualifiés</li>`}</ul></td></tr>
       </table>
@@ -364,6 +374,15 @@ export async function renderView(main, [id]) {
   $('[data-print]', main).addEventListener('click', () => window.print());
   $('[data-discord]', main).addEventListener('click', () => openDiscordModal(discordText(c)));
   $('[data-gdocs]', main).addEventListener('click', () => copyForDocs($('.paper', main)));
+  main.addEventListener('click', e => {
+    const t = e.target.closest('[data-close-as]');
+    if (!t || !confirm(`${t.textContent.trim()} : la plainte sera close. Confirmer ?`)) return;
+    attempt(async () => {
+      await api(`/complaints/${c.id}/close`, { method: 'POST', body: { statut: t.dataset.closeAs } });
+      toast('Plainte close');
+      rerender();
+    }, t);
+  });
   $('[data-create-report]', main)?.addEventListener('click', e => attempt(async () => {
     const { report_id } = await api(`/complaints/${c.id}/report`, { method: 'POST' });
     toast("Rapport d'arrestation créé à partir de la plainte");
