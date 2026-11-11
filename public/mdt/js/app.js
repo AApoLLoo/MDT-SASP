@@ -1,5 +1,5 @@
 import { html, mount, $, $$, agentLabel, toast, countUp } from './dom.js';
-import { api, state, setUnauthorizedHandler, hasRole } from './api.js';
+import { api, state, setUnauthorizedHandler, hasRole, isJustice, isAvocat } from './api.js';
 import { startRouter, resolve, navigate } from './router.js';
 import { icon } from './icons.js';
 import { defconInfo } from './reference-data.js';
@@ -24,6 +24,7 @@ import * as announcements from './views/announcements.js';
 import * as incidents from './views/incidents.js';
 import * as evidence from './views/evidence.js';
 import * as audit from './views/audit.js';
+import * as justice from './views/justice.js';
 import { avatar } from './components/avatar.js';
 import { startAmbient } from './ambient.js';
 
@@ -63,9 +64,19 @@ function divisionNav() {
   ]);
 }
 
+// Comptes justice : le magistrat a les groupes Dossiers, Rapports et Outils ; l'avocat, ses seuls dossiers
+const JUSTICE_GROUPS = NAV.slice(NAV.indexOf('Dossiers'), NAV.indexOf('Personnel'));
+const justiceNav = () => (isAvocat() ? [['/', 'report', 'Mes dossiers']] : [['/', 'report', 'En attente de jugement'], ...JUSTICE_GROUPS]);
+// Pages ouvertes aux comptes justice (le serveur refuse le reste de toute façon) ; aucune page de saisie police
+const JUSTICE_PATHS = {
+  magistrat: /^\/(casiers|vehicules|mandats|rapports|incidents|plaintes|preuves|calculatrice|code-penal|references)(\/\d+(\/juger)?)?$/,
+  avocat: /^\/(rapports|plaintes)\/\d+$/,
+};
+
 // Entrées visibles pour le rôle courant ; un titre de groupe sans entrée visible disparaît
 function navItems() {
-  const items = NAV.flatMap(e => (typeof e === 'function' ? e() : [e])).filter(e => typeof e === 'string' || !e[3] || hasRole(e[3]));
+  const entries = isJustice() ? justiceNav() : NAV;
+  const items = entries.flatMap(e => (typeof e === 'function' ? e() : [e])).filter(e => typeof e === 'string' || !e[3] || hasRole(e[3]));
   return items.filter((e, i) => typeof e !== 'string' || (items[i + 1] && typeof items[i + 1] !== 'string'));
 }
 
@@ -158,6 +169,7 @@ function playPing() {
 // Pastille du menu, titre de l'onglet et notification des nouvelles annonces non lues
 async function updateUnread() {
   if (!state.user || $('.tab-lock')) return; // onglet masqué : pas de ping en double
+  if (isJustice()) return; // les annonces sont internes à la police
   const data = await api('/announcements/unread').catch(() => null);
   const net = $('[data-net]');
   if (net) {
@@ -241,7 +253,7 @@ async function showApp() {
           <a href="#/references?onglet=defcon" data-defcon-badge></a>
           <span class="clock" data-clock><b></b><small></small></span>
           <div class="topbar-user">
-            <a class="user-label" href="#/agents/${state.user.id}" title="Mon profil" data-user-label></a>
+            <a class="user-label" href="#/${isJustice() ? '' : `agents/${state.user.id}`}" title="${isJustice() ? 'Accueil' : 'Mon profil'}" data-user-label></a>
             <a class="btn btn-sm btn-ghost" href="/" title="Site public">${icon('back')}</a>
             <button type="button" class="btn btn-sm btn-ghost" data-lite>${icon('zap')}</button>
             <button type="button" class="btn btn-sm btn-ghost" data-logout title="Déconnexion">${icon('logout')}</button>
@@ -283,7 +295,8 @@ async function showApp() {
 
 async function route() {
   if (!state.user) return showLogin();
-  const { view, params, query, path } = resolve();
+  let { view, params, query, path } = resolve();
+  if (isJustice()) view = path === '/' ? justice.render : JUSTICE_PATHS[state.user.role].test(path) ? view : null;
   if (path !== '/annonces') updateUnread();
   for (const a of $$('[data-nav]')) {
     const p = a.dataset.nav;

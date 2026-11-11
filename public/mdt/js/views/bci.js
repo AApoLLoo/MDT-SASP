@@ -8,6 +8,7 @@ import { openRecordForm, canManage, statutBadge, linkedLabel } from './service.j
 import { sketchSvg, openSketchEditor } from '../components/sketch.js';
 import { citizenPicker } from '../components/picker.js';
 import { openWarrantForm } from './warrants.js';
+import { statutLabel } from './reports.js';
 import { COMPLAINT_STATUTS } from './complaints.js';
 import { EVIDENCE_STATUTS } from './evidence.js';
 
@@ -25,7 +26,7 @@ const TABLEAU = KIND.fields.find(f => f.key === 'tableau');
 
 // Document cité : [type, lien, détail, statut]
 const DOCS = {
-  rapport: d => ["Rapport d'arrestation", `#/rapports/${d.id}`, d.label && `Suspect : ${d.label}`, d.statut === 'finalise' ? 'Finalisé' : 'Brouillon'],
+  rapport: d => ["Rapport d'arrestation", `#/rapports/${d.id}`, d.label && `Suspect : ${d.label}`, statutLabel(d.statut)],
   plainte: d => ['Plainte', `#/plaintes/${d.id}`, d.label && `Plaignant : ${d.label}`, COMPLAINT_STATUTS[d.statut]],
   incident: d => [incidentTitre(d.type), `#/incidents/${d.id}`, d.label, d.statut === 'finalise' ? 'Finalisé' : 'Brouillon'],
   scelle: d => ['Scellé', `#/preuves?q=${encodeURIComponent(d.numero)}`, d.label, EVIDENCE_STATUTS[d.statut]?.[0]],

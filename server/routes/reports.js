@@ -109,7 +109,7 @@ r.get('/', (req, res) => {
   const mine = req.query.mine === '1' ? req.user.id : null;
   const q = `%${str(req.query.q)}%`;
   res.json(db.prepare(`
-    SELECT a.id, a.numero, a.statut, a.date_faits, a.citizen_id, a.redacteur_id, a.updated_at,
+    SELECT a.id, a.numero, a.statut, a.date_faits, a.citizen_id, a.redacteur_id, a.updated_at, a.depose_at,
       json_extract(a.suspect, '$.nom') AS suspect_nom, json_extract(a.suspect, '$.prenom') AS suspect_prenom,
       json_extract(a.calc_result, '$.amende') AS amende, json_extract(a.calc_result, '$.gavMinutes') AS gav_minutes,
       json_extract(a.calc_result, '$.nbChefs') AS nb_chefs,

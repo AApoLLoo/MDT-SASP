@@ -44,6 +44,17 @@ export const userByMatricule = m => state.users?.find(u => u.matricule.toLowerCa
 const ROLES = ['agent', 'superviseur', 'etat_major', 'admin'];
 export const hasRole = role => ROLES.indexOf(state.user?.role) >= ROLES.indexOf(role);
 
+// Comptes justice (miroir de server/auth.js) : hors hiérarchie police, hasRole(...) est faux pour eux
+export const isMagistrat = () => state.user?.role === 'magistrat';
+export const isAvocat = () => state.user?.role === 'avocat';
+export const isJustice = () => isMagistrat() || isAvocat();
+export const canJudge = () => isMagistrat() || hasRole('admin');
+
+export async function loadAvocats(force = false) {
+  if (!state.avocats || force) state.avocats = await api('/users/avocats');
+  return state.avocats;
+}
+
 export async function uploadImage(file) {
   const { url } = await api('/uploads', { method: 'POST', file });
   return url;

@@ -84,7 +84,9 @@ export async function renderList(main) {
       <select class="input" data-division><option value="">Toutes les divisions</option>${divisions.map(d => html`<option>${d}</option>`)}</select>
       ${admin ? html`<label class="check"><input type="checkbox" data-inactifs> Comptes révoqués</label>` : ''}
     </div>
-    <div class="roster" data-results></div>`);
+    <div class="roster" data-results></div>
+    ${admin ? html`<section class="card" data-justice></section>` : ''}`);
+  if (admin) attempt(() => drawJustice($('[data-justice]', main)));
 
   const draw = () => {
     const words = normalize($('[data-q]', main).value).split(/\s+/).filter(Boolean);
@@ -112,6 +114,68 @@ export async function renderList(main) {
   for (const el of $$('[data-q], [data-division], [data-inactifs]', main)) el.addEventListener('input', draw);
   $('[data-new]', main)?.addEventListener('click', openCreateForm);
   draw();
+}
+
+// ---------- Comptes justice (administrateur) ----------
+
+// Fonction affichée selon le type de compte (miroir de JUSTICE_FONCTIONS, server/auth.js)
+const JUSTICE_FONCTIONS = { magistrat: ['Procureur', 'Juge'], avocat: ['Avocat'] };
+const JUSTICE_TYPES = { magistrat: 'Magistrat', avocat: 'Avocat' };
+
+async function drawJustice(root) {
+  const comptes = await api('/users?justice=1');
+  mount(root, html`
+    <div class="card-head"><h3>Comptes justice</h3>
+      <button type="button" class="btn btn-sm btn-primary" data-new-justice>${icon('plus')} Nouveau compte justice</button></div>
+    <p class="muted small">Magistrats (procureurs, juges) et avocats : ils ne figurent pas dans les effectifs et n'accèdent qu'aux dossiers de justice.</p>
+    ${comptes.length ? html`<div class="table-wrap"><table class="table">
+      <thead><tr><th>Matricule</th><th>Nom</th><th>Fonction</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${comptes.map(u => html`<tr>
+        <td class="mono">${u.matricule}</td><td>${fullName(u)}</td><td>${u.grade || JUSTICE_TYPES[u.role]}</td>
+        <td>${u.actif ? html`<span class="badge badge-ok">Actif</span>` : html`<span class="badge badge-danger">Révoqué</span>`}</td>
+        <td class="nowrap"><button type="button" class="btn btn-sm" data-reset="${u.id}">Réinitialiser le mot de passe</button>
+          <button type="button" class="btn btn-sm btn-ghost" data-toggle="${u.id}" data-actif="${u.actif ? 0 : 1}">${u.actif ? 'Révoquer' : 'Réactiver'}</button></td>
+      </tr>`)}</tbody></table></div>` : html`<p class="empty-state">Aucun compte justice.</p>`}`);
+  root.onclick = e => {
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.matches('[data-new-justice]')) return openJusticeForm(() => attempt(() => drawJustice(root)));
+    if (t.dataset.reset) {
+      const password = prompt('Nouveau mot de passe (8 caractères minimum) :');
+      if (password) attempt(async () => { await api(`/users/${t.dataset.reset}`, { method: 'PUT', body: { password } }); toast('Mot de passe réinitialisé'); }, t);
+    }
+    if (t.dataset.toggle) {
+      attempt(async () => {
+        await api(`/users/${t.dataset.toggle}`, { method: 'PUT', body: { actif: t.dataset.actif === '1' } });
+        await drawJustice(root);
+      }, t);
+    }
+  };
+}
+
+function openJusticeForm(onDone) {
+  const fonctions = role => JUSTICE_FONCTIONS[role].map(f => html`<option>${f}</option>`);
+  const dialog = openModal('Nouveau compte justice', html`
+    <form class="form-grid" data-form>
+      <label>Type de compte<select class="input" name="role" data-role>${Object.entries(JUSTICE_TYPES).map(([k, l]) => html`<option value="${k}">${l}</option>`)}</select></label>
+      <label>Fonction<select class="input" name="grade" data-fonction>${fonctions('magistrat')}</select></label>
+      <label>Identifiant de connexion *<input class="input mono" name="matricule" required></label>
+      <label>Mot de passe * (8 caractères min.)<input class="input" type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+      <label>Prénom<input class="input" name="prenom"></label>
+      <label>Nom<input class="input" name="nom"></label>
+      <div class="span-2 form-actions"><button class="btn btn-primary">Créer le compte</button></div>
+    </form>`);
+  $('[data-role]', dialog).addEventListener('change', e => mount($('[data-fonction]', dialog), html`${fonctions(e.target.value)}`));
+  $('[data-form]', dialog).addEventListener('submit', e => {
+    e.preventDefault();
+    attempt(async () => {
+      await api('/users', { method: 'POST', body: formValues(e.target) });
+      state.avocats = null; // la liste des avocats proposée sur les dossiers change
+      toast('Compte justice créé');
+      dialog.close();
+      onDone();
+    }, e.submitter);
+  });
 }
 
 // ---------- Profil ----------

@@ -1,20 +1,22 @@
 import { html, mount, $, attempt, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
-import { api } from '../api.js';
+import { api, isJustice } from '../api.js';
 import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
 
-export const statutBadge = s => (s === 'finalise' ? html`<span class="badge badge-ok">Finalisé</span>` : html`<span class="badge badge-warn">Brouillon</span>`);
+const STATUTS = { brouillon: ['Brouillon', 'badge-warn'], en_attente: ['En attente de jugement', 'badge-info'], finalise: ['Finalisé', 'badge-ok'] };
+export const statutLabel = s => (STATUTS[s] ?? STATUTS.brouillon)[0];
+export const statutBadge = s => html`<span class="badge ${(STATUTS[s] ?? STATUTS.brouillon)[1]}">${statutLabel(s)}</span>`;
 
 export async function render(main, params, query) {
   mount(main, html`
     <div class="page-head">
       <h1>Rapports d'arrestation</h1>
-      <div class="actions"><a class="btn btn-primary" href="#/rapports/nouveau">${icon('plus')} Nouveau rapport</a></div>
+      ${isJustice() ? '' : html`<div class="actions"><a class="btn btn-primary" href="#/rapports/nouveau">${icon('plus')} Nouveau rapport</a></div>`}
     </div>
     <div class="toolbar">
       <div class="search-box grow">${icon('search')}<input type="search" class="input" data-q placeholder="N° de rapport ou nom du suspect…"></div>
       <select class="input" data-statut>
-        <option value="">Tous les statuts</option><option value="brouillon">Brouillons</option><option value="finalise">Finalisés</option>
+        <option value="">Tous les statuts</option><option value="brouillon">Brouillons</option><option value="en_attente">En attente de jugement</option><option value="finalise">Finalisés</option>
       </select>
       <label class="check"><input type="checkbox" data-mine ${query.get('mine') === '1' ? 'checked' : ''}> Mes rapports</label>
     </div>
@@ -26,7 +28,7 @@ export async function render(main, params, query) {
     const list = await api(`/reports?${qs}`);
     mount($('[data-results]', main), list.length ? html`<table class="table table-click">
       <thead><tr><th>N°</th><th>Suspect</th><th>Date des faits</th><th>Rédacteur</th><th class="num">Chefs</th><th class="num">Amende</th><th class="num">GAV</th><th>Statut</th><th>Modifié</th></tr></thead>
-      <tbody>${list.map(r => html`<tr data-href="#/rapports/${r.id}${r.statut === 'brouillon' ? '/modifier' : ''}">
+      <tbody>${list.map(r => html`<tr data-href="#/rapports/${r.id}${r.statut === 'brouillon' && !isJustice() ? '/modifier' : ''}">
         <td class="mono strong">${r.numero}</td>
         <td>${r.suspect_nom ? fullName({ nom: r.suspect_nom, prenom: r.suspect_prenom }) : html`<span class="muted">Non renseigné</span>`}</td>
         <td>${fmtDate(r.date_faits)}</td>
