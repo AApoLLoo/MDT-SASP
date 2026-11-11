@@ -1,19 +1,14 @@
 import { Router } from 'express';
 import { db, parseJson, transaction, getDefcon } from '../db.js';
-import { hasRole } from '../auth.js';
+import { hasRole, canJudge, requireJudge } from '../auth.js';
+import { cleanAvocatId } from '../justice.js';
 import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
 import { compute, formatDollars, MAX_CHARGES, MAJORATION_DEFCON } from '../../public/mdt/js/calc.js';
 
-// Libellés des champs dans l'historique (modification d'un rapport finalisé)
-const FIELD_LABELS = {
-  date_rapport: 'date du rapport', date_faits: 'date des faits', miranda_heure: 'Miranda', miranda_par: 'Miranda', faits: 'faits',
-  agents_presents: 'agents présents', objets_illegaux: 'objets saisis', photos: 'photos', calc_input: "chefs d'accusation", suspect: 'suspect',
-};
-
 const SUSPECT_FIELDS = ['nom', 'prenom', 'date_naissance', 'id_unique', 'empreinte', 'telephone'];
-const JSON_DEFAULTS = { suspect: {}, agents_presents: [], objets_illegaux: [], photos: {}, calc_input: {} };
+const JSON_DEFAULTS = { suspect: {}, agents_presents: [], objets_illegaux: [], photos: {}, calc_input: {}, calc_input_police: null };
 const MAJORATIONS = [1, 1.5, 2, 3];
 
 const codeStmt = db.prepare('SELECT * FROM penal_code WHERE id = ?');
@@ -25,13 +20,31 @@ function loadReport(id, user) {
     FROM arrest_reports a JOIN users u ON u.id = a.redacteur_id WHERE a.id = ?`).get(id);
   if (!rep) fail(404, 'Rapport introuvable');
   for (const [k, def] of Object.entries(JSON_DEFAULTS)) rep[k] = parseJson(rep[k], def);
+  // Un avocat ne lit que les dossiers où son compte est inscrit
+  if (user.role === 'avocat' && rep.avocat_id !== user.id) fail(403, "Vous n'êtes pas l'avocat inscrit sur ce dossier");
   rep.calc_result = parseJson(rep.calc_result, null);
+  rep.calc_result_police = parseJson(rep.calc_result_police, null);
   rep.evidence = db.prepare('SELECT id, numero, description, statut FROM evidence WHERE report_id = ? ORDER BY id').all(id);
+  rep.avocat = rep.avocat_id ? db.prepare('SELECT id, matricule, nom, prenom FROM users WHERE id = ?').get(rep.avocat_id) ?? null : null;
+  rep.juge = rep.juge_id ? db.prepare('SELECT matricule, nom, prenom, grade FROM users WHERE id = ?').get(rep.juge_id) ?? null : null;
   rep.can_edit = canEdit(user, rep);
+  rep.can_judge = canJudge(user);
   return rep;
 }
 
-const canEdit = (user, rep) => hasRole(user, 'superviseur') || (rep.statut === 'brouillon' && rep.redacteur_id === user.id);
+// Seul un brouillon se modifie, par son rédacteur ou un superviseur ; ensuite le dossier appartient à la justice
+const canEdit = (user, rep) => rep.statut === 'brouillon' && (rep.redacteur_id === user.id || hasRole(user, 'superviseur'));
+
+// Contrôles communs au dépôt et à la finalisation ; renvoie le calcul à jour
+function checkReady(rep) {
+  if (!rep.citizen_id) fail(400, 'Renseignez le suspect avant de déposer le rapport');
+  const result = compute(rep.calc_input, getCode);
+  if (!result.nbChefs) fail(400, "Ajoutez au moins un chef d'accusation");
+  if (rep.calc_input.retenue === 'max' && !rep.calc_input.approbateur) fail(400, "La retenue MAX nécessite le nom de l'approbateur (état-major, juge ou procureur)");
+  return result;
+}
+
+const suspectLabel = rep => [rep.suspect.prenom, rep.suspect.nom].filter(Boolean).join(' ');
 
 function cleanCalcInput(input = {}) {
   const maxMajoration = MAJORATION_DEFCON[getDefcon()] ?? 1;
@@ -90,7 +103,7 @@ export function createReport(user, { citizenId = null, calcInput = {}, faits = '
 const r = Router();
 
 r.get('/', (req, res) => {
-  const statut = ['brouillon', 'finalise'].includes(req.query.statut) ? req.query.statut : null;
+  const statut = ['brouillon', 'en_attente', 'finalise'].includes(req.query.statut) ? req.query.statut : null;
   const mine = req.query.mine === '1' ? req.user.id : null;
   const q = `%${str(req.query.q)}%`;
   res.json(db.prepare(`
@@ -102,7 +115,7 @@ r.get('/', (req, res) => {
     FROM arrest_reports a JOIN users u ON u.id = a.redacteur_id
     WHERE (? IS NULL OR a.statut = ?) AND (? IS NULL OR a.redacteur_id = ?)
       AND (a.numero LIKE ? OR IFNULL(json_extract(a.suspect, '$.nom') || ' ' || json_extract(a.suspect, '$.prenom'), '') LIKE ?)
-    ORDER BY a.updated_at DESC LIMIT ?`).all(statut, statut, mine, mine, q, q, listLimit(req)));
+    ORDER BY ${statut === 'en_attente' ? 'a.depose_at ASC' : 'a.updated_at DESC'} LIMIT ?`).all(statut, statut, mine, mine, q, q, listLimit(req)));
 });
 
 r.get('/:id', (req, res) => res.json(loadReport(intParam(req.params.id), req.user)));
@@ -128,6 +141,7 @@ r.put('/:id', (req, res) => {
     fields.objets_illegaux = JSON.stringify(objets);
   }
   if (b.photos !== undefined) fields.photos = JSON.stringify(cleanPhotos(b.photos));
+  if (b.avocat_id !== undefined) fields.avocat_id = cleanAvocatId(b.avocat_id);
   if (b.calc_input !== undefined) {
     const calcInput = cleanCalcInput(b.calc_input);
     fields.calc_input = JSON.stringify(calcInput);
@@ -140,65 +154,97 @@ r.put('/:id', (req, res) => {
       fields.suspect = JSON.stringify(snapshot);
     }
     updateRow('arrest_reports', id, fields);
-    // Les brouillons s'enregistrent souvent : seule la modification d'un rapport finalisé est tracée
-    if (rep.statut === 'finalise') {
-      const changed = Object.keys(FIELD_LABELS).filter(k => k in fields && fields[k] !== (typeof rep[k] === 'string' ? rep[k] : JSON.stringify(rep[k])));
-      const before = rep.calc_result?.amende ?? 0;
-      const after = fields.calc_result ? JSON.parse(fields.calc_result).amende : before;
-      const details = [
-        changed.length && `Modifié : ${[...new Set(changed.map(k => FIELD_LABELS[k]))].join(', ')}`,
-        after !== before && `Amende : ${formatDollars(before)} → ${formatDollars(after)}`,
-      ].filter(Boolean).join(' · ');
-      if (details) logAction(req.user, "Rapport d'arrestation finalisé modifié", 'report', id, rep.numero, details);
-    }
   });
   res.json(loadReport(id, req.user));
 });
 
-r.post('/:id/finalize', (req, res) => {
+// Dépôt pour jugement : le rapport n'est plus modifiable par la police, le calcul proposé est conservé
+r.post('/:id/submit', (req, res) => {
   const id = intParam(req.params.id);
   const rep = loadReport(id, req.user);
   if (!rep.can_edit) fail(403, 'Droits insuffisants');
-  if (rep.statut === 'finalise') fail(400, 'Ce rapport est déjà finalisé');
-  if (!rep.citizen_id) fail(400, 'Renseignez le suspect avant de finaliser');
-  const result = compute(rep.calc_input, getCode);
-  if (!result.nbChefs) fail(400, "Ajoutez au moins un chef d'accusation");
-  if (rep.calc_input.retenue === 'max' && !rep.calc_input.approbateur) fail(400, "La retenue MAX nécessite le nom de l'approbateur (état-major, juge ou procureur)");
+  const result = JSON.stringify(checkReady(rep));
+  db.prepare(`UPDATE arrest_reports SET statut = 'en_attente', calc_result = ?, calc_input_police = calc_input, calc_result_police = ?,
+    depose_at = datetime('now'), renvoi_motif = '', updated_at = datetime('now') WHERE id = ?`).run(result, result, id);
+  const { nbChefs, amende } = JSON.parse(result);
+  logAction(req.user, 'Rapport déposé pour jugement', 'report', id, rep.numero,
+    [suspectLabel(rep), `${nbChefs} chef(s)`, `amende ${formatDollars(amende)}`].filter(Boolean).join(' · '));
+  res.json(loadReport(id, req.user));
+});
+
+// Le magistrat ajuste le calcul et l'avocat d'un rapport en attente ; faits, photos et suspect restent ceux de la police
+r.put('/:id/jugement', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const rep = loadReport(id, req.user);
+  if (rep.statut !== 'en_attente') fail(400, "Ce rapport n'est pas en attente de jugement");
+  const b = req.body ?? {};
+  const fields = {};
+  if (b.avocat_id !== undefined) fields.avocat_id = cleanAvocatId(b.avocat_id);
+  if (b.calc_input !== undefined) {
+    const calcInput = cleanCalcInput(b.calc_input);
+    fields.calc_input = JSON.stringify(calcInput);
+    fields.calc_result = JSON.stringify(compute(calcInput, getCode));
+  }
+  updateRow('arrest_reports', id, fields);
+  const before = rep.calc_result?.amende ?? 0;
+  const after = fields.calc_result ? JSON.parse(fields.calc_result).amende : before;
+  logAction(req.user, 'Jugement modifié', 'report', id, rep.numero, after !== before ? `Amende : ${formatDollars(before)} → ${formatDollars(after)}` : '');
+  res.json(loadReport(id, req.user));
+});
+
+// Jugement rendu : versé au casier, mandats clos, objets saisis mis sous scellés
+r.post('/:id/finalize', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const rep = loadReport(id, req.user);
+  if (rep.statut !== 'en_attente') fail(400, 'Seul un rapport en attente de jugement peut être finalisé');
+  const result = checkReady(rep);
   const closeIds = (Array.isArray(req.body?.close_warrants) ? req.body.close_warrants : []).map(Number).filter(Number.isInteger);
   transaction(() => {
-    db.prepare(`UPDATE arrest_reports SET statut = 'finalise', calc_result = ?, finalized_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`)
-      .run(JSON.stringify(result), id);
+    db.prepare(`UPDATE arrest_reports SET statut = 'finalise', calc_result = ?, juge_id = ?, finalized_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`)
+      .run(JSON.stringify(result), req.user.id, id);
     const close = db.prepare(`UPDATE warrants SET statut = 'clos', closed_at = datetime('now'), closed_by = ?, updated_at = datetime('now')
       WHERE id = ? AND citizen_id = ? AND statut = 'actif'`);
     const closed = closeIds.reduce((n, wid) => n + close.run(req.user.id, wid, rep.citizen_id).changes, 0);
     sealSeizedObjects(req.user, rep);
     logAction(req.user, "Rapport d'arrestation finalisé", 'report', id, rep.numero, [
-      `${[rep.suspect.prenom, rep.suspect.nom].filter(Boolean).join(' ')}`,
-      `${result.nbChefs} chef(s)`, `amende ${formatDollars(result.amende)}`,
+      suspectLabel(rep), `${result.nbChefs} chef(s)`, `amende ${formatDollars(result.amende)}`,
       closed && `${closed} mandat(s) clos`,
     ].filter(Boolean).join(' · '));
   });
   res.json(loadReport(id, req.user));
 });
 
-r.post('/:id/reopen', (req, res) => {
-  if (!hasRole(req.user, 'superviseur')) fail(403, 'Droits insuffisants');
+// Dossier incomplet : retour à l'agent avec un motif
+r.post('/:id/send-back', requireJudge, (req, res) => {
+  const id = intParam(req.params.id);
+  const motif = str(req.body?.motif);
+  if (!motif) fail(400, 'Indiquez le motif du renvoi');
+  const rep = loadReport(id, req.user);
+  if (rep.statut !== 'en_attente') fail(400, "Ce rapport n'est pas en attente de jugement");
+  db.prepare(`UPDATE arrest_reports SET statut = 'brouillon', renvoi_motif = ?, depose_at = NULL, updated_at = datetime('now') WHERE id = ?`).run(motif, id);
+  logAction(req.user, "Rapport renvoyé à l'agent", 'report', id, rep.numero, motif);
+  res.json(loadReport(id, req.user));
+});
+
+// Réouverture d'un rapport jugé : retiré du casier, de nouveau en attente de jugement
+r.post('/:id/reopen', requireJudge, (req, res) => {
   const id = intParam(req.params.id);
   const rep = db.prepare('SELECT numero FROM arrest_reports WHERE id = ?').get(id);
-  const { changes } = db.prepare(`UPDATE arrest_reports SET statut = 'brouillon', finalized_at = NULL, updated_at = datetime('now') WHERE id = ? AND statut = 'finalise'`)
-    .run(id);
+  const { changes } = db.prepare(`UPDATE arrest_reports SET statut = 'en_attente', finalized_at = NULL, juge_id = NULL, updated_at = datetime('now')
+    WHERE id = ? AND statut = 'finalise'`).run(id);
   if (!changes) fail(404, 'Rapport introuvable ou non finalisé');
-  logAction(req.user, "Rapport d'arrestation rouvert", 'report', id, rep.numero, 'Retiré du casier jusqu’à sa nouvelle finalisation');
+  logAction(req.user, "Rapport d'arrestation rouvert", 'report', id, rep.numero, 'Retiré du casier, de nouveau en attente de jugement');
   res.json({ ok: true });
 });
 
+// Un brouillon se supprime par son rédacteur ou un superviseur ; un rapport déposé ou jugé, par un administrateur seulement
+const STATUT_LABELS = { brouillon: 'Brouillon', en_attente: 'En attente de jugement', finalise: 'Rapport finalisé' };
 r.delete('/:id', (req, res) => {
   const id = intParam(req.params.id);
   const rep = loadReport(id, req.user);
-  if (!hasRole(req.user, 'superviseur') && !(rep.statut === 'brouillon' && rep.redacteur_id === req.user.id)) fail(403, 'Droits insuffisants');
+  if (!(rep.statut === 'brouillon' ? rep.can_edit : hasRole(req.user, 'admin'))) fail(403, 'Droits insuffisants');
   db.prepare('DELETE FROM arrest_reports WHERE id = ?').run(id);
-  logAction(req.user, "Rapport d'arrestation supprimé", 'report', id, rep.numero,
-    [rep.statut === 'finalise' ? 'Rapport finalisé' : 'Brouillon', [rep.suspect.prenom, rep.suspect.nom].filter(Boolean).join(' ')].filter(Boolean).join(' · '));
+  logAction(req.user, "Rapport d'arrestation supprimé", 'report', id, rep.numero, [STATUT_LABELS[rep.statut], suspectLabel(rep)].filter(Boolean).join(' · '));
   res.json({ ok: true });
 });
 

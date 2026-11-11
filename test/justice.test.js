@@ -80,3 +80,67 @@ test('comptes justice : fonction contrôlée, site public refusé', async () => 
   assert.notEqual(siteAuth.find('A1'), null);
 });
 
+
+// Rapport prêt à déposer : suspect fiché et un chef d'accusation
+const chargesInitiales = { charges: [{ code_id: 1, quantite: 1 }] };
+async function rapportPret(user) {
+  const { id: citizen_id } = (await req('POST', '/citizens', user, { nom: 'Doe', prenom: 'John' })).body;
+  return (await req('POST', '/reports', user, { citizen_id, calc_input: chargesInitiales })).body.id;
+}
+
+test("circuit : dépôt par l'agent, finalisation par le magistrat seulement", async () => {
+  const id = await rapportPret(agent);
+  assert.equal((await req('POST', `/reports/${id}/finalize`, agent)).status, 403);
+  assert.equal((await req('POST', `/reports/${id}/submit`, agent)).status, 200);
+  assert.equal((await req('PUT', `/reports/${id}`, agent, { faits: 'x' })).status, 403);
+  assert.equal((await req('PUT', `/reports/${id}`, superviseur, { faits: 'x' })).status, 403);
+  assert.equal((await req('POST', `/reports/${id}/finalize`, superviseur)).status, 403);
+  assert.equal((await req('PUT', `/reports/${id}/jugement`, superviseur, { calc_input: { charges: [] } })).status, 403);
+  await req('PUT', `/reports/${id}/jugement`, magistrat, { calc_input: { charges: [] } });
+  assert.equal((await req('POST', `/reports/${id}/finalize`, magistrat)).status, 400, 'aucun chef après jugement');
+  await req('PUT', `/reports/${id}/jugement`, magistrat, { calc_input: chargesInitiales });
+  const ok = (await req('POST', `/reports/${id}/finalize`, magistrat)).body;
+  assert.equal(ok.statut, 'finalise');
+  assert.equal(ok.juge.matricule, 'J1');
+  assert.ok(ok.calc_result_police, 'calcul police conservé');
+  assert.equal((await req('POST', `/reports/${id}/finalize`, magistrat)).status, 400, 'déjà finalisé');
+});
+
+test('renvoi et réouverture', async () => {
+  const id = await rapportPret(agent);
+  await req('POST', `/reports/${id}/submit`, agent);
+  assert.equal((await req('POST', `/reports/${id}/send-back`, magistrat, {})).status, 400);
+  const back = (await req('POST', `/reports/${id}/send-back`, magistrat, { motif: 'Faits incomplets' })).body;
+  assert.equal(back.statut, 'brouillon');
+  assert.equal(back.renvoi_motif, 'Faits incomplets');
+  assert.equal((await req('PUT', `/reports/${id}`, agent, { faits: 'Complétés' })).status, 200, "l'agent corrige");
+  await req('POST', `/reports/${id}/submit`, agent);
+  await req('POST', `/reports/${id}/finalize`, admin);
+  assert.equal((await req('POST', `/reports/${id}/reopen`, superviseur)).status, 403);
+  assert.equal((await req('POST', `/reports/${id}/reopen`, magistrat)).status, 200);
+  assert.equal((await req('GET', `/reports/${id}`, magistrat)).body.statut, 'en_attente');
+  assert.equal((await req('DELETE', `/reports/${id}`, superviseur)).status, 403, 'un rapport déposé ne se supprime que par un admin');
+});
+
+test('avocat rattaché : accès à son dossier seulement', async () => {
+  const id = await rapportPret(agent);
+  await req('PUT', `/reports/${id}`, agent, { avocat_id: avocat });
+  assert.equal((await req('GET', `/reports/${id}`, avocat)).status, 200);
+  assert.equal((await req('GET', `/reports/${id}`, avocat2)).status, 403);
+  assert.equal((await req('PUT', `/reports/${id}`, agent, { avocat_id: agent })).status, 400);
+  assert.deepEqual((await req('GET', '/justice/mes-dossiers', avocat)).body.reports.map(r => r.id), [id]);
+  assert.equal((await req('GET', `/reports/${id}`, agent)).body.avocat.matricule, 'L1');
+});
+
+test('liste des rapports en attente, du plus ancien au plus récent', async () => {
+  const a = await rapportPret(agent);
+  const b = await rapportPret(agent);
+  await req('POST', `/reports/${b}/submit`, agent);
+  db.prepare(`UPDATE arrest_reports SET depose_at = '2026-01-02 10:00:00' WHERE id = ?`).run(b);
+  await req('POST', `/reports/${a}/submit`, agent);
+  db.prepare(`UPDATE arrest_reports SET depose_at = '2026-01-01 10:00:00' WHERE id = ?`).run(a);
+  const list = (await req('GET', '/reports?statut=en_attente', magistrat)).body;
+  assert.ok(list.every(r => r.statut === 'en_attente'), 'filtre sur en_attente');
+  const ids = list.map(r => r.id);
+  assert.ok(ids.includes(a) && ids.indexOf(a) < ids.indexOf(b));
+});
