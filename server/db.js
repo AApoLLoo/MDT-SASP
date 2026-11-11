@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   nom TEXT NOT NULL DEFAULT '',
   prenom TEXT NOT NULL DEFAULT '',
   grade TEXT NOT NULL DEFAULT '',
-  role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('agent', 'superviseur', 'etat_major', 'admin')),
+  role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('agent', 'superviseur', 'etat_major', 'admin', 'magistrat', 'avocat')),
   password_hash TEXT NOT NULL,
   actif INTEGER NOT NULL DEFAULT 1,
   photo_url TEXT NOT NULL DEFAULT '',
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS arrest_reports (
   photos TEXT NOT NULL DEFAULT '{}',
   calc_input TEXT NOT NULL DEFAULT '{}',
   calc_result TEXT,
-  statut TEXT NOT NULL DEFAULT 'brouillon' CHECK (statut IN ('brouillon', 'finalise')),
+  statut TEXT NOT NULL DEFAULT 'brouillon' CHECK (statut IN ('brouillon', 'en_attente', 'finalise')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   finalized_at TEXT
@@ -389,6 +389,49 @@ if (db.prepare('PRAGMA user_version').get().user_version < 5) {
     db.exec(`UPDATE users SET tuteurs = '[]' WHERE tuteurs <> '[]' AND grade NOT LIKE '%rookie%'`);
     db.exec('PRAGMA user_version = 5');
   });
+}
+
+// Accès justice : avocat rattaché, calcul proposé par la police, jugement, blanchiment (rapports) ; avocats (plaintes)
+ensureColumns('arrest_reports', {
+  avocat_id: 'INTEGER REFERENCES users(id)',
+  calc_input_police: 'TEXT',
+  calc_result_police: 'TEXT',
+  depose_at: 'TEXT',
+  juge_id: 'INTEGER REFERENCES users(id)',
+  renvoi_motif: "TEXT NOT NULL DEFAULT ''",
+  blanchi_at: 'TEXT',
+  blanchi_par: 'INTEGER REFERENCES users(id)',
+  blanchi_motif: "TEXT NOT NULL DEFAULT ''",
+});
+ensureColumns('complaints', { avocat_ids: "TEXT NOT NULL DEFAULT '[]'" });
+
+// v6 : rôles magistrat et avocat, statut « en attente de jugement ». Même technique que la v4 : chaque table est
+// reconstruite d'après sa définition enregistrée, clés étrangères suspendues ; l'index des rapports est recréé
+if (db.prepare('PRAGMA user_version').get().user_version < 6) {
+  const checks = [
+    ['users', /CHECK \(role IN \([^)]*\)\)/, `CHECK (role IN ('agent', 'superviseur', 'etat_major', 'admin', 'magistrat', 'avocat'))`],
+    ['arrest_reports', /CHECK \(statut IN \([^)]*\)\)/, `CHECK (statut IN ('brouillon', 'en_attente', 'finalise'))`],
+  ];
+  db.exec('PRAGMA foreign_keys = OFF');
+  try {
+    transaction(() => {
+      for (const [table, pattern, check] of checks) {
+        const { sql } = db.prepare(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?`).get(table);
+        const rebuilt = sql.replace(pattern, check);
+        if (rebuilt === sql) continue;
+        db.exec(`
+          ${rebuilt.replace(new RegExp(`^CREATE TABLE "?${table}"?`), `CREATE TABLE ${table}_v6`)};
+          INSERT INTO ${table}_v6 SELECT * FROM ${table};
+          DROP TABLE ${table};
+          ALTER TABLE ${table}_v6 RENAME TO ${table};
+        `);
+      }
+      db.exec('CREATE INDEX IF NOT EXISTS idx_reports_citizen ON arrest_reports(citizen_id)');
+      db.exec('PRAGMA user_version = 6');
+    });
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
+  }
 }
 
 ensureColumns('patrol_units', { poste: "TEXT NOT NULL DEFAULT ''" });

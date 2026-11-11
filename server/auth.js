@@ -26,6 +26,16 @@ export function checkPassword(password) {
 
 export const hasRole = (user, role) => ROLES.indexOf(user?.role) >= ROLES.indexOf(role);
 
+// Comptes justice : hors de la hiérarchie police (hasRole(magistrat, 'agent') est faux, ils n'héritent de rien)
+export const JUSTICE_ROLES = ['magistrat', 'avocat'];
+export const ALL_ROLES = [...ROLES, ...JUSTICE_ROLES];
+// Fonction affichée, portée par la colonne grade
+export const JUSTICE_FONCTIONS = { magistrat: ['Procureur', 'Juge'], avocat: ['Avocat'] };
+export const isJustice = user => JUSTICE_ROLES.includes(user?.role);
+// Juger, finaliser, rouvrir, blanchir : magistrats et administrateurs
+export const canJudge = user => user?.role === 'magistrat' || hasRole(user, 'admin');
+export const requireJudge = (req, res, next) => (canJudge(req.user) ? next() : res.status(403).json({ error: 'Réservé aux magistrats' }));
+
 function readCookie(req) {
   for (const part of (req.headers.cookie || '').split(';')) {
     const [name, value] = part.trim().split('=');
