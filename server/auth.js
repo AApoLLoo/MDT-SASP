@@ -4,8 +4,8 @@ import { db, parseJson } from './db.js';
 import { fail, str } from './util.js';
 
 const COOKIE = 'mdt_session';
-const SESSION_MS = 7 * 24 * 3600 * 1000;
-const RENEW_AFTER_MS = 24 * 3600 * 1000;
+// Session fixe de 12 h, jamais prolongée : passé ce délai, l'agent se reconnecte avec son matricule et son mot de passe
+const SESSION_MS = 12 * 3600 * 1000;
 // Dans l'ordre hiérarchique : chaque rôle a les droits des précédents (hasRole)
 export const ROLES = ['agent', 'superviseur', 'etat_major', 'admin'];
 
@@ -56,11 +56,6 @@ export function authenticate(req, res, next) {
       FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token = ? AND u.actif = 1`).get(token);
     if (row && row.expires_at > Date.now()) {
-      // Session glissante : prolongée au plus une fois par jour
-      if (row.expires_at - Date.now() < SESSION_MS - RENEW_AFTER_MS) {
-        db.prepare('UPDATE sessions SET expires_at = ? WHERE token = ?').run(Date.now() + SESSION_MS, token);
-        setSessionCookie(req, res, token);
-      }
       const { expires_at, ...user } = row;
       req.user = { ...user, divisions: parseJson(user.divisions, []), qualifications: parseJson(user.qualifications, []) };
       req.sessionToken = token;
