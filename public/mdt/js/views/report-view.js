@@ -123,7 +123,7 @@ export async function render(main, [id]) {
     ${rep.statut === 'en_attente' ? html`<div class="alert alert-info no-print">En attente de jugement depuis le ${fmtDateTime(rep.depose_at)} : le rapport n'est pas encore versé au casier.</div>` : ''}
     ${rep.blanchi_at ? html`<div class="alert alert-warn no-print"><strong>Condamnation blanchie le ${fmtDateTime(rep.blanchi_at)}</strong><small>${rep.blanchi_motif}</small></div>` : ''}
 
-    <article class="paper">
+    <article class="paper${rep.statut === 'brouillon' ? ' is-draft' : ''}" data-stamp="${{ finalise: rep.blanchi_at ? 'Blanchi' : 'Jugé', en_attente: 'En attente' }[rep.statut] ?? ''}">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Rapport d'arrestation</h1>
       <p class="paper-sub">N° ${rep.numero}${copyBtn(rep.numero)}${{ brouillon: ' · BROUILLON', en_attente: ' · EN ATTENTE DE JUGEMENT' }[rep.statut] ?? ''}</p>

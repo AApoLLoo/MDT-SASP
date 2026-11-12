@@ -1,4 +1,19 @@
   <footer class="footer">
+    <section class="cta-band" aria-labelledby="cta-title">
+      <div class="wrap">
+        <div class="cta-band__card">
+          <div>
+            <p class="cta-band__kicker">Besoin de la SASP ?</p>
+            <h2 id="cta-title" class="cta-band__title">Une démarche, une question, une vocation&nbsp;?</h2>
+            <p class="cta-band__text">Rendez-vous, signalement ou candidature : tout se fait en ligne, sans compte.</p>
+          </div>
+          <div class="cta-band__actions">
+            <a class="btn btn--gold btn--lg" href="/contact" data-magnetic>Déposer une demande</a>
+            <a class="btn btn--outline-light btn--lg" href="/#postuler">Rejoindre la SASP</a>
+          </div>
+        </div>
+      </div>
+    </section>
     <div class="wrap footer__inner">
       <div class="footer__about">
         <p class="footer__brand">
@@ -7,6 +22,7 @@
         </p>
         <p>Assurer la sécurité de tous, sur l'ensemble de l'État de San Andreas.</p>
         <p class="footer__emergency">Urgence : composez le <strong>911</strong></p>
+        <p class="footer__status"><span class="footer__dot" aria-hidden="true"></span>Centrale opérationnelle 24&nbsp;h/24, 7&nbsp;j/7</p>
       </div>
       <nav class="footer__col" aria-label="Services">
         <h2>Services</h2>
@@ -34,9 +50,13 @@
     <div class="footer__bottom">
       <div class="wrap footer__bottom-inner">
         <p>© {{year}} État de San Andreas — San Andreas State Police, Département de la Sécurité publique.</p>
-        <a href="/mentions-legales">Mentions légales &amp; confidentialité</a>
+        <div class="footer__bottom-links">
+          <a href="/mentions-legales">Mentions légales &amp; confidentialité</a>
+          <a class="footer__top" href="#">Haut de page <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></a>
+        </div>
       </div>
     </div>
+    <p class="footer__wordmark" aria-hidden="true">SASP</p>
   </footer>
 </body>
 </html>

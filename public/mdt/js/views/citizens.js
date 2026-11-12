@@ -102,12 +102,22 @@ export async function renderDetail(main, [id]) {
   const unpaid = c.tickets.filter(t => t.statut === 'impayee').reduce((s, t) => s + t.montant, 0);
 
   mount(main, html`
+    <a href="#/casiers" class="back">${icon('back')} Casiers</a>
     <div class="page-head">
-      <div>
-        <a href="#/casiers" class="back">${icon('back')} Casiers</a>
-        <h1>${casier.length ? 'Casier' : 'Fiche'} de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
-        <p class="muted">${[c.alias && `dit « ${c.alias} »`, c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}
-          ${c.id_unique ? copyBtn(c.id_unique) : ''}${c.affiliation ? html` <span class="badge badge-warn">${c.affiliation}</span>` : ''}</p>
+      <div class="id-card ${actifs.length ? 'is-wanted' : ''}">
+        ${c.photo_url ? html`<img class="id-card-photo" src="${c.photo_url}" alt="Photo d'identité">`
+          : html`<div class="id-card-photo is-empty" aria-hidden="true">${[c.prenom, c.nom].filter(Boolean).map(s => s[0]).join('').toUpperCase()}</div>`}
+        <div class="id-card-body">
+          <small class="id-card-kicker">State of San Andreas · ${casier.length ? 'Casier judiciaire' : "Fiche d'identité"}</small>
+          <h1>${casier.length ? 'Casier' : 'Fiche'} de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
+          <dl class="id-card-fields">
+            <div><dt>ID unique</dt><dd class="mono">${c.id_unique || '—'}${copyBtn(c.id_unique)}</dd></div>
+            <div><dt>Naissance</dt><dd>${fmtDate(c.date_naissance)}</dd></div>
+            <div><dt>Téléphone</dt><dd class="mono">${c.telephone || '—'}</dd></div>
+            ${c.alias ? html`<div><dt>Alias</dt><dd>« ${c.alias} »</dd></div>` : ''}
+            ${c.affiliation ? html`<div><dt>Affiliation</dt><dd><span class="badge badge-warn">${c.affiliation}</span></dd></div>` : ''}
+          </dl>
+        </div>
       </div>
       <div class="actions">
         ${justice ? '' : html`<a class="btn btn-primary" href="#/rapports/nouveau?citoyen=${c.id}">${icon('report')} Nouveau rapport d'arrestation</a>`}

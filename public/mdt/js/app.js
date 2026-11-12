@@ -272,6 +272,20 @@ function initLite() {
   document.body.classList.toggle('lite', !gl || /swiftshader|basic render|llvmpipe|software/i.test(renderer));
 }
 
+// Densité : compact (lignes serrées, écran de bureau) ou confortable (par défaut, lisible en jeu)
+const COMPACT_KEY = 'mdt-compact';
+
+function initCompact() {
+  try { document.body.classList.toggle('compact', localStorage.getItem(COMPACT_KEY) === '1'); } catch { /* stockage indisponible : confortable */ }
+}
+
+function updateCompactButton() {
+  const btn = $('[data-compact]');
+  const compact = document.body.classList.contains('compact');
+  btn.setAttribute('aria-pressed', compact);
+  btn.title = compact ? 'Affichage compact : cliquer pour un affichage plus aéré' : 'Affichage confortable : cliquer pour un affichage compact';
+}
+
 function updateClock() {
   const el = $('[data-clock]');
   if (!el) return;
@@ -311,6 +325,7 @@ async function showApp() {
           <div class="topbar-user">
             <a class="user-label" href="#/${isJustice() ? 'profil' : `agents/${state.user.id}`}" title="Mon profil" data-user-label></a>
             <a class="btn btn-sm btn-ghost" href="/" title="Site public">${icon('back')}</a>
+            <button type="button" class="btn btn-sm btn-ghost" data-compact>${icon('rows')}</button>
             <button type="button" class="btn btn-sm btn-ghost" data-lite>${icon('zap')}</button>
             <button type="button" class="btn btn-sm btn-ghost" data-logout title="Déconnexion">${icon('logout')}</button>
           </div>
@@ -322,7 +337,15 @@ async function showApp() {
   updateUserLabel();
   updateClock();
   updateLiteButton();
+  updateCompactButton();
   if (!isAvocat()) globalSearch($('[data-global-search]'));
+
+  $('[data-compact]').addEventListener('click', () => {
+    const compact = document.body.classList.toggle('compact');
+    try { localStorage.setItem(COMPACT_KEY, compact ? '1' : '0'); } catch { /* préférence non mémorisée */ }
+    updateCompactButton();
+    toast(compact ? 'Affichage compact' : 'Affichage confortable');
+  });
 
   $('[data-lite]').addEventListener('click', () => {
     const lite = document.body.classList.toggle('lite');
@@ -370,7 +393,8 @@ async function route() {
   $('#app').replaceChildren(container);
   window.scrollTo(0, 0);
   if (!view) return mount(container, html`<div class="empty-state">Page introuvable. <a href="#/">Retour au tableau de bord</a></div>`);
-  mount(container, html`<div class="skeleton" aria-busy="true" aria-label="Chargement…"><i></i><i></i><i></i><i></i></div>`);
+  // Squelette à la forme d'une page : titre, barre d'outils, tableau
+  mount(container, html`<div class="skeleton" aria-busy="true" aria-label="Chargement…"><i></i><i></i><i></i><div class="skeleton-card">${Array.from({ length: 6 }, () => html`<i></i>`)}</div></div>`);
   try {
     await view(container, params, query);
     countUp(container);
@@ -476,8 +500,17 @@ document.addEventListener('click', async e => {
   e.preventDefault();
   e.stopPropagation();
   const text = btn.dataset.copyText;
-  if (await copyText(text)) toast(`« ${text} » copié`);
-  else toast('Copie impossible : sélectionnez le texte et faites Ctrl+C', 'error');
+  if (!(await copyText(text))) {
+    toast('Copie impossible : sélectionnez le texte et faites Ctrl+C', 'error');
+    return;
+  }
+  toast(`« ${text} » copié`);
+  // L'icône passe brièvement en coche
+  if (btn.classList.contains('is-done')) return;
+  const before = btn.innerHTML;
+  mount(btn, icon('check'));
+  btn.classList.add('is-done');
+  setTimeout(() => { btn.innerHTML = before; btn.classList.remove('is-done'); }, 1200);
 }, true);
 
 // Clé de tri d'une cellule : date JJ/MM/AAAA [HH:MM], nombre ou montant, sinon texte
@@ -549,6 +582,7 @@ async function waitForTab() {
 }
 
 initLite();
+initCompact();
 const resumeAmbient = startAmbient($('#ambient'), $('.backdrop'));
 setUnauthorizedHandler(showLogin);
 setSessionExpiredHandler(promptRelogin);

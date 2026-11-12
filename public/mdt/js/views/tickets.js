@@ -143,6 +143,7 @@ const discordText = t => joinLines([
 export function openTicket(t, onChange = () => {}) {
   const justice = isJustice();
   const dialog = openModal(`Amende ${t.numero}`, html`
+    ${t.statut === 'payee' ? html`<span class="stamp" aria-hidden="true">Réglée</span>` : ''}
     <p>${copyBtn(t.numero)} ${ticketBadge(t.statut)} <strong>${fullName({ nom: t.citizen_nom, prenom: t.citizen_prenom })}</strong>
       ${t.citizen_id ? html` · <a href="#/casiers/${t.citizen_id}" data-close>Voir la fiche</a>` : ''}</p>
     <p class="muted">${[fmtDate(t.date_faits) + (t.heure ? ` à ${t.heure}` : ''), t.lieu, t.plaque && `Plaque ${t.plaque}`, `Agent 『${t.agent_matricule}』`].filter(Boolean).join(' · ')}</p>
@@ -202,13 +203,13 @@ export async function render(main, params, query) {
         <td>${ticketBadge(t.statut)}</td>
         <td class="nowrap">${fmtDateTime(t.created_at)}<small class="muted block">『${t.agent_matricule}』</small></td></tr>`)}</tbody></table>
       ${moreButton(list.length, limit)}`
-      : html`<p class="empty-state">Aucune amende.</p>`);
+      : html`<p class="empty-state">Aucune amende.${isJustice() ? '' : html` <button type="button" class="btn btn-sm" data-new>${icon('plus')} Dresser une amende</button>`}</p>`);
   };
 
   const reload = () => attempt(load);
   $('[data-q]', main).addEventListener('input', debounce(() => { limit = PAGE; reload(); }));
-  $('[data-new]', main)?.addEventListener('click', () => attempt(() => openTicketForm({}, reload)));
   main.addEventListener('click', e => {
+    if (e.target.closest('[data-new]')) { attempt(() => openTicketForm({}, reload)); return; }
     if (e.target.closest('[data-more]')) { limit += PAGE; reload(); return; }
     const t = list.find(x => x.id === Number(e.target.closest('tr[data-id]')?.dataset.id));
     if (t) openTicket(t, reload);

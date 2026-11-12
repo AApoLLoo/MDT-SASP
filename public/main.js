@@ -139,6 +139,101 @@ if (!reduceMotion && finePointer) {
   }
 }
 
+// --- Power saving: looping animations (beacons, ticker, 911 border) pause while their block is off screen
+const offscreen = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("is-offscreen", !e.isIntersecting)));
+document.querySelectorAll(".hero, .page-hero, .urgent, .ticker, .notfound").forEach((el) => offscreen.observe(el));
+
+// --- Hero: lightbar beams and haze drawn by a small WebGL shader.
+// Cheap by design: half resolution, 30 fps cap, stopped off screen, in background tabs and on Save-Data.
+// Without WebGL (or with reduced motion) the CSS beams stay.
+const BEAMS_FRAG = `
+precision mediump float;
+uniform vec2 r;
+uniform float t;
+float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h(i), h(i + vec2(1.0, 0.0)), f.x), mix(h(i + vec2(0.0, 1.0)), h(i + 1.0), f.x), f.y);
+}
+float beam(vec2 p, vec2 o, float ang, float w) {
+  vec2 d = p - o;
+  float a = atan(d.y, d.x) - ang;
+  return exp(-a * a / (w * w)) * exp(-length(d) * 0.55);
+}
+void main() {
+  float ax = r.x / r.y;
+  vec2 p = gl_FragCoord.xy / r.y;
+  float haze = n(p * 3.0 + vec2(t * 0.05, t * 0.02)) * 0.6 + n(p * 7.0 - t * 0.04) * 0.4;
+  float s = 0.5 + 0.5 * sin(t * 1.85);
+  float red = beam(p, vec2(0.0, 1.0), -0.6 + 0.12 * sin(t * 0.9), 0.28) * (0.2 + 0.8 * s);
+  float blue = beam(p, vec2(ax, 1.0), -2.54 + 0.12 * sin(t * 0.9 + 1.0), 0.28) * (0.2 + 0.8 * (1.0 - s));
+  vec3 col = (vec3(1.0, 0.23, 0.28) * red + vec3(0.18, 0.42, 1.0) * blue) * (0.45 + 0.75 * haze) * 0.9;
+  gl_FragColor = vec4(col, max(col.r, max(col.g, col.b)));
+}`;
+
+function heroShader(hero) {
+  const host = hero.querySelector(".hero__lights");
+  if (!host || navigator.connection?.saveData) return;
+  const canvas = document.createElement("canvas");
+  canvas.setAttribute("aria-hidden", "true");
+  const gl = canvas.getContext("webgl", { antialias: false, depth: false, powerPreference: "low-power" });
+  if (!gl) return;
+  const shader = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const prog = gl.createProgram();
+  try {
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, "attribute vec2 v; void main() { gl_Position = vec4(v, 0.0, 1.0); }"));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, BEAMS_FRAG));
+    gl.bindAttribLocation(prog, 0, "v");
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  } catch (err) {
+    console.warn("Shader du hero indisponible, faisceaux CSS conservés :", err.message);
+    return;
+  }
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); // one triangle covers the screen
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const uRes = gl.getUniformLocation(prog, "r");
+  const uTime = gl.getUniformLocation(prog, "t");
+
+  const SCALE = 0.5; // soft glow: half resolution is invisible and 4x cheaper
+  const MAX_WIDTH = 960;
+  new ResizeObserver(() => {
+    canvas.width = Math.min(Math.round(host.clientWidth * SCALE), MAX_WIDTH);
+    canvas.height = Math.round(canvas.width * host.clientHeight / Math.max(host.clientWidth, 1));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+  }).observe(host);
+
+  let visible = false;
+  let last = 0;
+  const frame = (now) => {
+    if (!visible) return;
+    requestAnimationFrame(frame);
+    if (now - last < 1000 / 30) return;
+    last = now;
+    gl.uniform1f(uTime, now / 1000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+  new IntersectionObserver(([e]) => {
+    const was = visible;
+    visible = e.isIntersecting;
+    if (visible && !was) requestAnimationFrame(frame);
+  }).observe(hero);
+  host.append(canvas);
+  hero.classList.add("has-shader");
+}
+if (!reduceMotion) document.querySelectorAll(".hero").forEach(heroShader);
+
 // --- News filters (cards are rendered by the server)
 const newsRoot = document.querySelector("[data-news]");
 if (newsRoot) {

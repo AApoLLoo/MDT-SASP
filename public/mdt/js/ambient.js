@@ -5,8 +5,35 @@
 import { debounce } from './dom.js';
 
 const FPS = 30;
+const IDLE_MS = 60000;
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = list => list[Math.floor(Math.random() * list.length)];
+
+// Vues de Los Santos en fond : une au hasard au chargement, puis une autre au hasard toutes les ROTATE_MS, en fondu.
+// Le fondu force le flou du verre à se recalculer pendant 2,5 s : rare, donc peu coûteux. Rien ne change onglet masqué.
+const PHOTOS = ['los-santos.jpg', 'Los-Santos2.jpg', 'Los-Santos3.jpg', 'Los-Santos4.jpg', 'Los-Santos5.jpg'];
+const ROTATE_MS = 90000;
+const photoUrl = name => `url("${new URL(`img/${name}`, location.href).href}")`;
+
+function rotateBackdrop(el) {
+  let current = pick(PHOTOS);
+  let onB = false; // photo visible : couche B (::before) ou A (l'élément)
+  el.style.setProperty('--photo-a', photoUrl(current));
+  setInterval(() => {
+    if (document.hidden) return;
+    const next = pick(PHOTOS.filter(p => p !== current));
+    const img = new Image();
+    // Affichée seulement une fois chargée : pas de fondu vers une image vide
+    img.onload = () => {
+      current = next;
+      el.style.setProperty(onB ? '--photo-a' : '--photo-b', photoUrl(next));
+      onB = !onB;
+      el.classList.toggle('show-b', onB);
+    };
+    img.onerror = () => console.warn(`Fond introuvable : img/${next}`);
+    img.src = `img/${next}`;
+  }, ROTATE_MS);
+}
 
 // Halo pré-rendu une fois par couleur, ensuite simplement redimensionné
 function sprite(rgb) {
@@ -27,9 +54,12 @@ const BOKEH_COLORS = ['blue', 'blue', 'sky', 'sky', 'gold', 'red'];
 export function startAmbient(canvas, photo) {
   const ctx = canvas.getContext('2d');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  rotateBackdrop(photo);
   const par = { x: 0, y: 0, tx: 0, ty: 0 }; // parallaxe du pointeur, de -0.5 à 0.5
   let w, h, bokeh, dust;
   let flash = null, nextFlash = 4000, last = 0;
+  let running = false;
+  let lastActivity = performance.now();
 
   function seed() {
     bokeh = Array.from({ length: Math.round((w * h) / 60000) }, () => ({
@@ -90,25 +120,28 @@ export function startAmbient(canvas, photo) {
     w = canvas.width = innerWidth;
     h = canvas.height = innerHeight;
     seed();
-    if (still) draw(0);
+    if (!running) draw(last); // boucle à l'arrêt : on redessine une image fixe
   }
 
   addEventListener('resize', debounce(resize, 200));
   addEventListener('pointermove', e => { par.tx = e.clientX / w - 0.5; par.ty = e.clientY / h - 0.5; }, { passive: true });
   resize();
-  let running = false;
+  // Économie : la boucle s'arrête quand l'agent ne touche plus au MDT depuis IDLE_MS
+  // ou quand la fenêtre perd le focus (jeu au premier plan) ; elle repart au moindre geste
   const loop = t => {
-    if (document.body.classList.contains('lite')) { running = false; return; }
+    if (document.body.classList.contains('lite') || !document.hasFocus() || t - lastActivity > IDLE_MS) { running = false; return; }
     requestAnimationFrame(loop);
     if (t - last < 1000 / FPS) return;
     last = t;
     draw(t);
   };
   const resume = () => {
+    lastActivity = performance.now();
     if (still || running) return;
     running = true;
     requestAnimationFrame(loop);
   };
+  for (const type of ['pointermove', 'pointerdown', 'keydown', 'wheel', 'focus']) addEventListener(type, resume, { passive: true });
   resume();
   return resume;
 }

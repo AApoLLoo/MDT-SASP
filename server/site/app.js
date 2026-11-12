@@ -318,7 +318,7 @@ const createHandler = (config) => {
         divisions: divisionList(divisions), formations: formationDomains(), formationsCount: formationsCount(qualifications.length),
       });
     },
-    "/contact": (res) => sendPage(res, 200, "contact", { title: "Contacter la SASP", description: "Prendre rendez-vous, faire un signalement ou poser une question à la SASP." }),
+    "/contact": (res) => sendPage(res, 200, "contact", { title: "Contacter la SASP", description: "Prendre rendez-vous, faire un signalement ou poser une question à la SASP.", bodyClass: "page-contact" }),
     "/suivi": (res) => sendPage(res, 200, "suivi", { title: "Suivre ma demande — SASP", description: "Consultez la réponse de la SASP avec votre code de suivi." }),
     "/mentions-legales": (res) => sendPage(res, 200, "mentions-legales", { title: "Mentions légales & confidentialité — SASP" }),
     "/agent": (res) => sendPage(res, 200, "agent", {}, PRIVATE),

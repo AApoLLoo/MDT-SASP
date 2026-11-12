@@ -808,3 +808,48 @@ button { font: inherit; }
   .hero__light, .page-hero::before, .page-hero::after { opacity: .45; rotate: none; }
   .ticker__track { animation: none; }
 }
+
+/* Économie : les animations en boucle s'arrêtent tant que leur bloc est hors de l'écran (classe posée par main.js) */
+.is-offscreen, .is-offscreen *, .is-offscreen::before, .is-offscreen::after, .is-offscreen *::before, .is-offscreen *::after { animation-play-state: paused !important; }
+
+/* Hero : faisceaux de gyrophare en shader WebGL (main.js) ; les faisceaux CSS restent en secours */
+.hero__lights canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s var(--ease-out); }
+.hero.has-shader .hero__light { display: none; }
+.hero.has-shader .hero__lights canvas { opacity: 1; }
+
+/* Appel à l'action avant le pied de page */
+.cta-band { padding: clamp(48px, 7vw, 104px) 0 0; }
+.cta-band__card {
+  position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.4fr) auto; align-items: center; gap: 28px 56px;
+  padding: clamp(28px, 4.5vw, 64px); border: 1px solid var(--edge); border-radius: 24px;
+  background:
+    radial-gradient(110% 160% at 100% 0%, rgba(47, 107, 255, .3), transparent 55%),
+    radial-gradient(90% 140% at 0% 100%, rgba(255, 59, 71, .2), transparent 55%),
+    var(--midnight-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 30px 60px -30px rgba(0, 0, 0, .8);
+}
+.cta-band__card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--lightbar); }
+.cta-band__card::after {
+  content: ""; position: absolute; right: -60px; bottom: -90px; z-index: -1; width: 340px; aspect-ratio: 1; opacity: .06; background: var(--gold-light);
+  -webkit-mask: var(--star) center / contain no-repeat; mask: var(--star) center / contain no-repeat;
+}
+.cta-band__kicker { margin: 0 0 10px; font: 600 .9rem/1.2 var(--sans); text-transform: uppercase; letter-spacing: .16em; color: var(--gold-light); }
+.cta-band__title { margin: 0 0 12px; color: var(--white); font-size: clamp(2rem, 4vw, 3.4rem); }
+.cta-band__text { margin: 0; max-width: 52ch; color: var(--on-dark-muted); }
+.cta-band__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 860px) { .cta-band__card { grid-template-columns: 1fr; } }
+.page-contact .cta-band { display: none; }
+
+/* Pied de page : état de la centrale, retour en haut, grand monogramme */
+.footer__status { display: flex; align-items: center; gap: 10px; color: var(--on-dark); }
+.footer__dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #3fb27f; box-shadow: 0 0 0 3px rgba(63, 178, 127, .2), 0 0 10px #3fb27f; }
+.footer__bottom-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
+.footer__top { display: inline-flex; align-items: center; gap: 6px; }
+.footer__top .icon { width: 16px; height: 16px; transition: translate .35s var(--ease-out); }
+.footer__top:hover .icon { translate: 0 -3px; }
+.footer__wordmark {
+  height: .6em; margin: 0; overflow: hidden; text-align: center; user-select: none; pointer-events: none;
+  font: 700 clamp(7rem, 30vw, 26rem)/.8 var(--serif); letter-spacing: .04em;
+  color: transparent; -webkit-text-stroke: 1px rgba(140, 170, 235, .16);
+  background: linear-gradient(180deg, rgba(217, 169, 58, .14), transparent 75%); -webkit-background-clip: text; background-clip: text;
+}

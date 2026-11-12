@@ -51,7 +51,7 @@ export async function render(main) {
         ${stat('Arrestations ce mois', d.stats.rapports_mois, '#/rapports', 'report')}
       </section>
 
-      <section class="card span-2">
+      ${d.moi && html`<section class="card span-2">
         <div class="card-head"><h3>Mon activité ce mois</h3><a href="#/agents/${state.user.id}">Mon profil</a></div>
         <div class="stats stats-4">
           ${stat('Arrestations', d.moi.arrestations, '#/rapports', 'report')}
@@ -59,7 +59,7 @@ export async function render(main) {
           ${stat("Rapports d'incident", d.moi.incidents, '#/incidents', 'incident')}
           ${stat('Plaintes reçues', d.moi.plaintes, '#/plaintes', 'complaint')}
         </div>
-      </section>
+      </section>`}
 
       <section class="card span-2">
         <div class="card-head"><h3>Dernières annonces</h3><a href="#/annonces">Toutes les annonces</a></div>

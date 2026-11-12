@@ -320,7 +320,7 @@ export async function renderView(main, [id]) {
       </div>
     </div>
 
-    <article class="paper">
+    <article class="paper" data-stamp="${{ classee: 'Classée', resolue: 'Résolue' }[c.statut] ?? ''}">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Dépôt de plainte</h1>
       <p class="paper-sub">Procès-verbal N° ${c.numero}${copyBtn(c.numero)}</p>

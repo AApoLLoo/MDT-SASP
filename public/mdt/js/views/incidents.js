@@ -241,7 +241,7 @@ export async function renderView(main, [id]) {
     </div>
     ${inc.statut === 'brouillon' ? html`<div class="alert alert-warn no-print">Brouillon : ce rapport n'est pas encore finalisé.</div>` : ''}
 
-    <article class="paper">
+    <article class="paper${inc.statut === 'brouillon' ? ' is-draft' : ''}" data-stamp="${inc.statut === 'finalise' ? 'Finalisé' : ''}">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Rapport d'incident</h1>
       <p class="paper-sub">N° ${inc.numero}${copyBtn(inc.numero)} · ${incidentTitre(inc.type)}${inc.statut === 'brouillon' ? ' · BROUILLON' : ''}</p>
