@@ -7,8 +7,8 @@ import { fail, str, logAction } from './util.js';
 // Les contrôles fins (avocat rattaché, rapport blanchi) sont faits dans les routes elles-mêmes.
 const ALLOWED = {
   magistrat: [
-    ['GET', /^\/(citizens|vehicles|warrants|reports|incidents|complaints|evidence)(\/\d+)?$/],
-    ['GET', /^\/(penal-code|weapons|settings|users|users\/avocats)$/],
+    ['GET', /^\/(citizens|vehicles|warrants|reports|incidents|complaints|evidence|tickets)(\/\d+)?$/],
+    ['GET', /^\/(penal-code|weapons|settings|users|users\/avocats|search)$/],
     ['POST', /^\/(warrants|uploads|penal-code)$/],
     ['POST', /^\/complaints\/\d+\/close$/],
     ['POST', /^\/reports\/\d+\/(finalize|send-back|reopen|blanchir|unblanchir)$/],

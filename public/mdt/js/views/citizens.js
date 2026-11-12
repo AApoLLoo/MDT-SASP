@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, formValues, toast, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, formValues, toast, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton, openModal } from '../dom.js';
 import { api, hasRole, canJudge, isJustice } from '../api.js';
 import { navigate, rerender } from '../router.js';
 import { icon } from '../icons.js';
@@ -8,8 +8,10 @@ import { openWarrantForm, closeWarrant, warrantTypeBadge } from './warrants.js';
 import { complaintBadge } from './complaints.js';
 import { canManage, statutBadge } from './service.js';
 import { DIVISION_KINDS } from '../service-kinds.js';
+import { citizenPicker } from '../components/picker.js';
+import { openTicketForm, openTicket, ticketBadge } from './tickets.js';
 
-const citizenForm = (c = {}) => html`
+const citizenForm = (c = {}, affiliations = []) => html`
   <form class="form-grid" data-form>
     <label>Nom *<input class="input" name="nom" required value="${c.nom}"></label>
     <label>Prénom<input class="input" name="prenom" value="${c.prenom}"></label>
@@ -17,6 +19,10 @@ const citizenForm = (c = {}) => html`
     <label>N° sécu (ID unique)<input class="input" name="id_unique" value="${c.id_unique}"></label>
     <label>Empreinte<input class="input" name="empreinte" value="${c.empreinte}"></label>
     <label>Téléphone<input class="input" name="telephone" value="${c.telephone}" placeholder="(000) 000-0000"></label>
+    <label>Alias / surnoms<input class="input" name="alias" value="${c.alias}" placeholder="Ex. : Le Gros, Bobby"></label>
+    <label>Affiliation (groupe, gang)<input class="input" name="affiliation" value="${c.affiliation}" list="affiliations" placeholder="Ex. : Ballas"></label>
+    <datalist id="affiliations">${affiliations.map(a => html`<option value="${a.nom}">`)}</datalist>
+    <label class="span-2">Signalement<textarea class="input" name="signalement" rows="2" placeholder="Taille, corpulence, tatouages, cicatrices, tenue habituelle…">${c.signalement}</textarea></label>
     <label class="span-2">Notes<textarea class="input" name="notes" rows="3">${c.notes}</textarea></label>
     <div class="span-2 form-actions"><button class="btn btn-primary">Enregistrer</button></div>
   </form>`;
@@ -61,11 +67,13 @@ export async function renderList(main, params, query) {
 }
 
 export async function renderDetail(main, [id]) {
+  // Groupes déjà saisis, proposés à la saisie (orthographe commune) ; pas pour les comptes justice
+  const affiliations = isJustice() ? [] : await api('/citizens/affiliations');
   if (id === 'nouveau') {
     mount(main, html`
       <div class="page-head"><div><a href="#/casiers" class="back">${icon('back')} Casiers</a><h1>Nouvelle fiche</h1>
         <p class="muted">Le casier se remplira à la finalisation des rapports d'arrestation de cette personne.</p></div></div>
-      <section class="card">${citizenForm()}</section>`);
+      <section class="card">${citizenForm({}, affiliations)}</section>`);
     $('[data-form]', main).addEventListener('submit', e => {
       e.preventDefault();
       attempt(async () => {
@@ -90,17 +98,20 @@ export async function renderDetail(main, [id]) {
   const justice = isJustice();
   const totalAmendes = casier.reduce((s, r) => s + r.amende, 0);
   const totalGav = casier.reduce((s, r) => s + r.gav_minutes, 0);
+  const unpaid = c.tickets.filter(t => t.statut === 'impayee').reduce((s, t) => s + t.montant, 0);
 
   mount(main, html`
     <div class="page-head">
       <div>
         <a href="#/casiers" class="back">${icon('back')} Casiers</a>
         <h1>Casier de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
-        <p class="muted">${[c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}</p>
+        <p class="muted">${[c.alias && `dit « ${c.alias} »`, c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}
+          ${c.affiliation ? html` <span class="badge badge-warn">${c.affiliation}</span>` : ''}</p>
       </div>
       <div class="actions">
         ${justice ? '' : html`<a class="btn btn-primary" href="#/rapports/nouveau?citoyen=${c.id}">${icon('report')} Nouveau rapport d'arrestation</a>`}
         ${judge && casier.length ? html`<button class="btn" data-blanchir-casier>Blanchir le casier</button>` : ''}
+        ${hasRole('superviseur') && html`<button class="btn btn-ghost" data-merge title="Rattacher un doublon de cette personne à cette fiche">Fusionner un doublon</button>`}
         ${hasRole('superviseur') && html`<button class="btn btn-ghost" data-delete>${icon('trash')} Supprimer</button>`}
       </div>
     </div>
@@ -132,6 +143,18 @@ export async function renderDetail(main, [id]) {
       ${blanchis.length ? html`<p class="muted small">Condamnations blanchies (visibles de la justice seulement) :
         ${blanchis.map(r => html`<span class="nowrap"><a href="#/rapports/${r.id}" class="mono" title="${r.blanchi_motif}">${r.numero}</a>
           <button class="btn btn-sm btn-ghost" data-unblanchir="${r.id}">Annuler le blanchiment</button></span> `)}</p>` : ''}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>Amendes</h3>${justice ? '' : html`<button class="btn btn-sm" data-new-ticket>${icon('plus')} Dresser une amende</button>`}</div>
+      ${c.tickets.length ? html`<div class="table-wrap"><table class="table table-click">
+        <thead><tr><th>N°</th><th>Date</th><th>Infractions</th><th class="num">Montant</th><th>Statut</th><th>Agent</th></tr></thead>
+        <tbody>${c.tickets.map(t => html`<tr data-ticket="${t.id}">
+          <td class="mono strong">${t.numero}</td><td class="nowrap">${fmtDate(t.date_faits)}</td>
+          <td>${t.charges.map(l => l.infraction).join(' · ')}</td><td class="num">${formatDollars(t.montant)}</td>
+          <td>${ticketBadge(t.statut)}</td><td class="mono">『${t.agent_matricule}』</td></tr>`)}</tbody></table></div>
+        ${unpaid ? html`<p class="muted small">Impayé : <strong>${formatDollars(unpaid)}</strong></p>` : ''}`
+        : html`<p class="empty-state">Aucune amende.</p>`}
     </section>
 
     <section class="card">
@@ -173,7 +196,7 @@ export async function renderDetail(main, [id]) {
         <h3>Identité</h3>
         <div class="identity">
           <div data-photo class="identity-photo"></div>
-          <div class="grow"><fieldset class="bare-fieldset" ${justice ? 'disabled' : ''}>${citizenForm(c)}</fieldset></div>
+          <div class="grow"><fieldset class="bare-fieldset" ${justice ? 'disabled' : ''}>${citizenForm(c, affiliations)}</fieldset></div>
         </div>
       </section>
     </div>
@@ -208,9 +231,16 @@ export async function renderDetail(main, [id]) {
   });
 
   main.addEventListener('click', e => {
-    const t = e.target.closest('button, a, tr[data-href]');
+    const t = e.target.closest('button, a, tr[data-href], tr[data-ticket]');
     if (!t || t.matches('a')) return;
     if (t.matches('tr[data-href]')) { location.hash = t.dataset.href; return; }
+    if (t.dataset.ticket) {
+      const ticket = c.tickets.find(x => x.id === Number(t.dataset.ticket));
+      openTicket({ ...ticket, citizen_nom: c.nom, citizen_prenom: c.prenom }, rerender);
+      return;
+    }
+    if (t.matches('[data-new-ticket]')) attempt(() => openTicketForm({ citizen: c }, rerender));
+    if (t.matches('[data-merge]')) openMerge(c);
     if (t.dataset.closeW) closeWarrant(t.dataset.closeW);
     if (t.dataset.blanchir || t.matches('[data-blanchir-casier]')) {
       const motif = prompt(t.dataset.blanchir ? 'Motif du blanchiment de cette condamnation :' : `Motif du blanchiment de tout le casier de ${fullName(c)} :`);
@@ -239,4 +269,30 @@ export async function renderDetail(main, [id]) {
       });
     }
   });
+}
+
+// Fusion d'un doublon dans cette fiche (superviseurs) : le doublon choisi est absorbé puis supprimé
+function openMerge(c) {
+  const dialog = openModal(`Fusionner un doublon dans la fiche de ${fullName(c)}`, html`
+    <p>Choisissez la fiche en double. Ses rapports, plaintes, mandats, amendes, photos et apparitions dans les enquêtes
+      passent sur <strong>cette fiche</strong>, qui garde son identité (les champs vides sont complétés), puis le doublon est supprimé.</p>
+    <div data-pick></div>
+    <div data-choice></div>`, { wide: true });
+  citizenPicker($('[data-pick]', dialog), source => {
+    if (source.id === c.id) {
+      toast('Choisissez une autre fiche que celle-ci', 'error');
+      return;
+    }
+    mount($('[data-choice]', dialog), html`
+      <div class="alert alert-warn"><strong>${fullName(source)}</strong>
+        <small>${[source.id_unique && `ID ${source.id_unique}`, source.date_naissance && `né(e) le ${fmtDate(source.date_naissance)}`, `fiche n° ${source.id}`, `${source.nb_arrestations} arrestation(s)`].filter(Boolean).join(' · ')}</small></div>
+      <div class="form-actions"><button type="button" class="btn" data-close>Annuler</button>
+        <button type="button" class="btn btn-primary" data-confirm>Fusionner et supprimer le doublon</button></div>`);
+    $('[data-confirm]', dialog).addEventListener('click', e => attempt(async () => {
+      await api(`/citizens/${c.id}/merge`, { method: 'POST', body: { source_id: source.id } });
+      toast(`Fiche de ${fullName(source)} fusionnée`);
+      dialog.close();
+      rerender();
+    }, e.target));
+  }, 'Rechercher la fiche en double…');
 }

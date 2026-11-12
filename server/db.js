@@ -438,6 +438,33 @@ if (db.prepare('PRAGMA user_version').get().user_version < 6) {
 ensureColumns('patrol_units', { poste: "TEXT NOT NULL DEFAULT ''" });
 // Photos ajoutées aux dossiers : casiers, véhicules volés, mandats et BOLO ({ emplacement: url })
 for (const table of ['citizens', 'vehicles', 'warrants']) ensureColumns(table, { photos: "TEXT NOT NULL DEFAULT '{}'" });
+// Identification sans la base du jeu : surnoms, signes distinctifs, groupe ou gang
+ensureColumns('citizens', {
+  alias: "TEXT NOT NULL DEFAULT ''",
+  signalement: "TEXT NOT NULL DEFAULT ''",
+  affiliation: "TEXT NOT NULL DEFAULT ''",
+});
+
+// Amendes simples (contraventions) dressées sans arrestation ; charges : [{ code_id, infraction, amende, quantite, total }]
+db.exec(`
+CREATE TABLE IF NOT EXISTS tickets (
+  id INTEGER PRIMARY KEY,
+  numero TEXT NOT NULL UNIQUE,
+  citizen_id INTEGER NOT NULL REFERENCES citizens(id) ON DELETE CASCADE,
+  plaque TEXT NOT NULL DEFAULT '',
+  lieu TEXT NOT NULL DEFAULT '',
+  date_faits TEXT NOT NULL DEFAULT '',
+  heure TEXT NOT NULL DEFAULT '',
+  charges TEXT NOT NULL DEFAULT '[]',
+  montant REAL NOT NULL DEFAULT 0,
+  statut TEXT NOT NULL DEFAULT 'impayee' CHECK (statut IN ('impayee', 'payee')),
+  notes TEXT NOT NULL DEFAULT '',
+  agent_id INTEGER NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_tickets_citizen ON tickets(citizen_id);
+`);
 
 function seed(table, file, cols) {
   if (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n) return;

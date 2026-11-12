@@ -56,14 +56,14 @@ function openFoundForm(v, onSaved) {
 }
 
 export async function render(main, params, query) {
-  const statut = query.get('statut') ?? 'vole';
+  const statut = query.get('statut') ?? (query.get('q') ? 'tous' : 'vole');
   mount(main, html`
     <div class="page-head">
       <div><h1>Véhicules volés</h1><p class="muted" data-count></p></div>
       <div class="actions"><button class="btn btn-primary" data-new>${icon('plus')} Déclarer un vol</button></div>
     </div>
     <div class="toolbar">
-      <div class="search-box grow">${icon('search')}<input type="search" class="input" data-q placeholder="Vérifier une plaque, un modèle ou un propriétaire…" autofocus></div>
+      <div class="search-box grow">${icon('search')}<input type="search" class="input" data-q value="${query.get('q') ?? ''}" placeholder="Vérifier une plaque, un modèle ou un propriétaire…" autofocus></div>
       <div class="segmented">
         ${[['vole', 'Volés'], ['retrouve', 'Retrouvés'], ['tous', 'Tous']].map(([k, l]) => html`<a href="#/vehicules?statut=${k}" class="${k === statut ? 'is-active' : ''}">${l}</a>`)}
       </div>

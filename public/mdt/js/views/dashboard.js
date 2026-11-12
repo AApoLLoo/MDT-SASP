@@ -1,9 +1,8 @@
 import { html, mount, $, attempt, toast, fullName, fmtDate, fmtDateTime } from '../dom.js';
 import { api, state, hasRole } from '../api.js';
-import { navigate, rerender } from '../router.js';
+import { rerender } from '../router.js';
 import { icon } from '../icons.js';
 import { defconInfo } from '../reference-data.js';
-import { citizenPicker } from '../components/picker.js';
 import { warrantTypeBadge, warrantTarget } from './warrants.js';
 import { complaintBadge } from './complaints.js';
 import { statutBadge } from './service.js';
@@ -26,8 +25,6 @@ export async function render(main) {
         <a class="btn" href="#/calculatrice">${icon('calculator')} Calculatrice</a>
       </div>
     </div>
-
-    <div class="quick-search card">${icon('search')}<div data-search class="grow"></div></div>
 
     <div class="dash-grid">
       <section class="card defcon-card defcon-${state.defcon}">
@@ -101,8 +98,6 @@ export async function render(main) {
           : html`<p class="empty-state">Aucune plainte en cours.</p>`}
       </section>
     </div>`);
-
-  citizenPicker($('[data-search]', main), c => navigate(`/casiers/${c.id}`), 'Recherche rapide : citoyen (nom, ID unique, téléphone)…');
 
   $('[data-defcon]', main)?.addEventListener('change', e => attempt(async () => {
     state.defcon = (await api('/settings', { method: 'PUT', body: { defcon: Number(e.target.value) } })).defcon;

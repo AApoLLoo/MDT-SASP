@@ -868,3 +868,9 @@ dialog.modal[open]::backdrop { background: rgba(3, 7, 18, 0.72); backdrop-filter
   .paper-totals { grid-template-columns: repeat(3, 1fr); }
   .paper-signatures { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---------- Recherche globale (barre du haut) et lignes de PV ---------- */
+.topbar-search { flex: 1; max-width: 460px; }
+.topbar-search .dropdown { min-width: min(560px, 90vw); }
+@media (max-width: 860px) { .topbar-search { order: 10; flex-basis: 100%; max-width: none; } }
+.row-inline { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }

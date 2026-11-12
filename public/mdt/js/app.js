@@ -24,6 +24,8 @@ import * as divisions from './views/divisions.js';
 import * as announcements from './views/announcements.js';
 import * as incidents from './views/incidents.js';
 import * as evidence from './views/evidence.js';
+import * as tickets from './views/tickets.js';
+import { globalSearch } from './components/search.js';
 import * as audit from './views/audit.js';
 import * as justice from './views/justice.js';
 import { avatar } from './components/avatar.js';
@@ -41,6 +43,7 @@ const NAV = [
   ['/rapports', 'report', "Rapports d'arrestation"],
   ['/incidents', 'incident', "Rapports d'incident"],
   ['/plaintes', 'complaint', 'Plaintes'],
+  ['/amendes', 'ticket', 'Amendes'],
   ['/preuves', 'box', 'Preuves'],
   'Outils',
   ['/calculatrice', 'calculator', 'Calculatrice'],
@@ -70,7 +73,7 @@ const JUSTICE_GROUPS = NAV.slice(NAV.indexOf('Dossiers'), NAV.indexOf('Personnel
 const justiceNav = () => (isAvocat() ? [['/', 'report', 'Mes dossiers']] : [['/', 'report', 'En attente de jugement'], ...JUSTICE_GROUPS]);
 // Pages ouvertes aux comptes justice (le serveur refuse le reste de toute façon) ; aucune page de saisie police
 const JUSTICE_PATHS = {
-  magistrat: /^\/(casiers|vehicules|mandats|rapports|incidents|plaintes|preuves|calculatrice|code-penal|references)(\/\d+(\/juger)?)?$/,
+  magistrat: /^\/(casiers|vehicules|mandats|rapports|incidents|plaintes|preuves|amendes|calculatrice|code-penal|references)(\/\d+(\/juger)?)?$/,
   avocat: /^\/(rapports|plaintes)\/\d+$/,
 };
 
@@ -97,6 +100,7 @@ const ROUTES = [
   [/^\/incidents\/(\d+)\/modifier$/, incidents.renderEdit],
   [/^\/incidents\/(\d+)$/, incidents.renderView],
   [/^\/preuves$/, evidence.render],
+  [/^\/amendes$/, tickets.render],
   [/^\/historique$/, audit.render],
   [/^\/plaintes$/, complaints.renderList],
   [/^\/plaintes\/nouvelle$/, complaints.renderEdit],
@@ -302,6 +306,7 @@ async function showApp() {
           <div class="lightbar" data-lightbar></div>
           <a href="#/references?onglet=defcon" data-defcon-badge></a>
           <span class="clock" data-clock><b></b><small></small></span>
+          ${isAvocat() ? '' : html`<div class="topbar-search" data-global-search></div>`}
           <div class="topbar-user">
             <a class="user-label" href="#/${isJustice() ? 'profil' : `agents/${state.user.id}`}" title="Mon profil" data-user-label></a>
             <a class="btn btn-sm btn-ghost" href="/" title="Site public">${icon('back')}</a>
@@ -316,6 +321,7 @@ async function showApp() {
   updateUserLabel();
   updateClock();
   updateLiteButton();
+  if (!isAvocat()) globalSearch($('[data-global-search]'));
 
   $('[data-lite]').addEventListener('click', () => {
     const lite = document.body.classList.toggle('lite');
@@ -339,6 +345,15 @@ async function showApp() {
     window.addEventListener('defcon-change', updateDefconBadge);
     window.addEventListener('profile-change', updateUserLabel);
     window.addEventListener('annonces-seen', updateUnread);
+    // Ctrl+K (ou Cmd+K) : recherche globale depuis n'importe quelle page
+    window.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        const input = $('[data-global-search] input');
+        if (!input) return;
+        e.preventDefault();
+        input.focus();
+      }
+    });
   }
   route();
 }
