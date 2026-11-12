@@ -5,7 +5,7 @@ import { icon } from '../icons.js';
 import { mountPerson } from '../components/person.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
 import { picker } from '../components/picker.js';
-import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { openDiscordModal, joinLines, absoluteUrl, copyBtn } from '../components/discord.js';
 import { copyForDocs } from '../components/gdocs.js';
 
 export const COMPLAINT_STATUTS = { ouverte: 'Ouverte', en_cours: 'Enquête en cours', classee: 'Classée sans suite', resolue: 'Résolue' };
@@ -323,7 +323,7 @@ export async function renderView(main, [id]) {
     <article class="paper">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Dépôt de plainte</h1>
-      <p class="paper-sub">Procès-verbal N° ${c.numero}</p>
+      <p class="paper-sub">Procès-verbal N° ${c.numero}${copyBtn(c.numero)}</p>
 
       <table class="paper-table">
         <colgroup><col class="c1"><col class="c2"><col></colgroup>

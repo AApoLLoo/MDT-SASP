@@ -55,13 +55,104 @@ export function openModal(title, body, { wide = false } = {}) {
   dialog.className = `modal${wide ? ' modal-wide' : ''}`;
   dialog.innerHTML = String(html`<div class="modal-head"><h2>${title}</h2><button type="button" class="btn-icon" data-close aria-label="Fermer">✕</button></div><div class="modal-body">${body}</div>`);
   document.body.append(dialog);
+  const canClose = trackDraft(dialog, `${location.hash}|${title}`);
   // Laisse jouer la transition de fermeture (0,22 s en CSS) avant de retirer la modale
   dialog.addEventListener('close', () => setTimeout(() => dialog.remove(), 250));
   dialog.addEventListener('click', e => {
-    if (e.target.closest('[data-close]') || e.target === dialog) dialog.close();
+    if ((e.target.closest('[data-close]') || e.target === dialog) && canClose()) dialog.close();
   });
+  dialog.addEventListener('cancel', e => { if (!canClose()) e.preventDefault(); }); // Échap
   dialog.showModal();
   return dialog;
+}
+
+// Brouillon local des formulaires en modale : la saisie survit à une fermeture, une déconnexion ou un rechargement.
+// Seuls les champs nommés sont gardés (pas les listes construites en JS : lignes d'amende, photos, personnes choisies).
+export const DRAFT_PREFIX = 'mdt-draft:';
+const SKIP_TYPES = ['password', 'file', 'hidden', 'submit', 'button'];
+
+function trackDraft(dialog, key) {
+  const form = $('form', dialog);
+  if (!form) return () => true;
+  key = DRAFT_PREFIX + key;
+  let dirty = false;
+  let submitted = false;
+  const fields = () => [...formControls(form)].filter(el => el.name && !SKIP_TYPES.includes(el.type));
+  const save = debounce(() => {
+    const values = {};
+    for (const el of fields()) {
+      if (el.type === 'radio') { if (el.checked) values[el.name] = el.value; }
+      else values[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+    }
+    try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), values })); } catch { /* stockage plein ou indisponible : pas de brouillon */ }
+  }, 400);
+  const onEdit = e => {
+    if (!e.isTrusted) return; // restauration du brouillon
+    dirty = true;
+    submitted = false;
+    save();
+  };
+  form.addEventListener('input', onEdit);
+  form.addEventListener('change', onEdit);
+  // Fermée juste après un envoi (sans retouche depuis) : enregistrée, le brouillon ne sert plus
+  form.addEventListener('submit', () => { submitted = true; });
+  dialog.addEventListener('close', () => {
+    if (!submitted) return;
+    try { localStorage.removeItem(key); } catch { /* rien à nettoyer */ }
+  });
+
+  let draft = null;
+  try { draft = JSON.parse(localStorage.getItem(key)); } catch { /* brouillon illisible : ignoré */ }
+  if (draft?.values) {
+    const bar = document.createElement('div');
+    bar.className = 'alert alert-info draft-bar';
+    mount(bar, html`<span class="grow">Saisie non enregistrée du ${new Date(draft.at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}.</span>
+      <button type="button" class="btn btn-sm btn-primary" data-draft-restore>Restaurer</button>
+      <button type="button" class="btn btn-sm btn-ghost" data-draft-drop>Ignorer</button>`);
+    $('.modal-body', dialog).prepend(bar);
+    bar.addEventListener('click', e => {
+      if (e.target.closest('[data-draft-restore]')) {
+        for (const el of fields()) {
+          const v = draft.values[el.name];
+          if (v === undefined) continue;
+          if (el.type === 'checkbox') el.checked = v;
+          else if (el.type === 'radio') el.checked = el.value === v;
+          else el.value = v;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        dirty = true;
+      } else if (e.target.closest('[data-draft-drop]')) {
+        try { localStorage.removeItem(key); } catch { /* rien à nettoyer */ }
+      } else return;
+      bar.remove();
+    });
+  }
+  return () => !dirty || submitted || confirm('Fermer sans enregistrer ? La saisie reste disponible en brouillon à la prochaine ouverture.');
+}
+
+export function clearDrafts() {
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith(DRAFT_PREFIX)).forEach(k => localStorage.removeItem(k));
+  } catch { /* stockage indisponible */ }
+}
+
+// Surligne la première occurrence de q dans text (sans tenir compte des accents ni de la casse)
+export function highlight(text, q) {
+  const s = String(text ?? '');
+  const nq = normalize(q).trim();
+  let norm = '';
+  const at = []; // index du texte normalisé → index d'origine
+  for (let i = 0; i < s.length; i++) {
+    const n = normalize(s[i]);
+    norm += n;
+    for (let k = 0; k < n.length; k++) at.push(i);
+  }
+  const start = nq ? norm.indexOf(nq) : -1;
+  if (start < 0) return html`${s}`;
+  const a = at[start];
+  const b = at[start + nq.length - 1] + 1;
+  return html`${s.slice(0, a)}<mark>${s.slice(a, b)}</mark>${s.slice(b)}`;
 }
 
 export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -82,11 +173,12 @@ export function countUp(root) {
   }
 }
 
+// Getter d'origine : un champ nommé « elements » (« Hypothèses et pistes » des enquêtes) masque form.elements
+export const formControls = form => Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, 'elements').get.call(form);
+
 export function formValues(form) {
   const out = {};
-  // Getter d'origine : un champ nommé « elements » (« Hypothèses et pistes » des enquêtes) masque form.elements
-  const controls = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, 'elements').get.call(form);
-  for (const el of controls) {
+  for (const el of formControls(form)) {
     if (!el.name || el.disabled) continue;
     if (el.type === 'checkbox') out[el.name] = el.checked;
     else if (el.type === 'radio') { if (el.checked) out[el.name] = el.value; }

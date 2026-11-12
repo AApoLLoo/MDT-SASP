@@ -1,6 +1,6 @@
-import { html, mount, $, $$, agentLabel, toast, countUp, formValues } from './dom.js';
+import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, normalize } from './dom.js';
 import { api, state, setUnauthorizedHandler, setSessionExpiredHandler, hasRole, isJustice, isAvocat } from './api.js';
-import { startRouter, resolve, navigate } from './router.js';
+import { startRouter, resolve, navigate, rerender } from './router.js';
 import { icon } from './icons.js';
 import { defconInfo } from './reference-data.js';
 import { SPECIAL_DIVISIONS, DIVISION_KINDS, managesDivision } from './service-kinds.js';
@@ -25,7 +25,8 @@ import * as announcements from './views/announcements.js';
 import * as incidents from './views/incidents.js';
 import * as evidence from './views/evidence.js';
 import * as tickets from './views/tickets.js';
-import { globalSearch } from './components/search.js';
+import { globalSearch, rememberPage } from './components/search.js';
+import { copyText } from './components/discord.js';
 import * as audit from './views/audit.js';
 import * as justice from './views/justice.js';
 import { avatar } from './components/avatar.js';
@@ -333,6 +334,7 @@ async function showApp() {
 
   $('[data-logout]').addEventListener('click', async () => {
     state.user = null; // avant la requête : un 401 reçu entre-temps ne doit pas ouvrir la reconnexion
+    clearDrafts(); // le prochain agent sur ce poste ne voit pas les saisies du précédent
     await api('/auth/logout', { method: 'POST' }).catch(() => {});
     showLogin();
   });
@@ -345,15 +347,8 @@ async function showApp() {
     window.addEventListener('defcon-change', updateDefconBadge);
     window.addEventListener('profile-change', updateUserLabel);
     window.addEventListener('annonces-seen', updateUnread);
-    // Ctrl+K (ou Cmd+K) : recherche globale depuis n'importe quelle page
-    window.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        const input = $('[data-global-search] input');
-        if (!input) return;
-        e.preventDefault();
-        input.focus();
-      }
-    });
+    window.addEventListener('keydown', onShortcut);
+    window.addEventListener('show-shortcuts', showShortcuts);
   }
   route();
 }
@@ -379,10 +374,136 @@ async function route() {
   try {
     await view(container, params, query);
     countUp(container);
+    // Pages de détail : proposées ensuite dans la recherche (Ctrl+K, champ vide)
+    const text = sel => $(sel, container)?.textContent.replace(/\s+/g, ' ').trim() ?? '';
+    if (/\/\d+$/.test(path) && container.isConnected) rememberPage(path, text('h1'), text('.paper-sub'));
   } catch (err) {
     mount(container, html`<div class="alert alert-danger">${err.message}</div>`);
   }
 }
+
+// ---------- Raccourcis clavier ----------
+
+// Création rapide (Alt+lettre) : pas pour les comptes justice
+const CREATE = {
+  r: ["Nouveau rapport d'arrestation", () => navigate('/rapports/nouveau')],
+  a: ['Dresser une amende', () => tickets.openTicketForm({}, () => { if (/^\/(amendes|casiers\/\d+)$/.test(resolve().path)) rerender(); })],
+  i: ["Nouveau rapport d'incident", () => navigate('/incidents/nouveau')],
+  p: ['Nouvelle plainte', () => navigate('/plaintes/nouvelle')],
+};
+// Navigation « G » puis lettre
+const GOTO = {
+  t: ['/', 'Tableau de bord'], c: ['/casiers', 'Casiers'], v: ['/vehicules', 'Véhicules volés'], m: ['/mandats', 'Mandats & BOLO'],
+  r: ['/rapports', "Rapports d'arrestation"], i: ['/incidents', "Rapports d'incident"], p: ['/plaintes', 'Plaintes'],
+  a: ['/amendes', 'Amendes'], e: ['/preuves', 'Preuves'], k: ['/code-penal', 'Code pénal'], s: ['/service', 'Service'], f: ['/agents', 'Effectifs'],
+};
+const GOTO_DELAY_MS = 1500;
+let gPressedAt = 0;
+
+const typing = e => e.target.closest?.('input, textarea, select, [contenteditable]');
+const openDialog = () => $$('dialog[open]').at(-1);
+
+// Envoie le formulaire de la modale par son bouton principal (les gestionnaires lisent e.submitter)
+function submitDialog(dialog) {
+  const form = $('form', dialog);
+  if (!form) return;
+  const buttons = [...formControls(form)].filter(b => b.type === 'submit');
+  form.requestSubmit(buttons.find(b => b.classList.contains('btn-primary')) ?? buttons[0]);
+}
+
+function onShortcut(e) {
+  if (!state.user || $('.tab-lock')) return;
+  const key = e.key?.toLowerCase() ?? ''; // e.key absent sur les keydown de saisie automatique
+  const ctrl = e.ctrlKey || e.metaKey;
+  // Ctrl+K : recherche globale
+  if (ctrl && key === 'k') {
+    const input = $('[data-global-search] input');
+    if (input && !openDialog()) { e.preventDefault(); input.focus(); }
+    return;
+  }
+  // Ctrl+S : enregistre la modale ouverte (les pages d'édition gèrent le leur) ; jamais « Enregistrer sous » du navigateur
+  if (ctrl && key === 's') {
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    const dialog = openDialog();
+    if (dialog) submitDialog(dialog);
+    return;
+  }
+  // Alt+lettre (AltGr = Ctrl+Alt exclu, pour taper @, €…) : création rapide
+  if (e.altKey && !ctrl && !e.shiftKey && CREATE[key] && !isJustice() && !openDialog()) {
+    e.preventDefault();
+    CREATE[key][1]();
+    return;
+  }
+  if (ctrl || e.altKey || typing(e) || openDialog()) return;
+  if (e.key === '?') { showShortcuts(); return; }
+  // Échap hors modale : retour à la page parente (lien « retour » de la page)
+  if (e.key === 'Escape') { $('#app a.back')?.click(); return; }
+  if (Date.now() - gPressedAt < GOTO_DELAY_MS && GOTO[key]) {
+    gPressedAt = 0;
+    navigate(GOTO[key][0]);
+    return;
+  }
+  gPressedAt = key === 'g' ? Date.now() : 0;
+}
+
+function showShortcuts() {
+  if (openDialog()) return;
+  const combo = keys => html`${keys.map((k, i) => html`${i ? ' + ' : ''}<kbd>${k}</kbd>`)}`;
+  const rows = [
+    [['Ctrl', 'K'], 'Recherche globale (champ vide : pages consultées récemment)'],
+    [['Ctrl', 'S'], 'Enregistrer la page ou la fenêtre ouverte'],
+    [['Échap'], 'Fermer la fenêtre, ou revenir à la page parente'],
+    [['?'], 'Afficher cette aide'],
+    ...(isJustice() ? [] : Object.entries(CREATE).map(([k, [label]]) => [['Alt', k.toUpperCase()], label])),
+  ];
+  openModal('Raccourcis clavier', html`
+    <table class="table shortcuts"><tbody>
+      ${rows.map(([keys, label]) => html`<tr><td class="nowrap">${combo(keys)}</td><td>${label}</td></tr>`)}
+    </tbody></table>
+    <h3>Aller à… <small class="muted"><kbd>G</kbd> puis la lettre</small></h3>
+    <table class="table shortcuts"><tbody>
+      ${Object.entries(GOTO).map(([k, [, label]]) => html`<tr><td class="nowrap"><kbd>G</kbd> puis <kbd>${k.toUpperCase()}</kbd></td><td>${label}</td></tr>`)}
+    </tbody></table>`);
+}
+
+// ---------- Copie et tri (délégués : valables sur toutes les pages) ----------
+
+// Phase de capture : le clic sur « copier » ne déclenche pas aussi le clic de la ligne de tableau
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-copy-text]');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const text = btn.dataset.copyText;
+  if (await copyText(text)) toast(`« ${text} » copié`);
+  else toast('Copie impossible : sélectionnez le texte et faites Ctrl+C', 'error');
+}, true);
+
+// Clé de tri d'une cellule : date JJ/MM/AAAA [HH:MM], nombre ou montant, sinon texte
+function sortKey(cell) {
+  const t = cell?.textContent.trim() ?? '';
+  const d = t.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\D{1,3}(\d{2}):(\d{2}))?/);
+  if (d) return `${d[3]}${d[2]}${d[1]}${d[4] ?? '00'}${d[5] ?? '00'}`;
+  if (/\d/.test(t) && /^[-$\d\s., ]+$/.test(t)) return Number(t.replace(/[^\d-]/g, ''));
+  return normalize(t);
+}
+
+// Tri au clic sur l'en-tête de colonne ; ne trie que les lignes affichées (« Afficher plus » charge le reste)
+document.addEventListener('click', e => {
+  const th = e.target.closest('.table-wrap thead th');
+  if (!th || !th.textContent.trim() || e.target.closest('a, button, input, select')) return;
+  const tbody = th.closest('table').tBodies[0];
+  if (!tbody || tbody.rows.length < 2) return;
+  const dir = th.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
+  for (const h of th.parentElement.cells) h.removeAttribute('aria-sort');
+  th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
+  const col = th.cellIndex;
+  const rows = [...tbody.rows].map(row => [sortKey(row.cells[col]), row]);
+  const compare = (a, b) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'fr', { numeric: true }));
+  rows.sort(([a], [b]) => dir * compare(a, b));
+  tbody.append(...rows.map(([, row]) => row));
+});
 
 // Verre liquide : le reflet des panneaux suit le pointeur (variables lues par app.css)
 document.addEventListener('pointermove', e => {

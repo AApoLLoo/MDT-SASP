@@ -23,6 +23,7 @@ export async function render(main) {
       <div class="actions">
         <a class="btn btn-primary" href="#/rapports/nouveau">${icon('plus')} Nouveau rapport d'arrestation</a>
         <a class="btn" href="#/calculatrice">${icon('calculator')} Calculatrice</a>
+        <button type="button" class="btn btn-ghost" data-shortcuts title="Raccourcis clavier (?)">${icon('zap')} Raccourcis</button>
       </div>
     </div>
 
@@ -48,6 +49,16 @@ export async function render(main) {
         ${stat('Mandats & BOLO actifs', d.stats.mandats_actifs, '#/mandats', 'warrant', d.stats.mandats_actifs ? 'stat-danger' : '')}
         ${stat('Véhicules volés', d.stats.vehicules_voles, '#/vehicules', 'car', d.stats.vehicules_voles ? 'stat-danger' : '')}
         ${stat('Arrestations ce mois', d.stats.rapports_mois, '#/rapports', 'report')}
+      </section>
+
+      <section class="card span-2">
+        <div class="card-head"><h3>Mon activité ce mois</h3><a href="#/agents/${state.user.id}">Mon profil</a></div>
+        <div class="stats stats-4">
+          ${stat('Arrestations', d.moi.arrestations, '#/rapports', 'report')}
+          ${stat('Amendes', d.moi.amendes, '#/amendes', 'ticket')}
+          ${stat("Rapports d'incident", d.moi.incidents, '#/incidents', 'incident')}
+          ${stat('Plaintes reçues', d.moi.plaintes, '#/plaintes', 'complaint')}
+        </div>
       </section>
 
       <section class="card span-2">
@@ -99,6 +110,7 @@ export async function render(main) {
       </section>
     </div>`);
 
+  $('[data-shortcuts]', main).addEventListener('click', () => window.dispatchEvent(new Event('show-shortcuts')));
   $('[data-defcon]', main)?.addEventListener('change', e => attempt(async () => {
     state.defcon = (await api('/settings', { method: 'PUT', body: { defcon: Number(e.target.value) } })).defcon;
     window.dispatchEvent(new Event('defcon-change'));

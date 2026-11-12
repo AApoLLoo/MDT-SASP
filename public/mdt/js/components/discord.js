@@ -26,14 +26,26 @@ export const absoluteUrl = url => new URL(url, location.origin).href;
 // Retire les lignes vides consécutives
 export const joinLines = lines => lines.filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n');
 
-async function copy(text) {
+// Presse-papiers ; hors HTTPS/localhost l'API est absente, on passe par l'ancienne commande « copy »
+export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    return false;
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    // Dans une modale ouverte, le reste de la page est inerte : le champ temporaire doit y être placé
+    (document.querySelector('dialog[open]') ?? document.body).append(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
   }
 }
+
+// Petit bouton « copier » à côté d'un numéro ou d'une plaque (géré globalement dans app.js)
+export const copyBtn = text => (text ? html`<button type="button" class="btn-icon copy-btn no-print" data-copy-text="${text}" title="Copier ${text}" aria-label="Copier ${text}">${icon('copy')}</button>` : '');
 
 export function openDiscordModal(text) {
   const parts = splitDiscord(text);
@@ -47,7 +59,7 @@ export function openDiscordModal(text) {
   dialog.addEventListener('click', async e => {
     const btn = e.target.closest('[data-copy]');
     if (!btn) return;
-    if (await copy(parts[btn.dataset.copy])) {
+    if (await copyText(parts[btn.dataset.copy])) {
       toast(`Message ${Number(btn.dataset.copy) + 1} copié`);
     } else {
       btn.closest('.discord-part').querySelector('textarea').select();

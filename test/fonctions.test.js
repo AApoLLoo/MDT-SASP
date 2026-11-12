@@ -11,6 +11,7 @@ const { default: citizens } = await import('../server/routes/citizens.js');
 const { default: tickets } = await import('../server/routes/tickets.js');
 const { default: search } = await import('../server/routes/search.js');
 const { default: reports } = await import('../server/routes/reports.js');
+const { default: misc } = await import('../server/routes/misc.js');
 
 const user = role => Number(db.prepare(`INSERT INTO users (matricule, role, password_hash) VALUES (?, ?, 'x')`).run(`${role}-${Math.random()}`, role).lastInsertRowid);
 const users = { agent: user('agent'), superviseur: user('superviseur') };
@@ -25,6 +26,7 @@ app.use('/citizens', citizens);
 app.use('/tickets', tickets);
 app.use('/search', search);
 app.use('/reports', reports);
+app.use('/', misc);
 app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message }));
 const server = app.listen(0);
 after(() => server.close());
@@ -140,4 +142,15 @@ test("rapport d'arrestation : la carte d'identité devient la photo d'identité 
   assert.match(db.prepare('SELECT details FROM audit_log ORDER BY id DESC LIMIT 1').get().details, /carte d'identité/);
   await call('PUT', `/reports/${rep}`, { photos: { vetu_face: '/mdt/uploads/face.png' } });
   assert.equal((await call('GET', `/citizens/${id}`)).body.photo_url, '/mdt/uploads/carte.png', 'retirée du rapport : la fiche la garde');
+});
+
+test("tableau de bord : activité du mois propre à l'agent connecté", async () => {
+  const before = (await call('GET', '/dashboard')).body.moi;
+  const id = await citizen({ nom: 'Compteur' });
+  await call('POST', '/tickets', { citizen_id: id, charges: [{ code_id: code('Contravention').id }] });
+  await call('POST', '/tickets', { citizen_id: id, charges: [{ code_id: code('Contravention').id }] }, 'superviseur');
+  const { status, body } = await call('GET', '/dashboard');
+  assert.equal(status, 200);
+  assert.equal(body.moi.amendes, before.amendes + 1, "seules les amendes de l'agent comptent");
+  for (const k of ['arrestations', 'incidents', 'plaintes']) assert.equal(typeof body.moi[k], 'number');
 });

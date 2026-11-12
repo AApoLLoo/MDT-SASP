@@ -5,7 +5,7 @@ import { icon } from '../icons.js';
 import { formatDollars, formatDuree } from '../calc.js';
 import { PHOTO_GROUPS } from '../components/photos.js';
 import { statutBadge } from './reports.js';
-import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { openDiscordModal, joinLines, absoluteUrl, copyBtn } from '../components/discord.js';
 import { copyForDocs } from '../components/gdocs.js';
 
 const fmtCoef = n => `×${String(n).replace('.', ',')}`;
@@ -126,7 +126,7 @@ export async function render(main, [id]) {
     <article class="paper">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Rapport d'arrestation</h1>
-      <p class="paper-sub">N° ${rep.numero}${{ brouillon: ' · BROUILLON', en_attente: ' · EN ATTENTE DE JUGEMENT' }[rep.statut] ?? ''}</p>
+      <p class="paper-sub">N° ${rep.numero}${copyBtn(rep.numero)}${{ brouillon: ' · BROUILLON', en_attente: ' · EN ATTENTE DE JUGEMENT' }[rep.statut] ?? ''}</p>
 
       <table class="paper-table">
         <colgroup><col class="c1"><col class="c2"><col></colgroup>

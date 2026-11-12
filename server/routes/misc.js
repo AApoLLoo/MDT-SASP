@@ -60,6 +60,13 @@ r.get('/dashboard', (req, res) => {
       vehicules_voles: count(`SELECT COUNT(*) AS n FROM vehicles WHERE statut = 'vole'`),
       rapports_mois: count(`SELECT COUNT(*) AS n FROM arrest_reports WHERE statut = 'finalise' AND blanchi_at IS NULL AND finalized_at >= date('now', 'start of month')`),
     },
+    // Activité de l'agent connecté depuis le début du mois
+    moi: {
+      arrestations: count(`SELECT COUNT(*) AS n FROM arrest_reports WHERE redacteur_id = ? AND statut != 'brouillon' AND created_at >= date('now', 'start of month')`, req.user.id),
+      amendes: count(`SELECT COUNT(*) AS n FROM tickets WHERE agent_id = ? AND created_at >= date('now', 'start of month')`, req.user.id),
+      incidents: count(`SELECT COUNT(*) AS n FROM incident_reports WHERE redacteur_id = ? AND created_at >= date('now', 'start of month')`, req.user.id),
+      plaintes: count(`SELECT COUNT(*) AS n FROM complaints WHERE created_by = ? AND created_at >= date('now', 'start of month')`, req.user.id),
+    },
     mandats: db.prepare(`${WARRANT_SELECT} WHERE w.statut = 'actif' ORDER BY w.created_at DESC LIMIT 8`).all(),
     rapports: db.prepare(`
       SELECT a.id, a.numero, a.date_faits, json_extract(a.suspect, '$.nom') AS suspect_nom, json_extract(a.suspect, '$.prenom') AS suspect_prenom,

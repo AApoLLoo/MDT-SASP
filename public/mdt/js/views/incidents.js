@@ -5,13 +5,14 @@ import { icon } from '../icons.js';
 import { INCIDENT_TYPES, incidentTitre } from '../incident-kinds.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
 import { mountAgentsInput } from '../components/agents-input.js';
-import { openDiscordModal, joinLines, absoluteUrl } from '../components/discord.js';
+import { openDiscordModal, joinLines, absoluteUrl, copyBtn } from '../components/discord.js';
 import { copyForDocs } from '../components/gdocs.js';
 import { statutBadge } from './reports.js';
 import { section } from './report-edit.js';
 import { agentPresent } from './report-view.js';
 import { fieldInput } from './service.js';
 import { openEvidenceForm, evidenceBadge } from './evidence.js';
+import { templateSelect } from '../components/templates.js';
 
 const PHOTOS = [{ titre: '', slots: numberedSlots(), extra: true }];
 const redacteurOf = inc => ({ matricule: inc.redacteur_matricule, nom: inc.redacteur_nom, prenom: inc.redacteur_prenom, grade: inc.redacteur_grade });
@@ -95,7 +96,7 @@ export async function renderEdit(main, [id]) {
         </div>`)}
       ${section(2, 'Détails', html`<div class="form-grid" data-details></div>`)}
       ${section(3, 'Personnes impliquées', html`<textarea class="input" name="personnes" rows="3" placeholder="Suspects, victimes, témoins : nom, rôle, état…">${inc.personnes}</textarea>`)}
-      ${section(4, 'Récit des faits *', html`<textarea class="input faits" name="recit" rows="10" placeholder="Déroulé chronologique : appel, arrivée sur zone, actions, issue…">${inc.recit}</textarea>`)}
+      ${section(4, 'Récit des faits *', html`${templateSelect('incident')}<textarea class="input faits" name="recit" rows="10" placeholder="Déroulé chronologique : appel, arrivée sur zone, actions, issue…">${inc.recit}</textarea>`)}
       ${section(5, 'Photos', html`
         <p class="muted small">Cliquez sur un emplacement puis collez une capture (Ctrl+V), glissez-déposez une image, importez un fichier ou indiquez un lien.</p>
         <div data-photos></div>`)}
@@ -243,7 +244,7 @@ export async function renderView(main, [id]) {
     <article class="paper">
       <img class="paper-banner" src="img/sasp-banner.png" alt="San Andreas State Police">
       <h1 class="paper-title">Rapport d'incident</h1>
-      <p class="paper-sub">N° ${inc.numero} · ${incidentTitre(inc.type)}${inc.statut === 'brouillon' ? ' · BROUILLON' : ''}</p>
+      <p class="paper-sub">N° ${inc.numero}${copyBtn(inc.numero)} · ${incidentTitre(inc.type)}${inc.statut === 'brouillon' ? ' · BROUILLON' : ''}</p>
 
       <table class="paper-table">
         <colgroup><col class="c1"><col class="c2"><col></colgroup>

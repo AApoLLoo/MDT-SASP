@@ -10,6 +10,7 @@ import { canManage, statutBadge } from './service.js';
 import { DIVISION_KINDS } from '../service-kinds.js';
 import { citizenPicker } from '../components/picker.js';
 import { openTicketForm, openTicket, ticketBadge } from './tickets.js';
+import { copyBtn } from '../components/discord.js';
 
 const citizenForm = (c = {}, affiliations = []) => html`
   <form class="form-grid" data-form>
@@ -106,7 +107,7 @@ export async function renderDetail(main, [id]) {
         <a href="#/casiers" class="back">${icon('back')} Casiers</a>
         <h1>${casier.length ? 'Casier' : 'Fiche'} de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
         <p class="muted">${[c.alias && `dit « ${c.alias} »`, c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}
-          ${c.affiliation ? html` <span class="badge badge-warn">${c.affiliation}</span>` : ''}</p>
+          ${c.id_unique ? copyBtn(c.id_unique) : ''}${c.affiliation ? html` <span class="badge badge-warn">${c.affiliation}</span>` : ''}</p>
       </div>
       <div class="actions">
         ${justice ? '' : html`<a class="btn btn-primary" href="#/rapports/nouveau?citoyen=${c.id}">${icon('report')} Nouveau rapport d'arrestation</a>`}

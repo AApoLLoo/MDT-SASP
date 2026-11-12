@@ -2,8 +2,9 @@ import { html, mount, $, attempt, openModal, formValues, toast, fullName, fmtDat
 import { api, hasRole, isJustice, loadPenalCode } from '../api.js';
 import { icon } from '../icons.js';
 import { formatDollars } from '../calc.js';
-import { citizenPicker } from '../components/picker.js';
+import { citizenPicker, warnVehicle } from '../components/picker.js';
 import { mountPhotos } from '../components/photos.js';
+import { openDiscordModal, joinLines, copyBtn } from '../components/discord.js';
 
 // Amendes simples (PV) : contraventions du Code pénal, dressées sans arrestation ni jugement
 
@@ -92,6 +93,14 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
     lignes.push({ code_id: codes[0].id, quantite: 1 });
     renderLignes();
   });
+  // Plaque saisie : alerte si le véhicule est déclaré volé ou visé par un BOLO
+  $('[name="plaque"]', dialog).addEventListener('change', e => {
+    const plaque = e.target.value.trim().toUpperCase();
+    if (plaque.length < 2) return;
+    api(`/vehicles?q=${encodeURIComponent(plaque)}`)
+      .then(list => { const v = list.find(x => x.plaque.toUpperCase() === plaque); if (v) warnVehicle(v); })
+      .catch(err => console.warn('Vérification de plaque impossible', err));
+  });
   $('[data-form]', dialog).addEventListener('submit', ev => {
     ev.preventDefault();
     if (!target && !newPerson) {
@@ -117,11 +126,24 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
   renderLignes();
 }
 
+const discordText = t => joinLines([
+  `## 🧾 Amende — ${t.numero}`,
+  `**Contrevenant :** ${fullName({ nom: t.citizen_nom, prenom: t.citizen_prenom })}`,
+  `**Date :** ${fmtDate(t.date_faits)}${t.heure ? ` à ${t.heure}` : ''} · **Lieu :** ${t.lieu || '—'}${t.plaque ? ` · **Plaque :** ${t.plaque}` : ''}`,
+  `**Agent :** 『${t.agent_matricule}』`,
+  '',
+  '### 📋 Infractions',
+  ...t.charges.map(l => `- ${l.infraction}${l.quantite > 1 ? ` ×${l.quantite}` : ''} : ${formatDollars(l.total)}`),
+  '',
+  `**Total :** ${formatDollars(t.montant)} · ${t.statut === 'payee' ? 'Réglée' : 'Impayée'}`,
+  ...(t.notes ? ['', '### 📝 Notes', t.notes] : []),
+]);
+
 // Détail d'un PV : réglée / impayée, suppression par un superviseur
 export function openTicket(t, onChange = () => {}) {
   const justice = isJustice();
   const dialog = openModal(`Amende ${t.numero}`, html`
-    <p>${ticketBadge(t.statut)} <strong>${fullName({ nom: t.citizen_nom, prenom: t.citizen_prenom })}</strong>
+    <p>${copyBtn(t.numero)} ${ticketBadge(t.statut)} <strong>${fullName({ nom: t.citizen_nom, prenom: t.citizen_prenom })}</strong>
       ${t.citizen_id ? html` · <a href="#/casiers/${t.citizen_id}" data-close>Voir la fiche</a>` : ''}</p>
     <p class="muted">${[fmtDate(t.date_faits) + (t.heure ? ` à ${t.heure}` : ''), t.lieu, t.plaque && `Plaque ${t.plaque}`, `Agent 『${t.agent_matricule}』`].filter(Boolean).join(' · ')}</p>
     <table class="table"><thead><tr><th>Infraction</th><th class="num">Qté</th><th class="num">Montant</th></tr></thead>
@@ -129,9 +151,11 @@ export function openTicket(t, onChange = () => {}) {
       <tfoot><tr><th colspan="2">Total</th><th class="num">${formatDollars(t.montant)}</th></tr></tfoot></table>
     ${t.notes ? html`<p class="pre-wrap">${t.notes}</p>` : ''}
     ${justice ? '' : html`<div class="form-actions">
+      <button type="button" class="btn" data-discord>${icon('copy')} Copier pour Discord</button>
       ${hasRole('superviseur') ? html`<button type="button" class="btn btn-ghost" data-delete>${icon('trash')} Supprimer</button>` : ''}
       <button type="button" class="btn btn-primary" data-statut="${t.statut === 'payee' ? 'impayee' : 'payee'}">${t.statut === 'payee' ? 'Remettre en impayée' : 'Marquer réglée'}</button>
     </div>`}`, { wide: true });
+  $('[data-discord]', dialog)?.addEventListener('click', () => openDiscordModal(discordText(t)));
   $('[data-statut]', dialog)?.addEventListener('click', e => attempt(async () => {
     await api(`/tickets/${t.id}/statut`, { method: 'PUT', body: { statut: e.target.dataset.statut } });
     toast(e.target.dataset.statut === 'payee' ? 'Amende réglée' : 'Amende remise en impayée');
@@ -171,7 +195,7 @@ export async function render(main, params, query) {
     mount($('[data-results]', main), list.length ? html`<table class="table table-click">
       <thead><tr><th>N°</th><th>Contrevenant</th><th>Infractions</th><th class="num">Montant</th><th>Statut</th><th>Dressée le</th></tr></thead>
       <tbody>${list.map(t => html`<tr data-id="${t.id}">
-        <td class="mono strong">${t.numero}</td>
+        <td class="mono strong">${t.numero}${copyBtn(t.numero)}</td>
         <td>${fullName({ nom: t.citizen_nom, prenom: t.citizen_prenom })}${t.plaque ? html`<small class="muted block mono">${t.plaque}</small>` : ''}</td>
         <td>${t.charges.map(l => l.infraction).join(' · ')}</td>
         <td class="num">${formatDollars(t.montant)}</td>

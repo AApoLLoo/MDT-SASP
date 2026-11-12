@@ -875,3 +875,15 @@ dialog.modal[open]::backdrop { background: rgba(3, 7, 18, 0.72); backdrop-filter
 @media (max-width: 860px) { .topbar-search { order: 10; flex-basis: 100%; max-width: none; } }
 .row-inline { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
 .inline-form .doc-pick { flex: 2 1 14rem; }
+
+/* ---------- Copie, tri, surlignage, brouillons, modèles, raccourcis ---------- */
+.copy-btn { display: inline-grid; vertical-align: middle; margin-left: 0.3rem; padding: 2px; opacity: 0.55; }
+.copy-btn svg { width: 14px; height: 14px; }
+.copy-btn:hover, .copy-btn:focus-visible { opacity: 1; color: var(--gold-2); }
+.table-wrap thead th { cursor: pointer; user-select: none; }
+.table-wrap thead th[aria-sort='ascending']::after { content: ' ▲'; color: var(--gold-2); font-size: 0.7em; }
+.table-wrap thead th[aria-sort='descending']::after { content: ' ▼'; color: var(--gold-2); font-size: 0.7em; }
+.dropdown mark { background: var(--gold-soft); color: var(--gold-2); border-radius: 2px; }
+.draft-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.template-select { width: auto; max-width: 100%; margin-bottom: 0.5rem; }
+.shortcuts td:first-child { width: 11rem; }

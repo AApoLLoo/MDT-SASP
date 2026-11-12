@@ -3,6 +3,7 @@ import { api, hasRole } from '../api.js';
 import { icon } from '../icons.js';
 import { openWarrantForm } from './warrants.js';
 import { mountPhotos, numberedSlots, photoCount } from '../components/photos.js';
+import { copyBtn } from '../components/discord.js';
 
 // Registre des véhicules volés : déclaration, recherche par plaque, véhicule retrouvé
 
@@ -80,7 +81,7 @@ export async function render(main, params, query) {
     mount($('[data-results]', main), list.length ? html`<table class="table">
       <thead><tr><th>Plaque</th><th>Véhicule</th><th>Propriétaire</th><th>Vol</th><th>Statut</th><th></th></tr></thead>
       <tbody>${list.map(v => html`<tr class="${v.statut === 'retrouve' ? 'is-muted' : ''}">
-        <td class="mono strong plate">${v.plaque}</td>
+        <td class="mono strong plate">${v.plaque}${copyBtn(v.plaque)}</td>
         <td>${v.modele || '—'}${v.couleur ? html`<small class="muted block">${v.couleur}</small>` : ''}${photoCount(v.photos)}</td>
         <td>${v.proprietaire || '—'}${v.contact ? html`<small class="muted block">${v.contact}</small>` : ''}</td>
         <td><span class="nowrap">${fmtDate(v.date_vol)}</span>${v.lieu_vol ? html`<small class="muted block">${v.lieu_vol}</small>` : ''}
