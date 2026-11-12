@@ -34,15 +34,24 @@ app.use((req, res, next) => {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'same-origin',
-    'Content-Security-Policy': "default-src 'self'; img-src 'self' https: http: data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
+    'Content-Security-Policy': "default-src 'self'; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
   });
   next();
 });
 
+// Origine illisible (« null » d'une iframe isolée, valeur forgée) : traitée comme un autre site
+const sameHost = (origin, host) => {
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+};
+
 // Refuse les requêtes d'écriture venant d'un autre site
 app.use('/api', (req, res, next) => {
   const origin = req.headers.origin;
-  if (req.method !== 'GET' && origin && new URL(origin).host !== req.headers.host) {
+  if (req.method !== 'GET' && origin && !sameHost(origin, req.headers.host)) {
     return res.status(403).json({ error: 'Origine refusée' });
   }
   next();

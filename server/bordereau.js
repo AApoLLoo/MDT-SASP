@@ -215,7 +215,7 @@ export async function importBordereau(user, url, fetchDoc = fetchGoogleDoc) {
   const id = transaction(() => {
     // Fiche citoyen existante retrouvée par son n° sécu, sinon créée
     const known = b.suspect.id_unique && db.prepare('SELECT id FROM citizens WHERE id_unique = ?').get(b.suspect.id_unique);
-    const { citizen_id, snapshot } = upsertCitizen({ ...b.suspect, id: known?.id }, SUSPECT_FIELDS);
+    const { citizen_id, snapshot } = upsertCitizen({ ...b.suspect, id: known?.id }, SUSPECT_FIELDS, user, "Depuis l'import d'un bordereau");
     const reportId = createReport(user, { citizenId: citizen_id, calcInput: { charges }, faits: b.faits });
     updateRow('arrest_reports', reportId, {
       suspect: JSON.stringify(snapshot),

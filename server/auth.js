@@ -14,7 +14,11 @@ export function hashPassword(password) {
   return `${salt.toString('hex')}:${scryptSync(password, salt, 64).toString('hex')}`;
 }
 
-function verifyPassword(password, stored) {
+// Matricule inconnu : le mot de passe est quand même vérifié (contre ce hash), pour que la durée
+// de la réponse ne révèle pas si le matricule existe
+const DUMMY_HASH = hashPassword(randomBytes(16).toString('hex'));
+
+function verifyPassword(password, stored = DUMMY_HASH) {
   const [salt, hash] = stored.split(':');
   const expected = Buffer.from(hash, 'hex');
   return timingSafeEqual(scryptSync(password, Buffer.from(salt, 'hex'), expected.length), expected);
@@ -72,7 +76,7 @@ export const siteAuth = {
   find: matricule => officer(activeUser(matricule)),
   verify: (matricule, password) => {
     const user = activeUser(matricule);
-    return user && verifyPassword(password, user.password_hash) ? officer(user) : null;
+    return verifyPassword(password, user?.password_hash) && user ? officer(user) : null;
   },
 };
 
@@ -85,8 +89,14 @@ const failures = new Map();
 const MAX_FAILURES = 5;
 const LOCK_MS = 15 * 60 * 1000;
 
+// Appelée par la maintenance horaire : sessions expirées et blocages anti-bruteforce échus
+export function purgeExpired() {
+  const now = Date.now();
+  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(now);
+  for (const [key, entry] of failures) if (entry.until <= now) failures.delete(key);
+}
+
 export function ensureAdmin() {
-  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now());
   if (db.prepare('SELECT COUNT(*) AS n FROM users').get().n) return;
   const matricule = process.env.ADMIN_MATRICULE || 'admin';
   const password = process.env.ADMIN_PASSWORD || randomBytes(9).toString('base64url');
@@ -109,7 +119,7 @@ authRouter.post('/login', (req, res) => {
     fail(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
   }
   const user = db.prepare('SELECT * FROM users WHERE matricule = ? AND actif = 1').get(matricule);
-  if (!user || !verifyPassword(password, user.password_hash)) {
+  if (!verifyPassword(password, user?.password_hash) || !user) {
     const count = entry && entry.until > Date.now() ? entry.count + 1 : 1;
     failures.set(key, { count, until: Date.now() + LOCK_MS });
     fail(401, 'Matricule ou mot de passe incorrect');

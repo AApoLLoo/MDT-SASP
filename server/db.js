@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity, entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
 
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,

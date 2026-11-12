@@ -137,18 +137,22 @@ export async function renderEdit(main, [id]) {
   mountAgentsInput($('[data-agents]', main), model.agents_presents, markDirty);
   mountPhotos($('[data-photos]', main), model.photos, markDirty, PHOTOS);
 
+  // Version chargée : le serveur refuse la sauvegarde si quelqu'un d'autre a enregistré depuis (409)
+  let version = inc.updated_at;
   async function save({ quiet = false } = {}) {
     const details = readDetails();
     const fields = INCIDENT_TYPES[field('type').value].fields;
     const saved = await api(`/incidents/${id}`, {
       method: 'PUT',
       body: {
+        updated_at: version,
         ...Object.fromEntries(['type', 'date_faits', 'heure', 'lieu', 'personnes', 'recit'].map(k => [k, field(k).value])),
         details: Object.fromEntries(fields.map(f => [f.key, details[f.key] ?? ''])),
         agents_presents: model.agents_presents,
         photos: model.photos,
       },
     });
+    version = saved.updated_at;
     dirty = false;
     status.textContent = `Enregistré à ${nowTime()}`;
     status.classList.remove('is-dirty');

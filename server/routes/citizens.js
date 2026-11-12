@@ -15,14 +15,36 @@ export function cleanCitizen(body, keys = FIELDS) {
   return fields;
 }
 
+const CHANGE_LABELS = {
+  nom: 'Nom', prenom: 'Prénom', date_naissance: 'Naissance', id_unique: 'N° sécu', empreinte: 'Empreinte', telephone: 'Téléphone',
+};
+const BULKY = { notes: 'Notes modifiées', photos: 'Photos modifiées', photo_url: 'Photo modifiée' };
+const short = v => {
+  const s = str(v) || '—';
+  return s.length > 60 ? `${s.slice(0, 59)}…` : s;
+};
+
+// Champs qui changent réellement, pour le journal : « N° sécu : 123 → 456 · Notes modifiées »
+export function citizenChanges(before, fields) {
+  return Object.entries(fields)
+    .filter(([k, v]) => str(before[k]) !== str(v))
+    .map(([k, v]) => BULKY[k] ?? `${CHANGE_LABELS[k] ?? k} : ${short(before[k])} → ${short(v)}`)
+    .join(' · ');
+}
+
 // Met à jour (champs non vides) ou crée la fiche citoyen d'une personne saisie
-// dans un document (suspect d'un rapport, plaignant ou mis en cause d'une plainte)
-export function upsertCitizen(person, keys) {
+// dans un document (suspect d'un rapport, plaignant ou mis en cause d'une plainte) ;
+// une fiche existante modifiée ainsi est journalisée au nom de `user`, avec le document d'origine
+export function upsertCitizen(person, keys, user, source = '') {
   const fields = cleanCitizen(person, keys);
   if (!fields.nom) return { citizen_id: null, snapshot: fields };
   const id = optionalId(person.id);
   if (id) {
-    updateRow('citizens', id, Object.fromEntries(Object.entries(fields).filter(([, v]) => v)));
+    const before = getOr404('SELECT * FROM citizens WHERE id = ?', id, 'Citoyen introuvable');
+    const update = Object.fromEntries(Object.entries(fields).filter(([, v]) => v));
+    updateRow('citizens', id, update);
+    const changes = citizenChanges(before, update);
+    if (changes) logAction(user, 'Fiche citoyen modifiée', 'citizen', id, citizenName({ ...before, ...update }), [source, changes].filter(Boolean).join(' · '));
     return { citizen_id: id, snapshot: { ...fields, id } };
   }
   const newId = insertRow('citizens', fields);
@@ -87,8 +109,9 @@ r.put('/:id', (req, res) => {
   const fields = cleanCitizen(req.body);
   if ('nom' in fields && !fields.nom) fail(400, 'Le nom est obligatoire');
   const id = intParam(req.params.id);
+  const before = getOr404('SELECT * FROM citizens WHERE id = ?', id, 'Citoyen introuvable');
   updateRow('citizens', id, fields);
-  logAction(req.user, 'Fiche citoyen modifiée', 'citizen', id, citizenName(getOr404('SELECT nom, prenom FROM citizens WHERE id = ?', id)));
+  logAction(req.user, 'Fiche citoyen modifiée', 'citizen', id, citizenName({ ...before, ...fields }), citizenChanges(before, fields));
   res.json({ ok: true });
 });
 

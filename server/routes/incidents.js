@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db, parseJson } from '../db.js';
 import { hasRole } from '../auth.js';
-import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
+import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction, checkVersion } from '../util.js';
 import { INCIDENT_TYPES } from '../../public/mdt/js/incident-kinds.js';
 
 const JSON_DEFAULTS = { agents_presents: [], details: {}, photos: {} };
@@ -69,6 +69,7 @@ r.put('/:id', (req, res) => {
   const inc = load(id, req.user);
   if (!inc.can_edit) fail(403, 'Ce rapport ne peut plus être modifié');
   const b = req.body ?? {};
+  checkVersion(inc.updated_at, b.updated_at);
   const f = {};
   for (const k of ['date_faits', 'heure', 'lieu', 'personnes', 'recit']) if (b[k] !== undefined) f[k] = str(b[k]).slice(0, k === 'recit' ? 20000 : 4000);
   if (b.type !== undefined) {

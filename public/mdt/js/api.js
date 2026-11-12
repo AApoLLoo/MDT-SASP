@@ -4,8 +4,14 @@ export const state = { user: null, defcon: 5, settings: null, penalCode: null, u
 
 let onUnauthorized = () => {};
 export const setUnauthorizedHandler = fn => { onUnauthorized = fn; };
+// Session expirée en cours d'utilisation : reconnexion sans quitter la page (formulaire en cours conservé).
+// Une seule fenêtre pour toutes les requêtes refusées en même temps ; chacune est relancée ensuite.
+let onSessionExpired = null;
+export const setSessionExpiredHandler = fn => { onSessionExpired = fn; };
+let relogin = null;
 
-export async function api(path, { method = 'GET', body, file } = {}) {
+export async function api(path, options = {}) {
+  const { method = 'GET', body, file } = options;
   const opts = { method, headers: {} };
   if (file) {
     opts.body = file;
@@ -16,6 +22,11 @@ export async function api(path, { method = 'GET', body, file } = {}) {
   }
   const res = await fetch('api' + path, opts);
   const data = await res.json().catch(() => null);
+  if (res.status === 401 && !path.startsWith('/auth/') && state.user && onSessionExpired) {
+    relogin ??= onSessionExpired().finally(() => { relogin = null; });
+    await relogin;
+    return api(path, options);
+  }
   if (res.status === 401 && !path.startsWith('/auth/')) {
     state.user = null;
     onUnauthorized();

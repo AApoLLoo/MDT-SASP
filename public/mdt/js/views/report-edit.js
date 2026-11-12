@@ -212,10 +212,13 @@ export async function render(main, [id]) {
   mountPhotos($('[data-photos]', main), model.photos, markDirty);
 
   // --- Enregistrement
+  // Version chargée : le serveur refuse la sauvegarde si quelqu'un d'autre a enregistré depuis (409)
+  let version = rep.updated_at;
   async function save({ quiet = false } = {}) {
     const saved = await api(`/reports/${id}`, {
       method: 'PUT',
       body: {
+        updated_at: version,
         date_rapport: field('date_rapport').value,
         date_faits: field('date_faits').value,
         miranda_heure: field('miranda_heure').value,
@@ -229,6 +232,7 @@ export async function render(main, [id]) {
         avocat_id: field('avocat_id').value || null,
       },
     });
+    version = saved.updated_at;
     model.suspect = { ...saved.suspect };
     calcResult = saved.calc_result;
     dirty = false;

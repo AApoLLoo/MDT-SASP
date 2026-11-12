@@ -50,9 +50,9 @@ function fieldsFrom(b) {
 }
 
 // Plaignant et mis en cause : fiches citoyens créées ou mises à jour au passage
-function applyPersons(b, f) {
+function applyPersons(b, f, user, source = '') {
   if (b.plaignant !== undefined) {
-    const { citizen_id, snapshot } = upsertCitizen(b.plaignant ?? {}, PERSON_FIELDS);
+    const { citizen_id, snapshot } = upsertCitizen(b.plaignant ?? {}, PERSON_FIELDS, user, source);
     if (!snapshot.nom) fail(400, 'Le nom du plaignant est obligatoire');
     f.plaignant_id = citizen_id;
     f.plaignant = JSON.stringify(snapshot);
@@ -64,7 +64,7 @@ function applyPersons(b, f) {
       f.mis_en_cause_id = null;
       f.mis_en_cause = JSON.stringify({ inconnu: true, description });
     } else {
-      const { citizen_id, snapshot } = upsertCitizen(m, PERSON_FIELDS);
+      const { citizen_id, snapshot } = upsertCitizen(m, PERSON_FIELDS, user, source);
       f.mis_en_cause_id = citizen_id;
       f.mis_en_cause = JSON.stringify({ ...snapshot, description });
     }
@@ -102,7 +102,7 @@ r.post('/', (req, res) => {
   const f = fieldsFrom(b);
   if (b.plaignant === undefined) fail(400, 'Le nom du plaignant est obligatoire');
   const id = transaction(() => {
-    applyPersons(b, f);
+    applyPersons(b, f, req.user, 'Depuis une nouvelle plainte');
     return insertRow('complaints', {
       ...f,
       numero: nextNumero('complaints', 'PLT'),
@@ -124,7 +124,7 @@ r.put('/:id', (req, res) => {
   const f = fieldsFrom(b);
   if (f.statut && CLOSED.includes(f.statut) !== CLOSED.includes(current.statut)) f.closed_at = closedAt(f.statut);
   transaction(() => {
-    applyPersons(b, f);
+    applyPersons(b, f, req.user, `Depuis la plainte ${current.numero}`);
     updateRow('complaints', id, f);
     if (f.avocat_ids) logAvocatChange(req.user, 'complaint', id, current.numero, current.avocat_ids, JSON.parse(f.avocat_ids));
     logAction(req.user, 'Plainte modifiée', 'complaint', id, current.numero,

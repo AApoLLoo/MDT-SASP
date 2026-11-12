@@ -1,15 +1,18 @@
 import { DatabaseSync } from 'node:sqlite';
-import { mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { db, DATA_DIR, UPLOAD_DIR } from './db.js';
+import { purgeExpired } from './auth.js';
 
 export const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+// Copie de chaque sauvegarde hors du disque des données (lecteur réseau, dossier synchronisé…) ; vide = aucune copie
+const COPY_DIR = process.env.BACKUP_COPY_DIR ? path.resolve(process.env.BACKUP_COPY_DIR) : null;
 const KEEP = Number(process.env.BACKUP_KEEP) || 14;
 const DAY_MS = 24 * 3600 * 1000;
 const ORPHAN_GRACE_MS = 7 * DAY_MS; // laisse le temps d'enregistrer un formulaire où la photo vient d'être importée
 
-export const backups = () => readdirSync(BACKUP_DIR).filter(f => /^mdt-\d{8}-\d{9}\.sqlite$/.test(f)).sort();
+export const backups = (dir = BACKUP_DIR) => readdirSync(dir).filter(f => /^mdt-\d{8}-\d{9}\.sqlite$/.test(f)).sort();
 
 // Copie cohérente de la base, serveur en marche compris : contrairement à une copie du fichier,
 // VACUUM INTO inclut ce qui est encore dans le journal WAL. Garde les KEEP plus récentes.
@@ -19,6 +22,16 @@ export function backup() {
   const file = path.join(BACKUP_DIR, `mdt-${stamp}.sqlite`);
   db.exec(`VACUUM INTO '${file.replaceAll("'", "''")}'`);
   for (const old of backups().slice(0, -KEEP)) rmSync(path.join(BACKUP_DIR, old));
+  if (COPY_DIR) {
+    // Échec de la copie : signalé, la sauvegarde locale reste valable
+    try {
+      mkdirSync(COPY_DIR, { recursive: true });
+      copyFileSync(file, path.join(COPY_DIR, path.basename(file)));
+      for (const old of backups(COPY_DIR).slice(0, -KEEP)) rmSync(path.join(COPY_DIR, old));
+    } catch (err) {
+      console.error(`Copie de la sauvegarde vers ${COPY_DIR} en échec :`, err);
+    }
+  }
   return file;
 }
 
@@ -54,8 +67,9 @@ export function cleanUploads() {
   return removed;
 }
 
-// Lancée au démarrage puis toutes les heures : une sauvegarde par jour au plus
+// Lancée au démarrage puis toutes les heures : purge des sessions expirées, une sauvegarde par jour au plus
 export function dailyMaintenance() {
+  purgeExpired();
   mkdirSync(BACKUP_DIR, { recursive: true });
   const last = backups().at(-1);
   if (last && Date.now() - statSync(path.join(BACKUP_DIR, last)).mtimeMs < DAY_MS) return;

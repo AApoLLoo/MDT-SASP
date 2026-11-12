@@ -290,7 +290,7 @@ export function openSketchEditor({ url, units, onClose }) {
     }
     if (b.matches('[data-fond-link]')) {
       const link = prompt("Lien de l'image (https://…)")?.trim();
-      if (link && /^https?:\/\/\S+$/.test(link)) { setFond(link); drawAll(); }
+      if (link && /^https:\/\/\S+$/.test(link)) { setFond(link); drawAll(); }
       else if (link) alert('Lien invalide : il doit commencer par https://');
     }
     if (b.matches('[data-fond-rm]') && model.fond) { setFond(''); drawAll(); }

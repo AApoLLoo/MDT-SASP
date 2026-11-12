@@ -57,9 +57,9 @@ export function localDate() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-const PHOTO_URL = /^(\/mdt\/uploads\/[\w.-]+|https?:\/\/\S+)$/;
+const PHOTO_URL = /^(\/mdt\/uploads\/[\w.-]+|https:\/\/\S+)$/;
 
-// Photos { emplacement: url } : uniquement nos uploads ou des liens http(s)
+// Photos { emplacement: url } : uniquement nos uploads ou des liens https (http en clair refusé, comme par la CSP)
 export function cleanPhotos(photos = {}) {
   const out = {};
   for (const [slot, url] of Object.entries(photos ?? {})) {
@@ -76,6 +76,15 @@ export const listLimit = req => Math.min(Math.max(Number(req.query.limit) || 100
 export function logAction(user, action, entity, entityId = null, label = '', details = '') {
   db.prepare('INSERT INTO audit_log (user_id, action, entity, entity_id, label, details) VALUES (?, ?, ?, ?, ?, ?)')
     .run(user?.id ?? null, action, entity, entityId, str(label), str(details).slice(0, 1000));
+}
+
+// Verrou optimiste : le client renvoie l'updated_at du document qu'il a chargé ; s'il a changé entre-temps,
+// quelqu'un d'autre a enregistré et la sauvegarde l'écraserait. Sans updated_at, aucun contrôle.
+// ponytail: updated_at est à la seconde, deux enregistrements dans la même seconde passent ; horodatage plus fin si ça arrive
+export function checkVersion(current, sent) {
+  if (sent !== undefined && sent !== current) {
+    fail(409, "Ce document a été modifié par quelqu'un d'autre depuis son ouverture. Copiez votre texte, puis rechargez la page.");
+  }
 }
 
 export function getOr404(sql, id, message = 'Élément introuvable') {

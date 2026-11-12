@@ -78,7 +78,7 @@ export function mountPhotos(root, photos, onChange, groups = PHOTO_GROUPS) {
     if (e.target.matches('[data-file]')) upload(slotEl.dataset.slot, e.target.files[0]);
     if (e.target.matches('[data-url]')) {
       const url = e.target.value.trim();
-      if (!url || /^https?:\/\/\S+$/.test(url)) set(slotEl.dataset.slot, url);
+      if (!url || /^https:\/\/\S+$/.test(url)) set(slotEl.dataset.slot, url);
       else toast('Lien invalide : il doit commencer par https://', 'error');
     }
   });

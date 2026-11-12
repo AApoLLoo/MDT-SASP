@@ -1,5 +1,5 @@
-import { html, mount, $, $$, agentLabel, toast, countUp } from './dom.js';
-import { api, state, setUnauthorizedHandler, hasRole, isJustice, isAvocat } from './api.js';
+import { html, mount, $, $$, agentLabel, toast, countUp, formValues } from './dom.js';
+import { api, state, setUnauthorizedHandler, setSessionExpiredHandler, hasRole, isJustice, isAvocat } from './api.js';
 import { startRouter, resolve, navigate } from './router.js';
 import { icon } from './icons.js';
 import { defconInfo } from './reference-data.js';
@@ -118,6 +118,52 @@ let routerStarted = false;
 
 function showLogin() {
   renderLogin($('#root'), showApp);
+}
+
+// Session de 12 h écoulée pendant l'utilisation : reconnexion par-dessus la page, sans perdre la saisie en cours.
+// Résolue une fois le même agent reconnecté ; un autre agent recharge le MDT (il n'hérite pas de l'écran).
+function promptRelogin() {
+  return new Promise(resolve => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal';
+    mount(dialog, html`
+      <div class="modal-head"><h2>Session expirée</h2></div>
+      <form class="modal-body">
+        <p>Votre session de 12 heures est terminée. Reconnectez-vous : la page et votre saisie en cours sont conservées.</p>
+        <label class="field">Matricule<input class="input" name="matricule" required autocomplete="username" value="${state.user.matricule}"></label>
+        <label class="field">Mot de passe<input class="input" name="password" type="password" required autocomplete="current-password" autofocus></label>
+        <p class="form-error" hidden></p>
+        <div class="form-actions">
+          <button type="button" class="btn" data-switch>Changer d'agent</button>
+          <button class="btn btn-primary">Reconnexion</button>
+        </div>
+      </form>`);
+    const form = $('form', dialog);
+    const error = $('.form-error', dialog);
+    dialog.addEventListener('cancel', e => e.preventDefault()); // Échap ne ferme pas : la reconnexion est obligatoire
+    $('[data-switch]', dialog).addEventListener('click', () => location.reload());
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      error.hidden = true;
+      e.submitter.disabled = true;
+      try {
+        const { user } = await api('/auth/login', { method: 'POST', body: formValues(form) });
+        if (user.id !== state.user.id) {
+          location.reload();
+          return;
+        }
+        dialog.close();
+        dialog.remove();
+        resolve();
+      } catch (err) {
+        error.textContent = err.message;
+        error.hidden = false;
+        e.submitter.disabled = false;
+      }
+    });
+    document.body.append(dialog);
+    dialog.showModal();
+  });
 }
 
 function updateDefconBadge() {
@@ -280,8 +326,8 @@ async function showApp() {
   });
 
   $('[data-logout]').addEventListener('click', async () => {
+    state.user = null; // avant la requête : un 401 reçu entre-temps ne doit pas ouvrir la reconnexion
     await api('/auth/logout', { method: 'POST' }).catch(() => {});
-    state.user = null;
     showLogin();
   });
 
@@ -369,6 +415,7 @@ async function waitForTab() {
 initLite();
 const resumeAmbient = startAmbient($('#ambient'), $('.backdrop'));
 setUnauthorizedHandler(showLogin);
+setSessionExpiredHandler(promptRelogin);
 
 if (navigator.locks && !(await claimTab())) await waitForTab();
 try {

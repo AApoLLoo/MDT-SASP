@@ -29,6 +29,7 @@ La configuration se fait par variables d'environnement, ou dans un fichier `.env
 | `TRUST_PROXY` | `1` derrière un reverse proxy HTTPS : cookies `Secure` du MDT, IP réelle pour les limites du site | — |
 | `SECURE_COOKIES` | `true` une fois le site servi en HTTPS (cookies `Secure` du site) | `false` |
 | `BACKUP_KEEP` | Nombre de sauvegardes quotidiennes conservées dans `data/backups/` | `14` |
+| `BACKUP_COPY_DIR` | Dossier hors du disque des données (lecteur réseau, dossier synchronisé) où chaque sauvegarde est aussi copiée, `BACKUP_KEEP` copies gardées | vide (aucune copie) |
 | `SITE_ADMIN_PASSWORD` | Mot de passe de secours de `/admin` (12 caractères minimum conseillés). Vide = accès par compte MDT uniquement | — |
 | `DISCORD_WEBHOOK_URL` | Salon Discord qui reçoit les candidatures | — |
 | `DISCORD_TICKETS_WEBHOOK_URL` | Salon Discord des nouvelles demandes civiles | `DISCORD_WEBHOOK_URL` |

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db, parseJson, transaction, getDefcon } from '../db.js';
 import { hasRole, canJudge, requireJudge } from '../auth.js';
 import { cleanAvocatId, blanchirRapports, logAvocatChange } from '../justice.js';
-import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction } from '../util.js';
+import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction, checkVersion } from '../util.js';
 import { upsertCitizen } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
 import { compute, formatDollars, MAX_CHARGES, MAJORATION_DEFCON } from '../../public/mdt/js/calc.js';
@@ -134,6 +134,7 @@ r.put('/:id', (req, res) => {
   const rep = loadReport(id, req.user);
   if (!rep.can_edit) fail(403, 'Ce rapport ne peut plus être modifié');
   const b = req.body ?? {};
+  checkVersion(rep.updated_at, b.updated_at);
   const fields = {};
   for (const k of ['date_rapport', 'date_faits', 'miranda_heure', 'miranda_par', 'faits']) if (b[k] !== undefined) fields[k] = str(b[k]);
   if (b.agents_presents !== undefined) {
@@ -153,7 +154,7 @@ r.put('/:id', (req, res) => {
   }
   transaction(() => {
     if (b.suspect !== undefined) {
-      const { citizen_id, snapshot } = upsertCitizen(b.suspect ?? {}, SUSPECT_FIELDS);
+      const { citizen_id, snapshot } = upsertCitizen(b.suspect ?? {}, SUSPECT_FIELDS, req.user, `Depuis le rapport ${rep.numero}`);
       fields.citizen_id = citizen_id;
       fields.suspect = JSON.stringify(snapshot);
     }
