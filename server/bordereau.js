@@ -7,7 +7,7 @@ import path from 'node:path';
 import { db, UPLOAD_DIR, transaction } from './db.js';
 import { fail, updateRow, logAction } from './util.js';
 import { createReport, SUSPECT_FIELDS } from './routes/reports.js';
-import { upsertCitizen } from './routes/citizens.js';
+import { upsertCitizen, useIdentityPhoto } from './routes/citizens.js';
 import { imageExtension } from './routes/misc.js';
 
 const MAX_BYTES = 60 * 1024 * 1024; // l'export d'un bordereau illustré pèse ~12 Mo
@@ -227,6 +227,7 @@ export async function importBordereau(user, url, fetchDoc = fetchGoogleDoc) {
       objets_illegaux: JSON.stringify(b.objets_illegaux.slice(0, 50)),
       photos: JSON.stringify(photos),
     });
+    useIdentityPhoto(user, citizen_id, photos.carte_identite, "Depuis l'import d'un bordereau");
     logAction(user, 'Bordereau Google Docs importé', 'report', reportId, '', `Document ${docId}`);
     return reportId;
   });

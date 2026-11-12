@@ -58,7 +58,7 @@ const { db } = await import('../server/db.js');
 const { hasRole, canJudge } = await import('../server/auth.js');
 
 test('v6 : rôles justice et statut en_attente acceptés, données conservées', () => {
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 6);
+  assert.ok(db.prepare('PRAGMA user_version').get().user_version >= 6, 'v6 appliquée (et les suivantes)');
   const rep = db.prepare('SELECT statut, faits FROM arrest_reports WHERE numero = ?').get('SASP-OLD');
   assert.equal(rep.statut, 'finalise');
   assert.equal(rep.faits, "Vol à l'étalage");

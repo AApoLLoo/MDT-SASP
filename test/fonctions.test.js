@@ -10,6 +10,7 @@ const { db } = await import('../server/db.js');
 const { default: citizens } = await import('../server/routes/citizens.js');
 const { default: tickets } = await import('../server/routes/tickets.js');
 const { default: search } = await import('../server/routes/search.js');
+const { default: reports } = await import('../server/routes/reports.js');
 
 const user = role => Number(db.prepare(`INSERT INTO users (matricule, role, password_hash) VALUES (?, ?, 'x')`).run(`${role}-${Math.random()}`, role).lastInsertRowid);
 const users = { agent: user('agent'), superviseur: user('superviseur') };
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 app.use('/citizens', citizens);
 app.use('/tickets', tickets);
 app.use('/search', search);
+app.use('/reports', reports);
 app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message }));
 const server = app.listen(0);
 after(() => server.close());
@@ -110,4 +112,32 @@ test('recherche globale : citoyens par alias, plaques, numéros de document ; co
   assert.equal((await hit('zz9', 'vehicle'))[0].titre, 'ZZ999');
   assert.equal((await hit('PV-T', 'ticket')).length, 1);
   assert.equal((await hit('SASP-B', 'report')).length, 0, 'blanchi : invisible pour la police');
+});
+
+test("amende sans fiche : fiche créée avec date de naissance et carte d'identité obligatoires", async () => {
+  const charges = [{ code_id: code('Contravention').id }];
+  const count = () => db.prepare('SELECT COUNT(*) AS n FROM citizens').get().n;
+  const before = count();
+  const person = { nom: 'Dupres', prenom: 'Thomas', date_naissance: '1990-05-04', photo_url: '/mdt/uploads/id.png' };
+  assert.equal((await call('POST', '/tickets', { citizen: { ...person, photo_url: '' }, charges })).status, 400, 'photo exigée');
+  assert.equal((await call('POST', '/tickets', { citizen: { ...person, date_naissance: '' }, charges })).status, 400, 'date de naissance exigée');
+  assert.equal((await call('POST', '/tickets', { citizen: person, charges: [] })).status, 400);
+  assert.equal(count(), before, 'aucune fiche créée sur un refus');
+
+  const { status, body: t } = await call('POST', '/tickets', { citizen: person, charges });
+  assert.equal(status, 201);
+  const c = (await call('GET', `/citizens/${t.citizen_id}`)).body;
+  assert.deepEqual([c.nom, c.prenom, c.date_naissance, c.photo_url], ['Dupres', 'Thomas', '1990-05-04', '/mdt/uploads/id.png']);
+  assert.equal(c.tickets.length, 1);
+  assert.equal(c.reports.length, 0, 'une amende ne fait pas de casier');
+});
+
+test("rapport d'arrestation : la carte d'identité devient la photo d'identité de la fiche", async () => {
+  const id = await citizen({ nom: 'Photo', photo_url: '/mdt/uploads/ancienne.png' });
+  const { body: { id: rep } } = await call('POST', '/reports', { citizen_id: id });
+  await call('PUT', `/reports/${rep}`, { photos: { carte_identite: '/mdt/uploads/carte.png', vetu_face: '/mdt/uploads/face.png' } });
+  assert.equal((await call('GET', `/citizens/${id}`)).body.photo_url, '/mdt/uploads/carte.png');
+  assert.match(db.prepare('SELECT details FROM audit_log ORDER BY id DESC LIMIT 1').get().details, /carte d'identité/);
+  await call('PUT', `/reports/${rep}`, { photos: { vetu_face: '/mdt/uploads/face.png' } });
+  assert.equal((await call('GET', `/citizens/${id}`)).body.photo_url, '/mdt/uploads/carte.png', 'retirée du rapport : la fiche la garde');
 });

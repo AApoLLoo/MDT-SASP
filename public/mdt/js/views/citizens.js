@@ -104,7 +104,7 @@ export async function renderDetail(main, [id]) {
     <div class="page-head">
       <div>
         <a href="#/casiers" class="back">${icon('back')} Casiers</a>
-        <h1>Casier de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
+        <h1>${casier.length ? 'Casier' : 'Fiche'} de ${fullName(c)} ${actifs.length ? html`<span class="badge badge-danger">Recherché</span>` : ''}</h1>
         <p class="muted">${[c.alias && `dit « ${c.alias} »`, c.id_unique && `ID ${c.id_unique}`, c.date_naissance && `né(e) le ${fmtDate(c.date_naissance)}`, c.telephone].filter(Boolean).join(' · ') || `Fiche n° ${c.id}`}
           ${c.affiliation ? html` <span class="badge badge-warn">${c.affiliation}</span>` : ''}</p>
       </div>

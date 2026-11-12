@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { db, parseJson } from '../db.js';
+import { db, parseJson, transaction } from '../db.js';
+import { createFromId } from './citizens.js';
 import { requireRole } from '../auth.js';
 import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, listLimit, logAction, getOr404 } from '../util.js';
 import { formatDollars } from '../../public/mdt/js/calc.js';
@@ -40,25 +41,31 @@ r.get('/', (req, res) => {
 
 r.post('/', (req, res) => {
   const b = req.body ?? {};
-  const citizen = getOr404('SELECT id, nom, prenom FROM citizens WHERE id = ?', intParam(b.citizen_id), 'Citoyen introuvable');
   const charges = cleanCharges(b.charges);
   const montant = charges.reduce((s, l) => s + l.total, 0);
   const numero = nextNumero('tickets', 'PV');
-  const id = insertRow('tickets', {
-    numero,
-    citizen_id: citizen.id,
-    plaque: str(b.plaque).toUpperCase().slice(0, 20),
-    lieu: str(b.lieu).slice(0, 200),
-    date_faits: str(b.date_faits) || localDate(),
-    heure: str(b.heure).slice(0, 5),
-    charges: JSON.stringify(charges),
-    montant,
-    statut: b.statut === 'payee' ? 'payee' : 'impayee',
-    notes: str(b.notes).slice(0, 2000),
-    agent_id: req.user.id,
+  // Contrevenant connu (citizen_id) ou sans fiche (citizen) : fiche créée avec la PV, d'après sa carte d'identité
+  const id = transaction(() => {
+    const citizen = b.citizen_id || !b.citizen
+      ? getOr404('SELECT id, nom, prenom FROM citizens WHERE id = ?', intParam(b.citizen_id), 'Citoyen introuvable')
+      : createFromId(req.user, b.citizen, `Depuis l'amende ${numero}`);
+    const ticketId = insertRow('tickets', {
+      numero,
+      citizen_id: citizen.id,
+      plaque: str(b.plaque).toUpperCase().slice(0, 20),
+      lieu: str(b.lieu).slice(0, 200),
+      date_faits: str(b.date_faits) || localDate(),
+      heure: str(b.heure).slice(0, 5),
+      charges: JSON.stringify(charges),
+      montant,
+      statut: b.statut === 'payee' ? 'payee' : 'impayee',
+      notes: str(b.notes).slice(0, 2000),
+      agent_id: req.user.id,
+    });
+    logAction(req.user, 'Amende dressée', 'ticket', ticketId, numero,
+      `${[citizen.prenom, citizen.nom].filter(Boolean).join(' ')} · ${formatDollars(montant)} · ${charges.map(l => l.infraction).join(', ')}`);
+    return ticketId;
   });
-  logAction(req.user, 'Amende dressée', 'ticket', id, numero,
-    `${[citizen.prenom, citizen.nom].filter(Boolean).join(' ')} · ${formatDollars(montant)} · ${charges.map(l => l.infraction).join(', ')}`);
   res.status(201).json(parse(db.prepare(`${SELECT} WHERE t.id = ?`).get(id)));
 });
 

@@ -3,7 +3,7 @@ import { db, parseJson, transaction, getDefcon } from '../db.js';
 import { hasRole, canJudge, requireJudge } from '../auth.js';
 import { cleanAvocatId, blanchirRapports, logAvocatChange } from '../justice.js';
 import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction, checkVersion } from '../util.js';
-import { upsertCitizen } from './citizens.js';
+import { upsertCitizen, useIdentityPhoto } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
 import { compute, formatDollars, MAX_CHARGES, MAJORATION_DEFCON } from '../../public/mdt/js/calc.js';
 
@@ -160,6 +160,8 @@ r.put('/:id', (req, res) => {
     }
     updateRow('arrest_reports', id, fields);
     if ('avocat_id' in fields) logAvocatChange(req.user, 'report', id, rep.numero, [rep.avocat_id].filter(Boolean), [fields.avocat_id].filter(Boolean));
+    const photos = 'photos' in fields ? JSON.parse(fields.photos) : rep.photos;
+    useIdentityPhoto(req.user, 'citizen_id' in fields ? fields.citizen_id : rep.citizen_id, photos.carte_identite, `Depuis le rapport ${rep.numero}`);
   });
   res.json(loadReport(id, req.user));
 });

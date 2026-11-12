@@ -3,6 +3,7 @@ import { api, hasRole, isJustice, loadPenalCode } from '../api.js';
 import { icon } from '../icons.js';
 import { formatDollars } from '../calc.js';
 import { citizenPicker } from '../components/picker.js';
+import { mountPhotos } from '../components/photos.js';
 
 // Amendes simples (PV) : contraventions du Code pénal, dressées sans arrestation ni jugement
 
@@ -17,6 +18,8 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
     return;
   }
   let target = citizen;
+  // Contrevenant sans fiche : la fiche est créée avec l'amende, d'après sa carte d'identité
+  let newPerson = null;
   const lignes = [{ code_id: codes[0].id, quantite: 1 }];
   const dialog = openModal('Dresser une amende', html`
     <form class="form-grid" data-form>
@@ -35,21 +38,29 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
 
   const showCitizen = () => {
     const slot = $('[data-citizen]', dialog);
-    if (target) {
+    if (newPerson) {
+      mount(slot, html`<fieldset class="bare-fieldset form-grid">
+        <p class="span-2"><strong>Nouvelle fiche</strong> — d'après la carte d'identité
+          <button type="button" class="btn btn-sm btn-ghost" data-change>Chercher une fiche existante</button></p>
+        <label>Nom *<input class="input" name="new_nom" required value="${newPerson.nom}"></label>
+        <label>Prénom<input class="input" name="new_prenom" value="${newPerson.prenom}"></label>
+        <label>Date de naissance *<input class="input" type="date" name="new_date_naissance" required></label>
+        <div class="span-2" data-id-photo></div>
+      </fieldset>`);
+      mountPhotos($('[data-id-photo]', slot), newPerson.photos, () => {}, [{ titre: '', slots: [['photo_url', "Carte d'identité *"]] }]);
+      $('[data-change]', slot).addEventListener('click', () => { newPerson = null; showCitizen(); });
+    } else if (target) {
       mount(slot, html`<p>Contrevenant : <strong>${fullName(target)}</strong> ${citizen ? '' : html`<button type="button" class="btn btn-sm btn-ghost" data-change>Changer</button>`}</p>`);
       $('[data-change]', slot)?.addEventListener('click', () => { target = null; showCitizen(); });
     } else {
       mount(slot, html`<label>Contrevenant *<div data-pick></div></label>`);
       citizenPicker($('[data-pick]', slot), c => { target = c; showCitizen(); }, 'Rechercher le contrevenant (nom, ID unique, alias)…', {
-        // Personne sans fiche : créée sur place (dernier mot = nom, le reste = prénom ; corrigeable ensuite sur la fiche)
-        onCreate: q => attempt(async () => {
+        // Personne sans fiche : nom pré-rempli d'après la recherche (dernier mot = nom, le reste = prénom), modifiable
+        onCreate: q => {
           const words = q.split(/\s+/);
-          const person = { nom: words.pop(), prenom: words.join(' ') };
-          const { id } = await api('/citizens', { method: 'POST', body: person });
-          target = { id, ...person };
-          toast(`Fiche de ${fullName(person)} créée`);
+          newPerson = { nom: words.pop(), prenom: words.join(' '), photos: {} };
           showCitizen();
-        }),
+        },
       });
     }
   };
@@ -83,13 +94,20 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
   });
   $('[data-form]', dialog).addEventListener('submit', ev => {
     ev.preventDefault();
-    if (!target) {
+    if (!target && !newPerson) {
       toast('Choisissez le contrevenant', 'error');
       return;
     }
-    const { payee, ...v } = formValues(ev.target);
+    if (newPerson && !newPerson.photos.photo_url) {
+      toast("Ajoutez la photo de la carte d'identité", 'error');
+      return;
+    }
+    const { payee, new_nom, new_prenom, new_date_naissance, ...v } = formValues(ev.target);
+    const who = newPerson
+      ? { citizen: { nom: new_nom, prenom: new_prenom, date_naissance: new_date_naissance, photo_url: newPerson.photos.photo_url } }
+      : { citizen_id: target.id };
     attempt(async () => {
-      const t = await api('/tickets', { method: 'POST', body: { ...v, citizen_id: target.id, charges: lignes, statut: payee ? 'payee' : 'impayee' } });
+      const t = await api('/tickets', { method: 'POST', body: { ...v, ...who, charges: lignes, statut: payee ? 'payee' : 'impayee' } });
       toast(`Amende ${t.numero} dressée : ${formatDollars(t.montant)}`);
       dialog.close();
       onSaved(t);

@@ -436,6 +436,19 @@ if (db.prepare('PRAGMA user_version').get().user_version < 6) {
 }
 
 ensureColumns('patrol_units', { poste: "TEXT NOT NULL DEFAULT ''" });
+
+// v7 : la photo d'identité d'une fiche est celle de la carte d'identité ; les fiches sans photo reprennent
+// celle du dernier rapport d'arrestation qui en joint une
+if (db.prepare('PRAGMA user_version').get().user_version < 7) {
+  transaction(() => {
+    db.exec(`UPDATE citizens SET photo_url = (
+        SELECT json_extract(a.photos, '$.carte_identite') FROM arrest_reports a
+        WHERE a.citizen_id = citizens.id AND json_extract(a.photos, '$.carte_identite') <> '' ORDER BY a.id DESC LIMIT 1)
+      WHERE photo_url = '' AND EXISTS (
+        SELECT 1 FROM arrest_reports a WHERE a.citizen_id = citizens.id AND json_extract(a.photos, '$.carte_identite') <> '')`);
+    db.exec('PRAGMA user_version = 7');
+  });
+}
 // Photos ajoutées aux dossiers : casiers, véhicules volés, mandats et BOLO ({ emplacement: url })
 for (const table of ['citizens', 'vehicles', 'warrants']) ensureColumns(table, { photos: "TEXT NOT NULL DEFAULT '{}'" });
 // Identification sans la base du jeu : surnoms, signes distinctifs, groupe ou gang

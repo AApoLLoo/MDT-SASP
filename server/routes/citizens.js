@@ -53,6 +53,26 @@ export function upsertCitizen(person, keys, user, source = '') {
   return { citizen_id: newId, snapshot: { ...fields, id: newId } };
 }
 
+// La photo d'identité d'une fiche est celle de la carte d'identité : reprise de chaque rapport qui en joint une
+export function useIdentityPhoto(user, citizenId, url, source) {
+  if (!citizenId || !url) return;
+  const before = db.prepare('SELECT nom, prenom, photo_url FROM citizens WHERE id = ?').get(citizenId);
+  if (!before || before.photo_url === url) return;
+  updateRow('citizens', citizenId, { photo_url: url });
+  logAction(user, 'Fiche citoyen modifiée', 'citizen', citizenId, citizenName(before), `${source} · Photo d'identité remplacée par la carte d'identité`);
+}
+
+// Fiche créée en dressant une amende : nom, date de naissance et photo de la carte d'identité obligatoires
+export function createFromId(user, person, source) {
+  const fields = cleanCitizen(person, ['nom', 'prenom', 'date_naissance', 'photo_url']);
+  if (!fields.nom) fail(400, 'Le nom du contrevenant est obligatoire');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fields.date_naissance ?? '')) fail(400, 'La date de naissance du contrevenant est obligatoire');
+  if (!cleanPhotos({ photo: fields.photo_url }).photo) fail(400, "La photo de la carte d'identité est obligatoire");
+  const id = insertRow('citizens', fields);
+  logAction(user, 'Fiche citoyen créée', 'citizen', id, citizenName(fields), source);
+  return { id, ...fields };
+}
+
 const r = Router();
 
 r.get('/', (req, res) => {
