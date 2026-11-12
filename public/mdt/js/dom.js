@@ -84,7 +84,9 @@ export function countUp(root) {
 
 export function formValues(form) {
   const out = {};
-  for (const el of form.elements) {
+  // Getter d'origine : un champ nommé « elements » (« Hypothèses et pistes » des enquêtes) masque form.elements
+  const controls = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, 'elements').get.call(form);
+  for (const el of controls) {
     if (!el.name || el.disabled) continue;
     if (el.type === 'checkbox') out[el.name] = el.checked;
     else if (el.type === 'radio') { if (el.checked) out[el.name] = el.value; }
