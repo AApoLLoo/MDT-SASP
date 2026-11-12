@@ -40,7 +40,17 @@ export async function openTicketForm({ citizen = null } = {}, onSaved = () => {}
       $('[data-change]', slot)?.addEventListener('click', () => { target = null; showCitizen(); });
     } else {
       mount(slot, html`<label>Contrevenant *<div data-pick></div></label>`);
-      citizenPicker($('[data-pick]', slot), c => { target = c; showCitizen(); }, 'Rechercher le contrevenant (nom, ID unique, alias)…');
+      citizenPicker($('[data-pick]', slot), c => { target = c; showCitizen(); }, 'Rechercher le contrevenant (nom, ID unique, alias)…', {
+        // Personne sans fiche : créée sur place (dernier mot = nom, le reste = prénom ; corrigeable ensuite sur la fiche)
+        onCreate: q => attempt(async () => {
+          const words = q.split(/\s+/);
+          const person = { nom: words.pop(), prenom: words.join(' ') };
+          const { id } = await api('/citizens', { method: 'POST', body: person });
+          target = { id, ...person };
+          toast(`Fiche de ${fullName(person)} créée`);
+          showCitizen();
+        }),
+      });
     }
   };
 

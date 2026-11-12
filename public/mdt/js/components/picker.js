@@ -1,8 +1,9 @@
 import { html, mount, $, debounce, fullName, fmtDate } from '../dom.js';
 import { api } from '../api.js';
 
-// Champ de recherche avec liste de résultats ; onSelect(item) au clic ou sur Entrée
-export function picker(root, { placeholder, search, renderItem, onSelect }) {
+// Champ de recherche avec liste de résultats ; onSelect(item) au clic ou sur Entrée.
+// onCreate(q) facultatif : sans résultat, propose « createLabel(q) » (au clic seulement, pour ne rien créer par erreur)
+export function picker(root, { placeholder, search, renderItem, onSelect, onCreate, createLabel }) {
   mount(root, html`<div class="picker"><input type="search" class="input" placeholder="${placeholder}" autocomplete="off"><ul class="dropdown" hidden></ul></div>`);
   const input = $('input', root);
   const list = $('ul', root);
@@ -21,7 +22,8 @@ export function picker(root, { placeholder, search, renderItem, onSelect }) {
     lastQuery = q;
     if (!q) { items = []; list.hidden = true; return; }
     items = await search(q).catch(() => []);
-    mount(list, items.length ? items.map((it, i) => html`<li data-i="${i}">${renderItem(it)}</li>`) : html`<li class="muted">Aucun résultat</li>`);
+    mount(list, items.length ? items.map((it, i) => html`<li data-i="${i}">${renderItem(it)}</li>`)
+      : onCreate ? html`<li data-create>${createLabel(q)}</li>` : html`<li class="muted">Aucun résultat</li>`);
     list.hidden = false;
   };
   const run = debounce(runNow);
@@ -37,6 +39,15 @@ export function picker(root, { placeholder, search, renderItem, onSelect }) {
     } else if (e.key === 'Escape') list.hidden = true;
   });
   list.addEventListener('mousedown', e => {
+    if (e.target.closest('li[data-create]')) {
+      e.preventDefault();
+      const q = input.value.trim();
+      input.value = '';
+      lastQuery = '';
+      list.hidden = true;
+      onCreate(q);
+      return;
+    }
     const li = e.target.closest('li[data-i]');
     if (!li) return;
     e.preventDefault();
@@ -45,7 +56,9 @@ export function picker(root, { placeholder, search, renderItem, onSelect }) {
   return input;
 }
 
-export const citizenPicker = (root, onSelect, placeholder = 'Rechercher un citoyen (nom, ID unique, téléphone)…') => picker(root, {
+export const citizenPicker = (root, onSelect, placeholder = 'Rechercher un citoyen (nom, ID unique, téléphone)…', { onCreate } = {}) => picker(root, {
+  onCreate,
+  createLabel: q => html`<span class="badge badge-info">Nouvelle fiche</span> Créer la fiche « <strong>${q}</strong> »`,
   placeholder,
   search: q => api(`/citizens?q=${encodeURIComponent(q)}`),
   renderItem: c => html`<strong>${fullName(c)}</strong>
