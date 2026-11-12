@@ -171,7 +171,7 @@ export async function renderDetail(main, [id]) {
     </section>
 
     ${enquetes ? html`<section class="card">
-      <div class="card-head"><h3>Enquêtes du BCI</h3><small class="muted">Visible par le BCI et les superviseurs</small></div>
+      <div class="card-head"><h3>Enquêtes du BCI</h3><small class="muted">Visible par le BCI et l’état-major</small></div>
       ${enquetes.length ? html`<div class="table-wrap"><table class="table table-click">
         <thead><tr><th>N°</th><th>Objet</th><th>Qualité</th><th>Ouvert le</th><th>Statut</th></tr></thead>
         <tbody>${enquetes.map(e => html`<tr data-href="#/divisions/bci/enquetes/${e.id}">

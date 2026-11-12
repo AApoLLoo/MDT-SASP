@@ -10,6 +10,7 @@ process.env.DATA_DIR = mkdtempSync(path.join(tmpdir(), 'mdt-test-'));
 const { db, getList } = await import('../server/db.js');
 const { default: service } = await import('../server/routes/service.js');
 const { default: users } = await import('../server/routes/users.js');
+const { default: search } = await import('../server/routes/search.js');
 
 const addUser = (matricule, role, divisions = []) => Number(db.prepare(
   `INSERT INTO users (matricule, role, divisions, password_hash) VALUES (?, ?, ?, 'x')`,
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 });
 app.use('/service', service);
 app.use('/users', users);
+app.use('/search', search);
 app.use((err, req, res, next) => res.status(err.status || 500).json({ error: err.message }));
 const server = app.listen(0);
 after(() => server.close());
@@ -291,9 +293,9 @@ test("opérations du S.W.A.T. liées aux enquêtes par le numéro de dossier, de
   const op = await (await call(swat, 'POST', '/service/operations', { ...base, dossier: numero.toLowerCase() })).json();
   assert.equal(op.data.dossier, numero);
 
-  // Chacun voit l'autre dossier en résumé : objet et référent de l'enquête, nom et lieu de l'opération
+  // Chacun voit l'autre dossier en résumé : l'enquête par son seul nom de code (masque), nom et lieu de l'opération
   const vu = (await (await call(swat, 'GET', `/service/operations/${op.id}`)).json()).liens.dossier;
-  assert.deepEqual([vu.resume, vu.data, vu.agent_matricule], [true, { numero, objet: enquete.data.objet, type: 'Stupéfiants' }, 'B1']);
+  assert.deepEqual([vu.resume, vu.masque, vu.data, vu.agent_matricule], [true, true, { nom_code: 'Dossier confidentiel' }, undefined]);
   const vue = (await (await call(enqueteur, 'GET', `/service/enquetes/${enquete.id}`)).json()).liens.entrants.find(r => r.kind === 'operations');
   assert.deepEqual([vue.resume, vue.data], [true, { dossier: numero, nom: 'Coup de filet', type: 'Mandat à haut risque', lieu: 'Davis' }]);
   const complet = (await (await call(em, 'GET', `/service/enquetes/${enquete.id}`)).json()).liens.entrants.find(r => r.kind === 'operations');
@@ -331,4 +333,32 @@ test('superviseur : la Police Academy et ses propres divisions, pas les autres',
 test('les dossiers de service gardent leurs règles', async () => {
   assert.equal((await call(swat, 'POST', '/service/sanctions', { type: 'Avertissement', motif: 'X', date: '2026-11-06' })).status, 403);
   assert.equal((await call(swat, 'GET', '/service/constructor')).status, 404);
+});
+
+test("enquête du BCI vue ailleurs : nom de code seul, sans numéro ni lien, hors BCI et état-major", async () => {
+  const created = await call(enqueteur, 'POST', '/service/enquetes', { agent_id: enqueteur, objet: 'Réseau de faux papiers', nom_code: 'Faucon', type: 'Fraude / corruption', date_ouverture: '2026-11-12' });
+  assert.equal(created.status, 201);
+  const enquete = await created.json();
+  const numero = enquete.data.numero;
+  const opRes = await call(swat, 'POST', '/service/operations', { ...op, nom: 'Appui Faucon', dossier: numero });
+  assert.equal(opRes.status, 201);
+  const { id } = await opRes.json();
+
+  // S.W.A.T. : la fiche liée n'est que le nom de code
+  const vu = (await (await call(swat, 'GET', `/service/operations/${id}`)).json()).liens.dossier;
+  assert.deepEqual(vu, { kind: 'enquetes', data: { nom_code: 'Faucon' }, resume: true, masque: true });
+  // État-major (qui lit les deux divisions) : le dossier complet
+  const full = (await (await call(em, 'GET', `/service/operations/${id}`)).json()).liens.dossier;
+  assert.equal(full.data.objet, 'Réseau de faux papiers');
+  assert.ok(!full.masque);
+  // Sans nom de code : libellé générique
+  db.prepare(`UPDATE service_records SET data = json_remove(data, '$.nom_code') WHERE id = ?`).run(enquete.id);
+  assert.equal((await (await call(swat, 'GET', `/service/operations/${id}`)).json()).liens.dossier.data.nom_code, 'Dossier confidentiel');
+
+  // Recherche de documents : les enquêtes seulement pour le BCI et l'état-major
+  const docs = async u => (await (await call(u, 'GET', '/search/documents?q=faux')).json()).filter(d => d.type === 'Enquête BCI');
+  assert.equal((await docs(enqueteur)).length, 1);
+  assert.equal((await docs(em)).length, 1);
+  assert.equal((await docs(swat)).length, 0);
+  assert.equal((await docs(sup)).length, 0);
 });

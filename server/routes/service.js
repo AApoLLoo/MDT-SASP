@@ -204,10 +204,13 @@ function byNumero(kindName, numero) {
 
 // ---------- Liens entre dossiers et documents ----------
 
-// Un dossier lié que l'agent ne peut pas lire n'est montré qu'en résumé : numéro, titre, type, lieu, statut, agent
+// Un dossier lié que l'agent ne peut pas lire n'est montré qu'en résumé : numéro, titre, type, lieu, statut, agent ;
+// un type `masque` (enquêtes du BCI) ne montre que son nom de code : ni numéro, ni objet, ni agent, ni lien
+export const MASQUE_PAR_DEFAUT = 'Dossier confidentiel';
 function shown(rec, user) {
   const kind = ALL_KINDS[rec.kind];
   if (canSee(kind, user, rec)) return rec;
+  if (kind.masque) return { kind: rec.kind, data: { [kind.masque]: rec.data[kind.masque] || MASQUE_PAR_DEFAUT }, resume: true, masque: true };
   const keys = ['numero', 'dossier', kind.fields[0].key, 'type', 'lieu'];
   return { ...rec, data: Object.fromEntries(keys.filter(k => rec.data[k]).map(k => [k, rec.data[k]])), resume: true };
 }
@@ -216,6 +219,7 @@ function shown(rec, user) {
 const DOCUMENTS = {
   SASP: `SELECT 'rapport' AS doc, id, numero, statut, TRIM(COALESCE(json_extract(suspect, '$.prenom'), '') || ' ' || COALESCE(json_extract(suspect, '$.nom'), '')) AS label, date_faits AS date FROM arrest_reports WHERE numero = ? AND blanchi_at IS NULL`,
   PLT: `SELECT 'plainte' AS doc, id, numero, statut, TRIM(COALESCE(json_extract(plaignant, '$.prenom'), '') || ' ' || COALESCE(json_extract(plaignant, '$.nom'), '')) AS label, date_depot AS date FROM complaints WHERE numero = ?`,
+  PV: `SELECT 'amende' AS doc, t.id, t.numero, t.statut, TRIM(c.prenom || ' ' || c.nom) AS label, t.date_faits AS date FROM tickets t JOIN citizens c ON c.id = t.citizen_id WHERE t.numero = ?`,
   INC: `SELECT 'incident' AS doc, id, numero, statut, type, lieu AS label, date_faits AS date FROM incident_reports WHERE numero = ?`,
   PRV: `SELECT 'scelle' AS doc, id, numero, statut, description AS label, '' AS date FROM evidence WHERE numero = ?`,
 };
@@ -227,7 +231,9 @@ export function findDocument(numero, user) {
   if (sql) return db.prepare(sql).get(numero) ?? { numero, introuvable: true };
   const [kindName] = NUMEROTES.find(([, k]) => k.numero === prefix) ?? [];
   const rec = kindName && byNumero(kindName, numero);
-  return rec ? { doc: 'dossier', numero, dossier: shown(rec, user) } : { numero, introuvable: true };
+  if (!rec) return { numero, introuvable: true };
+  const dossier = shown(rec, user);
+  return { doc: 'dossier', numero: dossier.masque ? '' : numero, dossier };
 }
 
 // Liens d'un dossier : le dossier qu'il vise (`link`), les dossiers d'autres types qui le visent (ex. opérations

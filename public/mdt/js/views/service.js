@@ -172,6 +172,8 @@ const rowHtml = (f, row, editable, refs = {}) => html`<tr>${f.columns.filter(c =
 // Dossier numéroté lié, complet ou en résumé (voir `link`) : numéro, titre, statut et agent ; sa page pour qui peut la lire
 export const linkedLabel = d => {
   const kind = ALL_KINDS[d.kind];
+  // Dossier confidentiel (`masque`) pour qui ne peut pas le lire : son nom de code seul, sans lien
+  if (d.masque) return html`<strong>${d.data[kind.masque]}</strong> <span class="badge">Confidentiel</span>`;
   return html`${d.resume ? html`<strong class="mono">${d.data.numero}</strong>` : html`<a class="mono" href="#/divisions/${kind.division}/${d.kind}/${d.id}">${d.data.numero}</a>`}
     · ${d.data[kind.fields[0].key]} ${statutBadge(kind.statuts[d.statut])} · ${kind.agent} 『${d.agent_matricule}』`;
 };

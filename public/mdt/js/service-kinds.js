@@ -146,17 +146,19 @@ const PIONS_ENQUETE = [
 // chaque dossier voit ceux qui le citent (GET /service/<type>/<id>, `liens`), en résumé s'il n'a pas le droit de les lire.
 // Colonnes de `rows` : `doc` (numéro de document du MDT, résolu dans `liens`), `citizen` (id de fiche citoyen),
 // `hidden` (gardée sans être affichée). `max` : longueur d'un texte (4 000 caractères par défaut).
+// `masque` : champ (nom de code) seul montré, sans lien ni numéro, à qui ne peut pas lire le dossier quand il apparaît ailleurs.
 // `request: { division, statut, titre }` : les membres de cette autre division peuvent créer une demande (statut imposé),
 // liée à un de leurs dossiers, et la modifier tant qu'elle n'est pas prise en charge.
 export const DIVISION_KINDS = {
   enquetes: {
     division: 'bci', numero: 'BCI',
     titre: "Dossiers d'enquête", nouveau: 'Ouvrir un dossier', agent: 'Enquêteur référent', icon: 'search',
-    aide: "Enquêtes du BCI : personnes, documents liés, actes d'enquête et tableau d'enquête. Réservées aux enquêteurs et aux superviseurs.",
-    view: 'own', create: 'sup', dateKey: 'date_ouverture',
+    aide: "Enquêtes du BCI : personnes, documents liés, actes d'enquête et tableau d'enquête. Réservées au BCI et à l'état-major ; ailleurs, les autres agents n'en voient que le nom de code.",
+    view: 'own', create: 'sup', dateKey: 'date_ouverture', masque: 'nom_code',
     statuts: { ouverte: ['Ouverte', 'info'], en_cours: ['En cours', 'warn'], suspendue: ['Suspendue', ''], transmise: ['Transmise au parquet', 'ok'], resolue: ['Résolue', 'ok'], classee: ['Classée sans suite', ''] },
     fields: [
       { key: 'objet', label: 'Objet', required: true, placeholder: 'Ex. : Trafic de stupéfiants à Sandy Shores' },
+      { key: 'nom_code', label: 'Nom de code', placeholder: 'Ex. : Opération Faucon — seul nom vu hors du BCI' },
       { key: 'type', label: 'Nature', type: 'select', required: true, options: ['Stupéfiants', 'Vol / braquage', 'Homicide', 'Agression', 'Enlèvement / séquestration', 'Crime organisé / gang', "Trafic d'armes", 'Fraude / corruption', 'Autre'] },
       { key: 'priorite', label: 'Priorité', type: 'select', options: ['Basse', 'Normale', 'Haute', 'Critique'] },
       { key: 'date_ouverture', label: "Date d'ouverture", type: 'date', required: true },

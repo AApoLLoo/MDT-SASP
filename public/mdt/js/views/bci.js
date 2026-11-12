@@ -6,7 +6,7 @@ import { DIVISION_KINDS } from '../service-kinds.js';
 import { incidentTitre } from '../incident-kinds.js';
 import { openRecordForm, canManage, statutBadge, linkedLabel } from './service.js';
 import { sketchSvg, openSketchEditor } from '../components/sketch.js';
-import { citizenPicker } from '../components/picker.js';
+import { citizenPicker, picker } from '../components/picker.js';
 import { openWarrantForm } from './warrants.js';
 import { statutLabel } from './reports.js';
 import { COMPLAINT_STATUTS } from './complaints.js';
@@ -30,11 +30,14 @@ const DOCS = {
   plainte: d => ['Plainte', `#/plaintes/${d.id}`, d.label && `Plaignant : ${d.label}`, COMPLAINT_STATUTS[d.statut]],
   incident: d => [incidentTitre(d.type), `#/incidents/${d.id}`, d.label, d.statut === 'finalise' ? 'Finalisé' : 'Brouillon'],
   scelle: d => ['Scellé', `#/preuves?q=${encodeURIComponent(d.numero)}`, d.label, EVIDENCE_STATUTS[d.statut]?.[0]],
+  amende: d => ['Amende', `#/amendes?q=${encodeURIComponent(d.numero)}`, d.label, d.statut === 'payee' ? 'Réglée' : 'Impayée'],
 };
 
 const equipe = rec => (rec.data.equipe ?? []).map(r => r.agent).filter(Boolean);
 const isMine = rec => rec.agent_id === state.user.id || equipe(rec).some(m => m.toLowerCase() === state.user.matricule.toLowerCase());
 const agentOf = rec => userByMatricule(rec.agent_matricule) ?? { matricule: rec.agent_matricule, nom: rec.agent_nom, prenom: rec.agent_prenom, grade: rec.agent_grade };
+// Seul nom d'une enquête montré hors du BCI (opérations du S.W.A.T., mandats lus par tous les agents)
+const nomCode = rec => rec.data.nom_code || 'Dossier confidentiel';
 const priorite = p => (p ? html`<span class="badge ${PRIORITE[p]}">${p}</span>` : '');
 
 export const renderEnquetes = (main, id) => (id ? renderDossier(main, Number(id)) : renderListe(main));
@@ -62,12 +65,12 @@ async function renderListe(main) {
     const mine = $('[data-mine]', main).checked;
     const rows = list.filter(rec => (statut === 'tous' || (statut ? rec.statut === statut : ACTIFS.includes(rec.statut)))
       && (!mine || isMine(rec))
-      && (!q || normalize([rec.data.numero, rec.data.objet, rec.data.type, ...(rec.data.personnes ?? []).map(p => p.nom), ...(rec.data.vehicules ?? []).map(v => v.plaque)].join(' ')).includes(q)));
+      && (!q || normalize([rec.data.numero, rec.data.objet, rec.data.nom_code, rec.data.type, ...(rec.data.personnes ?? []).map(p => p.nom), ...(rec.data.vehicules ?? []).map(v => v.plaque)].join(' ')).includes(q)));
     mount($('[data-results]', main), rows.length ? html`<table class="table table-click">
       <thead><tr><th>N°</th><th>Objet</th><th>Priorité</th><th>${KIND.agent}</th><th>Personnes</th><th>Ouvert le</th><th>Statut</th></tr></thead>
       <tbody>${rows.map(rec => html`<tr data-href="#/divisions/bci/enquetes/${rec.id}">
         <td class="mono strong nowrap">${rec.data.numero}</td>
-        <td>${rec.data.objet}<small class="muted block">${rec.data.type}</small></td>
+        <td>${rec.data.objet}<small class="muted block">${[rec.data.nom_code && `« ${rec.data.nom_code} »`, rec.data.type].filter(Boolean).join(' · ')}</small></td>
         <td>${priorite(rec.data.priorite) || '—'}</td>
         <td>${agentLabel(agentOf(rec))}${equipe(rec).length ? html`<small class="muted block">+ ${equipe(rec).length} enquêteur(s)</small>` : ''}</td>
         <td>${(rec.data.personnes ?? []).length || '—'}</td>
@@ -126,7 +129,7 @@ async function renderDossier(main, id) {
         ${manage ? html`<button type="button" class="btn-icon" data-doc-rm="${d.numero}" title="Retirer le lien">✕</button>` : ''}</li>`;
     })}</ul>${docs.length ? '' : html`<p class="muted small">Aucun document lié.</p>`}
     ${manage ? html`<form class="inline-form" data-doc-form>
-      <input class="input input-sm mono" name="numero" required placeholder="SASP-, PLT-, INC-, PRV-, BCI-…" aria-label="Numéro du document">
+      <div class="doc-pick" data-doc-pick></div>
       <input class="input input-sm" name="note" placeholder="Note (facultatif)" aria-label="Note">
       <button class="btn btn-sm">Lier</button></form>` : ''}`;
   }
@@ -154,6 +157,7 @@ async function renderDossier(main, id) {
         <div>
           <p class="case-num"><span class="mono">${data.numero}</span> ${statutBadge(KIND.statuts[rec.statut])} ${priorite(data.priorite)}</p>
           <h1>${data.objet}</h1>
+          <p class="muted">Nom de code (seul nom vu hors du BCI) : <strong>${nomCode(rec)}</strong></p>
           <p class="muted">${data.type} · ouvert le ${fmtDate(data.date_ouverture)} · ${KIND.agent} : <a href="#/agents/${rec.agent_id}">${agentLabel(agentOf(rec))}</a></p>
         </div>
         <div class="actions">
@@ -191,6 +195,21 @@ async function renderDossier(main, id) {
         </div>
       </div>`);
     $('[data-live]', main).textContent = `● En direct · actualisé à ${new Date().toLocaleTimeString('fr-FR')}`;
+    if (manage) mountDocPicker();
+  }
+
+  // Documents du MDT cherchés par numéro, nom ou lieu ; le choix remplit le numéro (un numéro tapé en entier marche aussi)
+  function mountDocPicker() {
+    const input = picker($('[data-doc-pick]', main), {
+      placeholder: 'N° ou nom : rapport, plainte, incident, scellé, amende, BCI…',
+      search: q => (q.length < 2 ? Promise.resolve([]) : api(`/search/documents?q=${encodeURIComponent(q)}`)),
+      renderItem: d => html`<strong class="mono">${d.numero}</strong><span class="badge">${d.type}</span><span class="muted grow">${d.label}</span>`,
+      onSelect: d => { input.value = d.numero; },
+    });
+    input.name = 'numero';
+    input.required = true;
+    input.classList.add('input-sm', 'mono');
+    input.setAttribute('aria-label', 'Numéro du document');
   }
 
   const load = async () => {
@@ -258,7 +277,7 @@ async function renderDossier(main, id) {
       const o = rec.liens.entrants.find(r => r.id === Number(ds.op));
       if (!o.resume) attempt(() => openRecordForm('operations', o, load));
     } else if (t.matches('[data-appui]')) {
-      attempt(() => openRecordForm('operations', null, load, { dossier: numero, type: 'Mandat à haut risque', date: todayIso(), objectif: `Appui du BCI, dossier ${numero} : ${rec.data.objet}` }), t);
+      attempt(() => openRecordForm('operations', null, load, { dossier: numero, type: 'Mandat à haut risque', date: todayIso(), objectif: `Appui du BCI, enquête « ${nomCode(rec)} »` }), t);
     } else if (t.matches('[data-tableau]') && manage) {
       openSketchEditor({ url: `${url}/live/tableau`, units: TABLEAU.units, onClose: () => reload() });
     } else if (t.matches('[data-person-add]')) openPersonForm();
@@ -267,7 +286,7 @@ async function renderDossier(main, id) {
       if (confirm(`Retirer ${p.nom} du dossier ?`)) patch('personnes', list => list.filter(x => !same(p)(x)));
     } else if (ds.warrant) {
       const c = rec.liens.citoyens.find(x => String(x.id) === rec.data.personnes[ds.warrant].citoyen);
-      openWarrantForm({ type: 'mandat', citizen_id: c.id, citizen_nom: c.nom, citizen_prenom: c.prenom, motif: `Dossier ${numero} : ${rec.data.objet}` }, reload);
+      openWarrantForm({ type: 'mandat', citizen_id: c.id, citizen_nom: c.nom, citizen_prenom: c.prenom, motif: `Enquête BCI « ${nomCode(rec)} »` }, reload);
     } else if (ds.docRm && confirm(`Retirer le lien vers ${ds.docRm} ?`)) patch('pieces', list => list.filter(p => p.numero !== ds.docRm));
   });
 
