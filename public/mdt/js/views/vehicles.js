@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, openModal, formValues, toast, fmtDate, fmtDateTime, todayIso, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, openModal, formValues, toast, fmtDate, fmtDateTime, todayIso, debounce, PAGE, moreButton, live } from '../dom.js';
 import { api, hasRole } from '../api.js';
 import { icon } from '../icons.js';
 import { openWarrantForm } from './warrants.js';
@@ -114,5 +114,7 @@ export async function render(main, params, query) {
       attempt(async () => { await api(`/vehicles/${v.id}`, { method: 'DELETE' }); toast('Véhicule supprimé'); await load(); });
     }
   });
+  // Temps réel : seul le tableau est redessiné (recherche, filtre, « Afficher plus » et tri conservés)
+  live(main, ['vehicles', 'warrants'], load);
   await load();
 }

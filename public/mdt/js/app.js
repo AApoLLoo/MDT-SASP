@@ -381,10 +381,10 @@ async function showApp() {
 // ---------- Temps réel ----------
 
 // Ressources de l'API (premier segment, voir server/events.js) affichées par chaque page (premier segment du hash).
-// Les pages en direct (tableau de bord, mandats, unités : live() de dom.js) se mettent à jour seules et n'y figurent pas.
+// Les pages en direct (live() de dom.js : tableau de bord, listes des casiers, véhicules, mandats, rapports, unités)
+// se mettent à jour seules ; ici restent les autres, dont les fiches de détail.
 const PAGE_TOPICS = {
   casiers: ['citizens', 'reports', 'tickets', 'warrants'],
-  vehicules: ['vehicles'],
   rapports: ['reports', 'justice'],
   incidents: ['incidents'],
   plaintes: ['complaints'],

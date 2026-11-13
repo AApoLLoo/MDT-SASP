@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, toast, openModal, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, toast, openModal, fullName, fmtDate, fmtDateTime, debounce, PAGE, moreButton, live } from '../dom.js';
 import { api, isJustice } from '../api.js';
 import { navigate } from '../router.js';
 import { icon } from '../icons.js';
@@ -85,5 +85,7 @@ export async function render(main, params, query) {
     const tr = e.target.closest('tr[data-href]');
     if (tr) location.hash = tr.dataset.href;
   });
+  // Temps réel : seul le tableau est redessiné (recherche, filtres, « Afficher plus » et tri conservés)
+  live(main, ['reports', 'justice', 'citizens'], load);
   await load();
 }
