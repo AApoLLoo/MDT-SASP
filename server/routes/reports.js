@@ -5,6 +5,7 @@ import { cleanAvocatId, blanchirRapports, logAvocatChange } from '../justice.js'
 import { fail, str, intParam, optionalId, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction, checkVersion } from '../util.js';
 import { upsertCitizen, useIdentityPhoto } from './citizens.js';
 import { sealSeizedObjects } from './evidence.js';
+import { notifyMentions } from './mentions.js';
 import { compute, formatDollars, MAX_CHARGES, MAJORATION_DEFCON } from '../../public/mdt/js/calc.js';
 
 export const SUSPECT_FIELDS = ['nom', 'prenom', 'date_naissance', 'id_unique', 'empreinte', 'telephone'];
@@ -163,6 +164,7 @@ r.put('/:id', (req, res) => {
     const photos = 'photos' in fields ? JSON.parse(fields.photos) : rep.photos;
     useIdentityPhoto(req.user, 'citizen_id' in fields ? fields.citizen_id : rep.citizen_id, photos.carte_identite, `Depuis le rapport ${rep.numero}`);
   });
+  if ('faits' in fields) notifyMentions(req.user, 'report', id, rep.numero, fields.faits);
   res.json(loadReport(id, req.user));
 });
 

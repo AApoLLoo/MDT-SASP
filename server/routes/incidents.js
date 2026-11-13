@@ -3,6 +3,7 @@ import { db, parseJson } from '../db.js';
 import { hasRole } from '../auth.js';
 import { fail, str, intParam, insertRow, updateRow, nextNumero, localDate, cleanPhotos, listLimit, logAction, checkVersion } from '../util.js';
 import { INCIDENT_TYPES } from '../../public/mdt/js/incident-kinds.js';
+import { notifyMentions } from './mentions.js';
 
 const JSON_DEFAULTS = { agents_presents: [], details: {}, photos: {} };
 
@@ -83,6 +84,7 @@ r.put('/:id', (req, res) => {
   }
   if (b.photos !== undefined) f.photos = JSON.stringify(cleanPhotos(b.photos));
   updateRow('incident_reports', id, f);
+  if ('recit' in f) notifyMentions(req.user, 'incident', id, inc.numero, f.recit);
   // Les brouillons s'enregistrent souvent : seule la modification d'un rapport finalisé est tracée
   if (inc.statut === 'finalise') logAction(req.user, "Rapport d'incident finalisé modifié", 'incident', id, inc.numero);
   res.json(load(id, req.user));

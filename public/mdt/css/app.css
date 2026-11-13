@@ -984,3 +984,11 @@ body.lite .view .table tbody tr { animation: none; }
 .paper[data-stamp='En attente'] { --stamp: #1f4fa8; }
 .paper:is([data-stamp='Résolue'], [data-stamp='Finalisé']) { --stamp: #1e7a46; }
 .stamp { --stamp: var(--ok); top: 3.8rem; right: 1.5rem; }
+
+/* Mentions @matricule : pastille sur le bouton de la barre du haut, liste en modale */
+.mentions-btn { position: relative; }
+.mentions-btn .nav-badge { position: absolute; top: -6px; right: -6px; margin: 0; }
+.mentions-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.mentions-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; }
+.mentions-list li.is-unread { border-color: var(--gold); }
+.mentions-list small { color: var(--muted); white-space: nowrap; }

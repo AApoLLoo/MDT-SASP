@@ -477,6 +477,19 @@ CREATE TABLE IF NOT EXISTS tickets (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_tickets_citizen ON tickets(citizen_id);
+
+-- Mentions @matricule dans les rapports : une notification par agent et par rapport
+CREATE TABLE IF NOT EXISTS mentions (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  entity TEXT NOT NULL CHECK (entity IN ('report', 'incident')),
+  entity_id INTEGER NOT NULL,
+  numero TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  read_at TEXT,
+  UNIQUE (user_id, entity, entity_id)
+);
 `);
 
 function seed(table, file, cols) {

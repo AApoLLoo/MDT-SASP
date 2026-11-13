@@ -1,4 +1,4 @@
-import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, debounce, sortTable } from './dom.js';
+import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, debounce, sortTable, fmtDateTime } from './dom.js';
 import { api, state, setUnauthorizedHandler, setSessionExpiredHandler, hasRole, isJustice, isAvocat } from './api.js';
 import { startRouter, resolve, navigate, rerender, canLeave } from './router.js';
 import { icon } from './icons.js';
@@ -229,6 +229,39 @@ async function updateUnread() {
   }
 }
 
+// Mentions @matricule dans les rapports : pastille de la barre du haut, et notification d'une nouvelle mention
+let lastMentionId = null; // dernière mention déjà signalée (null : pas encore vérifié)
+const mentionPath = m => `/${m.entity === 'report' ? 'rapports' : 'incidents'}/${m.entity_id}`;
+const mentionLabel = m => `${m.auteur_matricule} vous a mentionné dans le rapport ${m.entity === 'report' ? "d'arrestation" : "d'incident"} ${m.numero}`;
+
+async function updateMentions() {
+  const badge = $('[data-mentions-count]');
+  if (!badge || $('.tab-lock')) return; // comptes justice : pas de mentions
+  const data = await api('/mentions').catch(() => null);
+  if (!data) return;
+  badge.textContent = data.unread > 9 ? '9+' : String(data.unread);
+  badge.hidden = !data.unread;
+  const latest = data.items[0];
+  if (lastMentionId !== null && latest && latest.id > lastMentionId && !latest.read_at) {
+    toast(mentionLabel(latest), 'annonce', { onClick: () => navigate(mentionPath(latest)), duration: 12000 });
+  }
+  lastMentionId = latest?.id ?? 0;
+}
+
+async function openMentions() {
+  const data = await api('/mentions').catch(err => toast(err.message, 'error'));
+  if (!data) return;
+  const dialog = openModal('Mentions', data.items.length
+    ? html`<ul class="mentions-list">${data.items.map(m => html`
+        <li class="${m.read_at ? '' : 'is-unread'}"><a href="#${mentionPath(m)}">${mentionLabel(m)}</a><small>${fmtDateTime(m.created_at)}</small></li>`)}</ul>`
+    : html`<p class="empty-state">Aucune mention. Un collègue vous mentionne en écrivant @${state.user.matricule} dans un rapport.</p>`);
+  dialog.addEventListener('click', e => { if (/** @type {Element} */ (e.target).closest('a')) dialog.close(); });
+  if (data.unread) {
+    await api('/mentions/seen', { method: 'POST' }).catch(err => toast(err.message, 'error'));
+    updateMentions();
+  }
+}
+
 // Mode fluide : sans flou ni fond animé, pour les postes qui rament (GPU occupé par le jeu, accélération matérielle coupée)
 const LITE_KEY = 'mdt-lite';
 
@@ -304,6 +337,7 @@ async function showApp() {
           ${isAvocat() ? '' : html`<div class="topbar-search" data-global-search></div>`}
           <div class="topbar-user">
             <a class="user-label" href="#/${isJustice() ? 'profil' : `agents/${state.user.id}`}" title="Mon profil" data-user-label></a>
+            ${isJustice() ? '' : html`<button type="button" class="btn btn-sm btn-ghost mentions-btn" data-mentions title="Mentions dans les rapports">${icon('at')}<b class="nav-badge" data-mentions-count hidden></b></button>`}
             <a class="btn btn-sm btn-ghost" href="/" title="Site public">${icon('back')}</a>
             <button type="button" class="btn btn-sm btn-ghost" data-compact>${icon('rows')}</button>
             <button type="button" class="btn btn-sm btn-ghost" data-lite>${icon('zap')}</button>
@@ -319,6 +353,9 @@ async function showApp() {
   updateLiteButton();
   updateCompactButton();
   if (!isAvocat()) globalSearch($('[data-global-search]'));
+  lastMentionId = null;
+  updateMentions();
+  $('[data-mentions]')?.addEventListener('click', openMentions);
 
   $('[data-compact]').addEventListener('click', () => {
     const compact = document.body.classList.toggle('compact');
@@ -456,6 +493,7 @@ const flushRemoteChanges = debounce(async () => {
   pendingTopics.clear();
   if (!state.user || $('.tab-lock')) return;
   if (topics.includes('announcements')) updateUnread();
+  if (topics.includes('mentions') || topics.includes('*')) updateMentions();
   // Attendu : les pages en direct relisent state.defcon juste après
   if (topics.includes('settings') || topics.includes('admin')) await refreshSettings();
   markNavNews(topics);

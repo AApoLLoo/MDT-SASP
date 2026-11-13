@@ -98,7 +98,7 @@ export async function renderEdit(main, [id]) {
         </div>`)}
       ${section(2, 'Détails', html`<div class="form-grid" data-details></div>`)}
       ${section(3, 'Personnes impliquées', html`<textarea class="input" name="personnes" rows="3" placeholder="Suspects, victimes, témoins : nom, rôle, état…">${inc.personnes}</textarea>`)}
-      ${section(4, 'Récit des faits *', html`${templateSelect('incident')}<textarea class="input faits" name="recit" rows="10" placeholder="Déroulé chronologique : appel, arrivée sur zone, actions, issue…">${inc.recit}</textarea>`)}
+      ${section(4, 'Récit des faits *', html`${templateSelect('incident')}<textarea class="input faits" name="recit" rows="10" placeholder="Déroulé chronologique : appel, arrivée sur zone, actions, issue… (@matricule pour notifier un collègue)">${inc.recit}</textarea>`)}
       ${section(5, 'Photos', html`
         <p class="muted small">Cliquez sur un emplacement puis collez une capture (Ctrl+V), glissez-déposez une image, importez un fichier ou indiquez un lien.</p>
         <div data-photos></div>`)}

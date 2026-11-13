@@ -100,7 +100,7 @@ export async function render(main, [id]) {
       ${section(5, 'Objet(s) illégal(aux) saisi(s)', html`<div data-objets></div>`,
         html`<button type="button" class="btn btn-sm" data-objet-add>${icon('plus')} Ajouter un objet</button>`)}
 
-      ${section(6, 'Faits', html`${templateSelect('arrestation')}<textarea class="input faits" name="faits" rows="10" placeholder="Décrivez les faits de manière chronologique : contexte, interpellation, fouille, transport…">${rep.faits}</textarea>`)}
+      ${section(6, 'Faits', html`${templateSelect('arrestation')}<textarea class="input faits" name="faits" rows="10" placeholder="Décrivez les faits de manière chronologique : contexte, interpellation, fouille, transport… (@matricule pour notifier un collègue)">${rep.faits}</textarea>`)}
 
       ${section(7, 'Photos', html`
         <p class="muted small">Cliquez sur un emplacement puis collez une capture (Ctrl+V), glissez-déposez une image, importez un fichier ou indiquez un lien.</p>

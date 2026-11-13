@@ -5,8 +5,8 @@ import { sessionUser } from './auth.js';
 
 const clients = new Set();
 const PING_MS = 25000;
-// Écritures sans intérêt pour les autres : annonces lues, envoi de photo, croquis (qui a son propre flux)
-const SILENT = /^\/(uploads$|announcements\/seen$|service\/[^/]+\/\d+\/live\/)/;
+// Écritures sans intérêt pour les autres : annonces et mentions lues, envoi de photo, croquis (qui a son propre flux)
+const SILENT = /^\/(uploads$|announcements\/seen$|mentions\/seen$|service\/[^/]+\/\d+\/live\/)/;
 
 const send = (client, topic) => client.res.write(`event: change\ndata: ${topic}\n\n`);
 
@@ -25,6 +25,11 @@ export function events(req, res) {
     clearInterval(ping);
     clients.delete(client);
   });
+}
+
+// Signal adressé à certains agents seulement (ex. mention dans un rapport)
+export function notifyUsers(userIds, topic) {
+  for (const client of clients) if (userIds.includes(client.userId)) send(client, topic);
 }
 
 // À monter sur /api après requireAuth : la ressource est le premier segment du chemin
