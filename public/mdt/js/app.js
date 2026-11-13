@@ -199,26 +199,6 @@ const BASE_TITLE = document.title;
 const UNREAD_POLL_MS = 30000;
 let lastPingId = null; // dernière annonce déjà signalée à l'agent connecté (null : pas encore vérifié)
 
-// Petit « ping » sonore (deux notes) ; ignoré si le navigateur bloque l'audio
-function playPing() {
-  try {
-    const ctx = new AudioContext();
-    [880, 1320].forEach((freq, i) => {
-      const t = ctx.currentTime + i * 0.15;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.15, t + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.3);
-    });
-    setTimeout(() => ctx.close(), 1000);
-  } catch { /* audio indisponible */ }
-}
-
 // Pastille du menu, titre de l'onglet et notification des nouvelles annonces non lues
 async function updateUnread() {
   if (!state.user || $('.tab-lock')) return; // onglet masqué : pas de ping en double
@@ -246,7 +226,6 @@ async function updateUnread() {
     const urgent = latest.importance === 'urgente';
     toast(`Nouvelle annonce${urgent ? ' URGENTE' : ''} : ${latest.titre}`, urgent ? 'error' : 'annonce', { onClick: open, duration: 12000 });
     if (urgent) flashLightbar();
-    playPing();
   }
 }
 
@@ -296,6 +275,7 @@ function updateClock() {
 
 async function showApp() {
   lastPingId = null;
+  navNews.clear(); // pas de pastilles héritées d'un autre agent sur ce poste
   state.settings = await api('/settings');
   state.defcon = state.settings.defcon;
   mount($('#root'), html`
@@ -381,20 +361,50 @@ async function showApp() {
 // ---------- Temps réel ----------
 
 // Ressources de l'API (premier segment, voir server/events.js) affichées par chaque page (premier segment du hash).
-// Les pages en direct (live() de dom.js : tableau de bord, listes des casiers, véhicules, mandats, rapports, unités)
-// se mettent à jour seules ; ici restent les autres, dont les fiches de détail.
+// Les pages en direct (live() de dom.js : tableau de bord, toutes les listes, unités) se mettent à jour seules ;
+// ici restent les autres : fiches de détail, dossiers de service et de division, effectifs.
 const PAGE_TOPICS = {
   casiers: ['citizens', 'reports', 'tickets', 'warrants'],
   rapports: ['reports', 'justice'],
   incidents: ['incidents'],
-  plaintes: ['complaints'],
-  amendes: ['tickets'],
-  preuves: ['evidence'],
+  plaintes: ['complaints', 'justice'],
   service: ['service'],
   divisions: ['service'],
   agents: ['users', 'service'],
-  annonces: ['announcements'],
 };
+// Pastilles du menu : rubrique où un collègue a créé ou modifié quelque chose depuis la dernière visite.
+// Compte les rafales de modifications (pas les requêtes) ; gardé en mémoire de l'onglet, remis à zéro à la connexion.
+const NAV_TOPICS = {
+  citizens: '/casiers', vehicles: '/vehicules', warrants: '/mandats', reports: '/rapports', justice: '/rapports',
+  incidents: '/incidents', complaints: '/plaintes', tickets: '/amendes', evidence: '/preuves', service: '/service', users: '/agents',
+};
+const navNews = new Map(); // chemin du menu → nombre de nouveautés
+
+function drawNavNews() {
+  for (const a of $$('[data-nav]')) {
+    const n = navNews.get(a.dataset.nav) ?? 0;
+    let badge = $('[data-news]', a);
+    if (!n) { badge?.remove(); continue; }
+    if (!badge) {
+      badge = document.createElement('b');
+      badge.className = 'nav-badge is-news';
+      badge.dataset.news = '';
+      a.append(badge);
+    }
+    badge.textContent = n > 9 ? '9+' : String(n);
+    badge.title = `${n} création(s) ou modification(s) par des collègues depuis votre dernière visite`;
+  }
+}
+
+// Rubrique affichée : déjà à jour (page en direct), pas de pastille
+function markNavNews(topics) {
+  const path = resolve().path;
+  for (const p of new Set(topics.map(t => NAV_TOPICS[t]).filter(Boolean))) {
+    if (!path.startsWith(p)) navNews.set(p, (navNews.get(p) ?? 0) + 1);
+  }
+  drawNavNews();
+}
+
 const EVENTS_RETRY_MS = 30000;
 const REMOTE_DEBOUNCE_MS = 1500; // une seule réaction pour une rafale d'écritures (ex. enregistrer puis soumettre)
 let events = null;
@@ -448,6 +458,7 @@ const flushRemoteChanges = debounce(async () => {
   if (topics.includes('announcements')) updateUnread();
   // Attendu : les pages en direct relisent state.defcon juste après
   if (topics.includes('settings') || topics.includes('admin')) await refreshSettings();
+  markNavNews(topics);
   // Pages en direct (ex. unités en patrouille) : elles écoutent « remote-change » et l'annulent si elles se sont mises à jour
   if (!window.dispatchEvent(new CustomEvent('remote-change', { detail: topics, cancelable: true }))) return;
   const page = resolve().path.split('/')[1];
@@ -465,8 +476,11 @@ async function route() {
   if (path !== '/annonces') updateUnread();
   for (const a of $$('[data-nav]')) {
     const p = a.dataset.nav;
-    a.classList.toggle('is-active', p === '/' ? path === '/' : path.startsWith(p));
+    const active = p === '/' ? path === '/' : path.startsWith(p);
+    a.classList.toggle('is-active', active);
+    if (active) navNews.delete(p); // rubrique visitée : nouveautés vues
   }
+  drawNavNews();
   // Chaque navigation rend dans un conteneur neuf : un rendu tardif d'une page quittée reste invisible
   const container = document.createElement('div');
   container.className = 'view';

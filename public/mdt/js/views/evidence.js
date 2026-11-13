@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, openModal, formValues, toast, fmtDateTime, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, openModal, formValues, toast, fmtDateTime, debounce, PAGE, moreButton, live } from '../dom.js';
 import { api, hasRole } from '../api.js';
 import { icon } from '../icons.js';
 import { mountPhotos } from '../components/photos.js';
@@ -106,5 +106,7 @@ export async function render(main, params, query) {
     const id = Number(e.target.closest('tr[data-id]')?.dataset.id);
     if (id) attempt(() => openEvidenceForm({ id }, reload));
   });
+  // Temps réel : seul le tableau est redessiné (recherche, statut, « Afficher plus » et tri conservés)
+  live(main, ['evidence'], load);
   await load();
 }

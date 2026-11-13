@@ -264,6 +264,8 @@ body[data-alert='2'] { --strobe: 2.4s; }
 /* ---------- Annonces ---------- */
 .nav-badge { --pulse: rgba(229, 72, 77, 0.7); margin-left: auto; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--danger); color: #fff; font: 700 0.7rem/20px var(--font); text-align: center; }
 .nav-badge.is-pinging { animation: pulse 1.6s ease-out infinite; }
+/* Nouveautés des collègues : or, le rouge reste aux annonces et alertes */
+.nav-badge.is-news { background: var(--gold); color: #1a1406; }
 .ping { display: inline-flex; align-items: center; gap: 0.35rem; margin-right: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: var(--danger); color: #fff; font: 700 0.7rem/1.4 var(--display); text-transform: uppercase; letter-spacing: 0.08em; vertical-align: middle; }
 .ping::before { --pulse: rgba(255, 255, 255, 0.7); content: ''; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: pulse 1.6s ease-out infinite; }
 .annonce.is-unread { border-color: rgba(229, 72, 77, 0.55); box-shadow: 0 0 0 1px rgba(229, 72, 77, 0.25), 0 0 28px -12px var(--danger); }

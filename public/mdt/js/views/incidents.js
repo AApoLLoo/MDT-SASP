@@ -1,4 +1,4 @@
-import { html, mount, $, $$, attempt, toast, agentLabel, fmtDate, fmtDateTime, nowTime, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, $$, attempt, toast, agentLabel, fmtDate, fmtDateTime, nowTime, debounce, PAGE, moreButton, live } from '../dom.js';
 import { api, loadUsers, hasRole } from '../api.js';
 import { navigate, setLeaveGuard, rerender } from '../router.js';
 import { icon } from '../icons.js';
@@ -56,6 +56,8 @@ export async function renderList(main, params, query) {
     const tr = e.target.closest('tr[data-href]');
     if (tr) location.hash = tr.dataset.href;
   });
+  // Temps réel : seul le tableau est redessiné (recherche, type, statut, « Mes rapports », « Afficher plus » et tri conservés)
+  live(main, ['incidents'], load);
   await load();
 }
 

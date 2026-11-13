@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, openModal, formValues, toast, agentLabel, fmtDateTime, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, openModal, formValues, toast, agentLabel, fmtDateTime, PAGE, moreButton, live } from '../dom.js';
 import { api, state, loadUsers } from '../api.js';
 import { icon } from '../icons.js';
 import { avatar } from '../components/avatar.js';
@@ -123,5 +123,7 @@ export async function render(main, params, query) {
     }
   });
 
+  // Temps réel : seul le fil est redessiné (onglet, « Ma division » et « Afficher plus » conservés)
+  live(main, ['announcements'], load);
   await load();
 }

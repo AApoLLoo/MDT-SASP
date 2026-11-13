@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, toast, fullName, agentLabel, fmtDate, fmtDateTime, todayIso, nowTime, normalize, categorieBadge, debounce, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, toast, fullName, agentLabel, fmtDate, fmtDateTime, todayIso, nowTime, normalize, categorieBadge, debounce, PAGE, moreButton, live } from '../dom.js';
 import { api, state, loadPenalCode, loadAvocats, hasRole, canJudge, isJustice, isAvocat } from '../api.js';
 import { navigate, setLeaveGuard, rerender } from '../router.js';
 import { icon } from '../icons.js';
@@ -63,6 +63,8 @@ export async function renderList(main, params, query) {
     const tr = e.target.closest('tr[data-href]');
     if (tr) location.hash = tr.dataset.href;
   });
+  // Temps réel : seul le tableau est redessiné (recherche, statut, « Afficher plus » et tri conservés)
+  live(main, ['complaints', 'justice'], load);
   await load();
 }
 

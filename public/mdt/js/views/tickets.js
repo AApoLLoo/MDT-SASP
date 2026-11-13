@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, openModal, formValues, toast, fullName, fmtDate, fmtDateTime, debounce, todayIso, nowTime, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, openModal, formValues, toast, fullName, fmtDate, fmtDateTime, debounce, todayIso, nowTime, PAGE, moreButton, live } from '../dom.js';
 import { api, hasRole, isJustice, loadPenalCode } from '../api.js';
 import { icon } from '../icons.js';
 import { formatDollars } from '../calc.js';
@@ -214,5 +214,7 @@ export async function render(main, params, query) {
     const t = list.find(x => x.id === Number(e.target.closest('tr[data-id]')?.dataset.id));
     if (t) openTicket(t, reload);
   });
+  // Temps réel : seul le tableau est redessiné (recherche, statut, « Afficher plus » et tri conservés)
+  live(main, ['tickets', 'citizens'], load);
   await load();
 }
