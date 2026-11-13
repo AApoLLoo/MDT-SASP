@@ -1,4 +1,4 @@
-import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, normalize, debounce } from './dom.js';
+import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, debounce, sortTable } from './dom.js';
 import { api, state, setUnauthorizedHandler, setSessionExpiredHandler, hasRole, isJustice, isAvocat } from './api.js';
 import { startRouter, resolve, navigate, rerender, canLeave } from './router.js';
 import { icon } from './icons.js';
@@ -380,12 +380,11 @@ async function showApp() {
 
 // ---------- Temps réel ----------
 
-// Ressources de l'API (premier segment, voir server/events.js) affichées par chaque page (premier segment du hash)
+// Ressources de l'API (premier segment, voir server/events.js) affichées par chaque page (premier segment du hash).
+// Les pages en direct (tableau de bord, mandats, unités : live() de dom.js) se mettent à jour seules et n'y figurent pas.
 const PAGE_TOPICS = {
-  '': ['warrants', 'reports', 'incidents', 'service', 'announcements', 'justice'],
   casiers: ['citizens', 'reports', 'tickets', 'warrants'],
   vehicules: ['vehicles'],
-  mandats: ['warrants'],
   rapports: ['reports', 'justice'],
   incidents: ['incidents'],
   plaintes: ['complaints'],
@@ -442,12 +441,13 @@ async function refreshSettings() {
 // Page sans saisie en cours ni fenêtre ouverte : la recharger ne fait rien perdre
 const canRefresh = () => !openDialog() && canLeave();
 
-const flushRemoteChanges = debounce(() => {
+const flushRemoteChanges = debounce(async () => {
   const topics = [...pendingTopics];
   pendingTopics.clear();
   if (!state.user || $('.tab-lock')) return;
   if (topics.includes('announcements')) updateUnread();
-  if (topics.includes('settings') || topics.includes('admin')) refreshSettings();
+  // Attendu : les pages en direct relisent state.defcon juste après
+  if (topics.includes('settings') || topics.includes('admin')) await refreshSettings();
   // Pages en direct (ex. unités en patrouille) : elles écoutent « remote-change » et l'annulent si elles se sont mises à jour
   if (!window.dispatchEvent(new CustomEvent('remote-change', { detail: topics, cancelable: true }))) return;
   const page = resolve().path.split('/')[1];
@@ -593,29 +593,11 @@ document.addEventListener('click', async e => {
   setTimeout(() => { btn.innerHTML = before; btn.classList.remove('is-done'); }, 1200);
 }, true);
 
-// Clé de tri d'une cellule : date JJ/MM/AAAA [HH:MM], nombre ou montant, sinon texte
-function sortKey(cell) {
-  const t = cell?.textContent.trim() ?? '';
-  const d = t.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\D{1,3}(\d{2}):(\d{2}))?/);
-  if (d) return `${d[3]}${d[2]}${d[1]}${d[4] ?? '00'}${d[5] ?? '00'}`;
-  if (/\d/.test(t) && /^[-$\d\s., ]+$/.test(t)) return Number(t.replace(/[^\d-]/g, ''));
-  return normalize(t);
-}
-
-// Tri au clic sur l'en-tête de colonne ; ne trie que les lignes affichées (« Afficher plus » charge le reste)
+// Tri au clic sur l'en-tête de colonne
 document.addEventListener('click', e => {
   const th = e.target.closest('.table-wrap thead th');
   if (!th || !th.textContent.trim() || e.target.closest('a, button, input, select')) return;
-  const tbody = th.closest('table').tBodies[0];
-  if (!tbody || tbody.rows.length < 2) return;
-  const dir = th.getAttribute('aria-sort') === 'ascending' ? -1 : 1;
-  for (const h of th.parentElement.cells) h.removeAttribute('aria-sort');
-  th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
-  const col = th.cellIndex;
-  const rows = [...tbody.rows].map(row => [sortKey(row.cells[col]), row]);
-  const compare = (a, b) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'fr', { numeric: true }));
-  rows.sort(([a], [b]) => dir * compare(a, b));
-  tbody.append(...rows.map(([, row]) => row));
+  sortTable(th, th.getAttribute('aria-sort') === 'ascending' ? -1 : 1);
 });
 
 // Verre liquide : le reflet des panneaux suit le pointeur (variables lues par app.css)

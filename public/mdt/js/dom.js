@@ -18,7 +18,9 @@ export function html(strings, ...values) {
 
 export const raw = s => new Html(s);
 
+/** @type {(sel: string, root?: ParentNode) => any} */
 export const $ = (sel, root = document) => root.querySelector(sel);
+/** @type {(sel: string, root?: ParentNode) => any[]} */
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 export function mount(el, content) {
@@ -232,3 +234,53 @@ export const agentLabel = u => (u ? `${u.grade ? u.grade + ' ' : ''}${fullName(u
 
 export const CATEGORIE_CLASS = { 'Contravention': 'contravention', 'Délit mineur': 'mineur', 'Délit majeur': 'majeur', 'Crime': 'crime' };
 export const categorieBadge = c => html`<span class="badge cat-${CATEGORIE_CLASS[c] || 'contravention'}">${c}</span>`;
+
+// Clé de tri d'une cellule : date JJ/MM/AAAA [HH:MM], nombre ou montant, sinon texte
+function sortKey(cell) {
+  const t = cell?.textContent.trim() ?? '';
+  const d = t.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\D{1,3}(\d{2}):(\d{2}))?/);
+  if (d) return `${d[3]}${d[2]}${d[1]}${d[4] ?? '00'}${d[5] ?? '00'}`;
+  if (/\d/.test(t) && /^[-$\d\s.,\u202f]+$/.test(t)) return Number(t.replace(/[^\d-]/g, ''));
+  return normalize(t);
+}
+
+/**
+ * Trie les lignes affichées d'un tableau selon la colonne de `th` (« Afficher plus » charge le reste)
+ * @param {HTMLTableCellElement} th
+ * @param {1 | -1} dir 1 croissant, -1 décroissant
+ */
+export function sortTable(th, dir) {
+  const tbody = th.closest('table').tBodies[0];
+  if (!tbody || tbody.rows.length < 2) return;
+  for (const h of th.parentElement.children) h.removeAttribute('aria-sort');
+  th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
+  const col = th.cellIndex;
+  /** @type {[string | number, HTMLTableRowElement][]} */
+  const rows = [...tbody.rows].map(row => [sortKey(row.cells[col]), row]);
+  const compare = (a, b) => (typeof a === 'number' && typeof b === 'number' ? a - b : String(a).localeCompare(String(b), 'fr', { numeric: true }));
+  rows.sort(([a], [b]) => dir * compare(a, b));
+  tbody.append(...rows.map(([, row]) => row));
+}
+
+/**
+ * Page en direct : `refresh` est rappelée quand une ressource de `topics` change (flux temps réel relayé par app.js),
+ * tant que `root` est affiché. Le tri des tableaux de `root` est conservé. La page n'a pas à proposer d'actualiser.
+ * @param {Element} root
+ * @param {string[]} topics ressources de l'API (premier segment du chemin, voir server/events.js)
+ * @param {() => Promise<unknown>} refresh
+ */
+export function live(root, topics, refresh) {
+  const onChange = e => {
+    if (!root.isConnected) return window.removeEventListener('remote-change', onChange);
+    if (!e.detail.some(t => t === '*' || topics.includes(t))) return;
+    e.preventDefault();
+    const sorted = $$('table', root).map(t => $('th[aria-sort]', t)).map(th => th && [th.cellIndex, th.getAttribute('aria-sort') === 'ascending' ? 1 : -1]);
+    refresh().then(() => {
+      $$('table', root).forEach((t, i) => {
+        const th = sorted[i] && t.tHead?.rows[0]?.cells[sorted[i][0]];
+        if (th) sortTable(th, sorted[i][1]);
+      });
+    }).catch(err => toast(`Page non actualisée : ${err.message}`, 'error'));
+  };
+  window.addEventListener('remote-change', onChange);
+}

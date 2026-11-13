@@ -1,4 +1,4 @@
-import { html, mount, $, $$, attempt, openModal, formValues, toast, fullName, agentLabel, fmtDate, fmtDateTime, nowTime, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, $$, attempt, openModal, formValues, toast, fullName, agentLabel, fmtDate, fmtDateTime, nowTime, PAGE, moreButton, live } from '../dom.js';
 import { api, state, loadUsers, userByMatricule, hasRole } from '../api.js';
 import { icon } from '../icons.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
@@ -131,15 +131,8 @@ async function renderUnits(root) {
     draw();
   };
 
-  // Temps réel : rechargé dès qu'une unité change (flux SSE relayé par app.js), sans attendre ni tout reconstruire.
-  // preventDefault : la page se met à jour seule, app.js ne propose pas d'actualiser
-  const onRemote = e => {
-    if (!root.isConnected) return window.removeEventListener('remote-change', onRemote);
-    if (!e.detail.includes('service') && !e.detail.includes('*')) return;
-    e.preventDefault();
-    load().catch(err => toast(`Unités non actualisées : ${err.message}`, 'error'));
-  };
-  window.addEventListener('remote-change', onRemote);
+  // Temps réel : rechargé dès qu'une unité change, sans attendre ni tout reconstruire
+  live(root, ['service'], load);
 
   const reload = () => attempt(load);
   $('[data-new]', root).addEventListener('click', () => openUnitForm(null, reload));

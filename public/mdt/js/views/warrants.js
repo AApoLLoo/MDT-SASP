@@ -1,4 +1,4 @@
-import { html, mount, $, attempt, openModal, formValues, toast, fullName, fmtDateTime, PAGE, moreButton } from '../dom.js';
+import { html, mount, $, attempt, openModal, formValues, toast, fullName, fmtDateTime, PAGE, moreButton, live } from '../dom.js';
 import { api, hasRole } from '../api.js';
 import { rerender } from '../router.js';
 import { icon } from '../icons.js';
@@ -133,5 +133,7 @@ export async function render(main, params, query) {
       attempt(async () => { await api(`/warrants/${t.dataset.delete}`, { method: 'DELETE' }); toast('Mandat supprimé'); await load(); });
     }
   });
+  // Temps réel : seul le tableau est redessiné (filtre, « Afficher plus » et tri conservés)
+  live(main, ['warrants', 'citizens', 'vehicles'], load);
   await load();
 }
