@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "checkJs": false,
+    "noEmit": true
+  },
+  "include": ["public/mdt/js/**/*.js"]
+}

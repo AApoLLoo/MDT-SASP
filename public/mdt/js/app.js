@@ -1,6 +1,6 @@
-import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, normalize } from './dom.js';
+import { html, mount, $, $$, agentLabel, toast, countUp, formValues, formControls, openModal, clearDrafts, normalize, debounce } from './dom.js';
 import { api, state, setUnauthorizedHandler, setSessionExpiredHandler, hasRole, isJustice, isAvocat } from './api.js';
-import { startRouter, resolve, navigate, rerender } from './router.js';
+import { startRouter, resolve, navigate, rerender, canLeave } from './router.js';
 import { icon } from './icons.js';
 import { defconInfo } from './reference-data.js';
 import { SPECIAL_DIVISIONS, DIVISION_KINDS, managesDivision } from './service-kinds.js';
@@ -357,6 +357,7 @@ async function showApp() {
 
   $('[data-logout]').addEventListener('click', async () => {
     state.user = null; // avant la requête : un 401 reçu entre-temps ne doit pas ouvrir la reconnexion
+    stopEvents();
     clearDrafts(); // le prochain agent sur ce poste ne voit pas les saisies du précédent
     await api('/auth/logout', { method: 'POST' }).catch(() => {});
     showLogin();
@@ -373,8 +374,87 @@ async function showApp() {
     window.addEventListener('keydown', onShortcut);
     window.addEventListener('show-shortcuts', showShortcuts);
   }
+  startEvents();
   route();
 }
+
+// ---------- Temps réel ----------
+
+// Ressources de l'API (premier segment, voir server/events.js) affichées par chaque page (premier segment du hash)
+const PAGE_TOPICS = {
+  '': ['warrants', 'reports', 'incidents', 'service', 'announcements', 'justice'],
+  casiers: ['citizens', 'reports', 'tickets', 'warrants'],
+  vehicules: ['vehicles'],
+  mandats: ['warrants'],
+  rapports: ['reports', 'justice'],
+  incidents: ['incidents'],
+  plaintes: ['complaints'],
+  amendes: ['tickets'],
+  preuves: ['evidence'],
+  service: ['service'],
+  divisions: ['service'],
+  agents: ['users', 'service'],
+  annonces: ['announcements'],
+};
+const EVENTS_RETRY_MS = 30000;
+const REMOTE_DEBOUNCE_MS = 1500; // une seule réaction pour une rafale d'écritures (ex. enregistrer puis soumettre)
+let events = null;
+const pendingTopics = new Set();
+
+function startEvents() {
+  events?.close();
+  const source = new EventSource('api/events');
+  events = source;
+  source.addEventListener('change', e => {
+    pendingTopics.add(e.data);
+    flushRemoteChanges();
+  });
+  // Reconnexion après une coupure : des changements ont pu être manqués, les pages en direct se rechargent (« * »)
+  let opened = false;
+  source.addEventListener('open', () => {
+    if (opened) {
+      pendingTopics.add('*');
+      flushRemoteChanges();
+    }
+    opened = true;
+  });
+  // Coupure réseau : EventSource se reconnecte seul. Refus (session expirée, reconnexion en cours) : nouvel essai plus tard
+  source.addEventListener('error', () => {
+    if (source.readyState !== EventSource.CLOSED || events !== source) return;
+    events = null;
+    setTimeout(() => { if (state.user && !events) startEvents(); }, EVENTS_RETRY_MS);
+  });
+}
+
+function stopEvents() {
+  events?.close();
+  events = null;
+}
+
+async function refreshSettings() {
+  const settings = await api('/settings').catch(() => null);
+  if (!settings) return;
+  state.settings = settings;
+  state.defcon = settings.defcon;
+  updateDefconBadge();
+}
+
+// Page sans saisie en cours ni fenêtre ouverte : la recharger ne fait rien perdre
+const canRefresh = () => !openDialog() && canLeave();
+
+const flushRemoteChanges = debounce(() => {
+  const topics = [...pendingTopics];
+  pendingTopics.clear();
+  if (!state.user || $('.tab-lock')) return;
+  if (topics.includes('announcements')) updateUnread();
+  if (topics.includes('settings') || topics.includes('admin')) refreshSettings();
+  // Pages en direct (ex. unités en patrouille) : elles écoutent « remote-change » et l'annulent si elles se sont mises à jour
+  if (!window.dispatchEvent(new CustomEvent('remote-change', { detail: topics, cancelable: true }))) return;
+  const page = resolve().path.split('/')[1];
+  if (!topics.some(t => PAGE_TOPICS[page]?.includes(t)) || !canRefresh()) return;
+  // ponytail: proposé et non automatique, car rerender() remonte la page entière (scroll, filtres) ; rendu incrémental si besoin
+  toast('Un collègue a modifié ces données : cliquer pour actualiser', 'info', { onClick: () => { if (canRefresh()) rerender(); }, duration: 10000 });
+}, REMOTE_DEBOUNCE_MS);
 
 async function route() {
   if (!state.user) return showLogin();

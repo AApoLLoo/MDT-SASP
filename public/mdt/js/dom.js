@@ -1,3 +1,4 @@
+// @ts-check
 // Petits utilitaires DOM. `html` échappe toutes les valeurs interpolées,
 // sauf les fragments déjà produits par `html` (ou `raw`) et les tableaux de fragments.
 
@@ -25,6 +26,11 @@ export function mount(el, content) {
   return el;
 }
 
+/**
+ * @param {string} message
+ * @param {string} [type] success, error, info…
+ * @param {{ onClick?: () => void, duration?: number }} [options]
+ */
 export function toast(message, type = 'success', { onClick, duration } = {}) {
   const ms = duration ?? (type === 'error' ? 6000 : 3500);
   const el = document.createElement('div');
@@ -59,7 +65,8 @@ export function openModal(title, body, { wide = false } = {}) {
   // Laisse jouer la transition de fermeture (0,22 s en CSS) avant de retirer la modale
   dialog.addEventListener('close', () => setTimeout(() => dialog.remove(), 250));
   dialog.addEventListener('click', e => {
-    if ((e.target.closest('[data-close]') || e.target === dialog) && canClose()) dialog.close();
+    const target = /** @type {Element} */ (e.target);
+    if ((target.closest('[data-close]') || target === dialog) && canClose()) dialog.close();
   });
   dialog.addEventListener('cancel', e => { if (!canClose()) e.preventDefault(); }); // Échap
   dialog.showModal();
@@ -111,7 +118,8 @@ function trackDraft(dialog, key) {
       <button type="button" class="btn btn-sm btn-ghost" data-draft-drop>Ignorer</button>`);
     $('.modal-body', dialog).prepend(bar);
     bar.addEventListener('click', e => {
-      if (e.target.closest('[data-draft-restore]')) {
+      const target = /** @type {Element} */ (e.target);
+      if (target.closest('[data-draft-restore]')) {
         for (const el of fields()) {
           const v = draft.values[el.name];
           if (v === undefined) continue;
@@ -122,7 +130,7 @@ function trackDraft(dialog, key) {
           el.dispatchEvent(new Event('change', { bubbles: true }));
         }
         dirty = true;
-      } else if (e.target.closest('[data-draft-drop]')) {
+      } else if (target.closest('[data-draft-drop]')) {
         try { localStorage.removeItem(key); } catch { /* rien à nettoyer */ }
       } else return;
       bar.remove();

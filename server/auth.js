@@ -52,18 +52,24 @@ function setSessionCookie(req, res, token) {
   res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', secure: req.secure, maxAge: SESSION_MS, path: '/' });
 }
 
+// Agent d'une session valide (non expirée, compte actif), sinon null
+export function sessionUser(token) {
+  if (!token) return null;
+  const row = db.prepare(`
+    SELECT u.id, u.matricule, u.nom, u.prenom, u.grade, u.role, u.photo_url, u.divisions, u.qualifications, s.expires_at
+    FROM sessions s JOIN users u ON u.id = s.user_id
+    WHERE s.token = ? AND u.actif = 1`).get(token);
+  if (!row || row.expires_at <= Date.now()) return null;
+  const { expires_at, ...user } = row;
+  return { ...user, divisions: parseJson(user.divisions, []), qualifications: parseJson(user.qualifications, []) };
+}
+
 export function authenticate(req, res, next) {
   const token = readCookie(req);
-  if (token) {
-    const row = db.prepare(`
-      SELECT u.id, u.matricule, u.nom, u.prenom, u.grade, u.role, u.photo_url, u.divisions, u.qualifications, s.expires_at
-      FROM sessions s JOIN users u ON u.id = s.user_id
-      WHERE s.token = ? AND u.actif = 1`).get(token);
-    if (row && row.expires_at > Date.now()) {
-      const { expires_at, ...user } = row;
-      req.user = { ...user, divisions: parseJson(user.divisions, []), qualifications: parseJson(user.qualifications, []) };
-      req.sessionToken = token;
-    }
+  const user = sessionUser(token);
+  if (user) {
+    req.user = user;
+    req.sessionToken = token;
   }
   next();
 }

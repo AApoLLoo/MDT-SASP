@@ -1,3 +1,4 @@
+// @ts-check
 // Accès à l'API et cache des données de référence partagées par les vues
 // settings : listes réglées par l'administration (grades, divisions, qualifications, secteurs, postes)
 export const state = { user: null, defcon: 5, settings: null, penalCode: null, users: null, weapons: null };

@@ -16,6 +16,8 @@ export function navigate(path) {
 
 // fn() doit renvoyer true pour autoriser la sortie de la vue courante
 export const setLeaveGuard = fn => { leaveGuard = fn; };
+// Sortie possible sans rien demander (aucune modification en cours sur la page)
+export const canLeave = () => !leaveGuard || leaveGuard(true);
 
 export function resolve() {
   const { path, query } = parseHash();

@@ -21,6 +21,7 @@ import admin from './routes/admin.js';
 import justice, { justiceGate } from './justice.js';
 import bordereau from './bordereau.js';
 import { dailyMaintenance } from './maintenance.js';
+import { events, broadcastChanges } from './events.js';
 
 ensureAdmin();
 dailyMaintenance();
@@ -64,6 +65,8 @@ app.use(authenticate);
 
 app.use('/api/auth', authRouter);
 app.use('/api', requireAuth);
+app.get('/api/events', events);
+app.use('/api', broadcastChanges);
 app.use('/api', justiceGate);
 app.use('/api/justice', justice);
 app.use('/api/citizens', citizens);

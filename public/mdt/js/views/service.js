@@ -4,10 +4,12 @@ import { icon } from '../icons.js';
 import { mountPhotos, numberedSlots } from '../components/photos.js';
 import { sketchSvg, openSketchEditor } from '../components/sketch.js';
 import { KINDS, DIVISION_KINDS, UNIT_STATUTS, initialStatut, managesDivision } from '../service-kinds.js';
+import { html as lit, render as litRender, nothing } from '../vendor/lit-html-3.2.1/lit-html.js';
+import { repeat } from '../vendor/lit-html-3.2.1/directives/repeat.js';
+import { unsafeHTML } from '../vendor/lit-html-3.2.1/directives/unsafe-html.js';
 
 const TABS = [['patrouilles', 'Patrouilles'], ...Object.entries(KINDS).map(([k, v]) => [k, v.titre])];
 const TONE = { ok: 'badge-ok', info: 'badge-info', danger: 'badge-danger', warn: 'badge-warn', '': '' };
-const REFRESH_MS = 20000;
 
 export const statutBadge = ([label, tone]) => html`<span class="badge ${TONE[tone]}">${label}</span>`;
 const agentOf = rec => ({ matricule: rec.agent_matricule, nom: rec.agent_nom, prenom: rec.agent_prenom, grade: rec.agent_grade });
@@ -90,55 +92,68 @@ async function renderUnits(root) {
     <div class="units" data-units></div>`);
 
   let units = [];
+  // Fragments de dom.js (icônes, puces d'agents, déjà échappés) insérés tels quels dans un modèle lit-html
+  const frag = h => unsafeHTML(String(h));
+  // lit-html ne modifie que ce qui a changé, carte par carte (repeat : une carte suit son unité) :
+  // une liste « Statut » ouverte, le focus et le reflet du pointeur survivent à une mise à jour
   const draw = () => {
     const me = state.user.matricule.toLowerCase();
     const counts = Object.entries(UNIT_STATUTS).map(([k, [l]]) => `${units.filter(u => u.statut === k).length} ${l.toLowerCase()}`);
     $('[data-summary]', root).textContent = units.length
       ? `${units.length} unité(s) · ${units.reduce((s, u) => s + u.agents.length, 0)} agent(s) · ${counts.join(' · ')} · actualisé à ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
       : 'Aucune unité en service.';
-    mount($('[data-units]', root), units.length ? units.map(u => html`
+    litRender(units.length ? repeat(units, u => u.id, u => lit`
       <article class="unit-card unit-${u.statut} ${u.agents.some(m => m.toLowerCase() === me) ? 'is-mine' : ''}">
         <div class="unit-head">
           <strong class="mono">${u.indicatif}</strong>
-          <select class="input input-sm" data-statut="${u.id}" aria-label="Statut de l'unité">
-            ${Object.entries(UNIT_STATUTS).map(([k, [l]]) => html`<option value="${k}" ${k === u.statut ? 'selected' : ''}>${l}</option>`)}
+          <select class="input input-sm" data-statut=${u.id} aria-label="Statut de l'unité">
+            ${Object.entries(UNIT_STATUTS).map(([k, [l]]) => lit`<option value=${k} .selected=${k === u.statut}>${l}</option>`)}
           </select>
         </div>
-        <div class="tags">${u.agents.length ? u.agents.map(agentChip) : html`<span class="muted small">Aucun agent</span>`}</div>
+        <div class="tags">${u.agents.length ? frag(u.agents.map(agentChip).join('')) : lit`<span class="muted small">Aucun agent</span>`}</div>
         <dl class="dl small">
           <dt>Secteur</dt><dd>${u.secteur || '—'}</dd>
           <dt>Poste</dt><dd>${u.poste || '—'}</dd>
           <dt>Véhicule</dt><dd>${u.vehicule || '—'}</dd>
-          ${u.notes ? html`<dt>Notes</dt><dd>${u.notes}</dd>` : ''}
+          ${u.notes ? lit`<dt>Notes</dt><dd>${u.notes}</dd>` : nothing}
         </dl>
         <div class="unit-foot">
           <small class="muted">Màj ${fmtDateTime(u.updated_at)}${u.updated_matricule ? ` par 『${u.updated_matricule}』` : ''}</small>
           <span>
-            <button class="btn btn-sm btn-ghost" data-edit="${u.id}" title="Modifier">${icon('edit')}</button>
-            <button class="btn btn-sm btn-ghost" data-end="${u.id}" title="Fin de service">${icon('logout')}</button>
+            <button class="btn btn-sm btn-ghost" data-edit=${u.id} title="Modifier">${frag(icon('edit'))}</button>
+            <button class="btn btn-sm btn-ghost" data-end=${u.id} title="Fin de service">${frag(icon('logout'))}</button>
           </span>
         </div>
-      </article>`) : html`<p class="empty-state">Aucune unité en patrouille. Créez la vôtre en début de service.</p>`);
+      </article>`) : lit`<p class="empty-state">Aucune unité en patrouille. Créez la vôtre en début de service.</p>`, $('[data-units]', root));
   };
   const load = async () => {
     units = await api('/service/units');
     draw();
   };
 
-  // Rafraîchissement automatique tant que la page est affichée
-  const timer = setInterval(() => {
-    if (!root.isConnected) return clearInterval(timer);
-    if (!document.querySelector('dialog[open]')) load().catch(() => {});
-  }, REFRESH_MS);
+  // Temps réel : rechargé dès qu'une unité change (flux SSE relayé par app.js), sans attendre ni tout reconstruire.
+  // preventDefault : la page se met à jour seule, app.js ne propose pas d'actualiser
+  const onRemote = e => {
+    if (!root.isConnected) return window.removeEventListener('remote-change', onRemote);
+    if (!e.detail.includes('service') && !e.detail.includes('*')) return;
+    e.preventDefault();
+    load().catch(err => toast(`Unités non actualisées : ${err.message}`, 'error'));
+  };
+  window.addEventListener('remote-change', onRemote);
 
   const reload = () => attempt(load);
   $('[data-new]', root).addEventListener('click', () => openUnitForm(null, reload));
-  root.addEventListener('change', e => {
-    const id = e.target.dataset.statut;
-    if (id) attempt(async () => {
-      await api(`/service/units/${id}`, { method: 'PUT', body: { statut: e.target.value } });
-      await load();
+  root.addEventListener('change', async e => {
+    const select = e.target;
+    const id = select.dataset.statut;
+    if (!id) return;
+    const saved = await attempt(async () => {
+      await api(`/service/units/${id}`, { method: 'PUT', body: { statut: select.value } });
+      return true;
     });
+    if (saved) return reload();
+    // Refusé : la liste reprend le statut réel (lit-html ne la retouche pas, sa valeur n'ayant pas changé)
+    select.value = units.find(u => u.id === Number(id))?.statut ?? select.value;
   });
   root.addEventListener('click', e => {
     const t = e.target.closest('button');
