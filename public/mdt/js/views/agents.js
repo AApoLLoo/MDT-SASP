@@ -6,7 +6,7 @@ import { formatDollars } from '../calc.js';
 import { avatar } from '../components/avatar.js';
 import { mountPhotos } from '../components/photos.js';
 import { dossierCard } from './service.js';
-import { divisionConflict, SPECIAL_DIVISIONS } from '../service-kinds.js';
+import { divisionConflict, managesProfile, SPECIAL_DIVISIONS } from '../service-kinds.js';
 
 // Divisions à grades internes (S.W.A.T., BCI) : liste réglable `grades`, portée par la colonne `gradeField` de l'agent
 const GRADED = Object.values(SPECIAL_DIVISIONS).filter(d => d.gradeField);
@@ -185,8 +185,9 @@ export async function renderProfile(main, [id]) {
   // Tuteurs de l'Academy (rookie) et rookies confiés (tuteur), réglés dans Academy → Suivi des rookies
   const tuteurs = u.tuteurs.map(t => users.find(x => x.id === t)).filter(Boolean);
   const suivis = users.filter(r => r.actif && r.tuteurs.includes(u.id));
-  const canEdit = u.id === state.user.id || hasRole('superviseur');
-  const dossier = canEdit ? await dossierCard(u.id) : '';
+  const canEdit = u.id === state.user.id || managesProfile(state.user, u);
+  // Dossier administratif : l'agent lui-même et les superviseurs (contrôle côté serveur)
+  const dossier = u.id === state.user.id || hasRole('superviseur') ? await dossierCard(u.id) : '';
   const stat = (value, label) => html`<div class="stat"><strong>${value}</strong><span>${label}</span></div>`;
   mount(main, html`
     <div class="page-head">
@@ -279,7 +280,7 @@ export async function renderEdit(main, [id]) {
   const u = await api(`/users/${id}`);
   const self = u.id === state.user.id;
   const admin = hasRole('admin');
-  const sup = hasRole('superviseur');
+  const sup = managesProfile(state.user, u);
   if (!self && !sup) {
     mount(main, html`<div class="alert alert-danger">Vous ne pouvez modifier que votre propre profil. <a href="#/agents/${u.id}">Retour au profil</a></div>`);
     return;
@@ -288,7 +289,7 @@ export async function renderEdit(main, [id]) {
   const model = { photos: { photo_url: u.photo_url }, qualifications: [...u.qualifications] };
   let dirty = false;
   const dis = ok => (ok ? '' : 'disabled');
-  const lockNote = role => `Modifiable par ${role === 'admin' ? 'un administrateur' : 'un superviseur'}`;
+  const lockNote = role => `Modifiable par ${role === 'admin' ? 'un administrateur' : "l'état-major, ou un superviseur pour un agent"}`;
 
   mount(main, html`
     <div class="page-head">
@@ -344,7 +345,7 @@ export async function renderEdit(main, [id]) {
           ${self ? '' : html`<label>Réinitialiser le mot de passe<input class="input" type="password" name="password" minlength="8" autocomplete="new-password" placeholder="Laisser vide pour conserver"></label>`}
           ${self ? '' : html`<label class="check span-2"><input type="checkbox" name="actif" ${u.actif ? 'checked' : ''}> Compte actif (décocher pour révoquer l'accès au MDT)</label>`}
         </div>
-        <p class="muted small">Agent : rédige ses rapports. Superviseur : modifie et rouvre tous les rapports, gère divisions et qualifications, change le Defcon ; accède à la Police Academy et à ses propres divisions. État-major : droits du superviseur sur toutes les divisions. Administrateur : comptes, paramètres du MDT (grades, divisions, qualifications…), Code pénal et sauvegardes.</p>`) : ''}
+        <p class="muted small">Agent : rédige ses rapports. Superviseur : modifie et rouvre tous les rapports, gère divisions et qualifications des agents, change le Defcon ; accède à la Police Academy et à ses propres divisions. État-major : droits du superviseur sur toutes les divisions. Administrateur : comptes, paramètres du MDT (grades, divisions, qualifications…), Code pénal et sauvegardes.</p>`) : ''}
     </form>
 
     ${self ? section('Sécurité', html`

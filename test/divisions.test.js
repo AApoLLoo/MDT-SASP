@@ -362,3 +362,19 @@ test("enquête du BCI vue ailleurs : nom de code seul, sans numéro ni lien, hor
   assert.equal((await docs(swat)).length, 0);
   assert.equal((await docs(sup)).length, 0);
 });
+
+test('un superviseur ne gère les divisions que des agents : ni les siennes, ni celles de ses pairs ou de sa hiérarchie', async () => {
+  const divisionsOf = async id => (await (await call(em, 'GET', `/users/${id}`)).json()).divisions;
+  // Sur son propre profil : divisions ignorées, il ne s'ajoute pas au BCI
+  await call(sup, 'PUT', `/users/${sup}`, { divisions: ['Investigation'], bio: 'Chef de quart' });
+  assert.deepEqual(await divisionsOf(sup), []);
+  // Ni sur un autre superviseur, ni sur l'état-major
+  await call(sup, 'PUT', `/users/${supBci}`, { divisions: ['Patrouille'] });
+  assert.deepEqual(await divisionsOf(supBci), ['Basic Criminal Investigations']);
+  await call(sup, 'PUT', `/users/${em}`, { divisions: ['Investigation'] });
+  assert.deepEqual(await divisionsOf(em), []);
+  // L'état-major gère tout le monde, lui-même compris
+  await call(em, 'PUT', `/users/${sup}`, { divisions: ['Patrouille'] });
+  assert.deepEqual(await divisionsOf(sup), ['Patrouille']);
+  await call(em, 'PUT', `/users/${sup}`, { divisions: [] });
+});

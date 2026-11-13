@@ -104,6 +104,12 @@ export function managesDivision(key, user) {
     || (user?.role === 'superviseur' && DIVISIONS_SUPERVISEUR.includes(key));
 }
 
+// Divisions, grades de division, date d'entrée et qualifications d'un compte : l'état-major et les administrateurs
+// pour tous ; un superviseur pour les agents seulement (ni lui-même, ni ses pairs, ni sa hiérarchie, ni la justice).
+// Sinon un superviseur s'ajouterait au BCI et lirait ses enquêtes confidentielles.
+export const managesProfile = (user, target) =>
+  ['etat_major', 'admin'].includes(user?.role) || (user?.role === 'superviseur' && target?.role === 'agent');
+
 // Divisions qu'un agent ne peut pas cumuler
 export const INCOMPATIBLES = [['bci', 'swat']];
 

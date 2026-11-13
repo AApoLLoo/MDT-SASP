@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db, parseJson, getList } from '../db.js';
 import { requireRole, hasRole, hashPassword, checkPassword, ALL_ROLES, JUSTICE_ROLES, JUSTICE_FONCTIONS, isJustice } from '../auth.js';
 import { fail, pick, str, bool, intParam, insertRow, updateRow, cleanPhotos, logAction, getOr404 } from '../util.js';
-import { isMember, divisionConflict, ROOKIE, SPECIAL_DIVISIONS } from '../../public/mdt/js/service-kinds.js';
+import { isMember, divisionConflict, managesProfile, ROOKIE, SPECIAL_DIVISIONS } from '../../public/mdt/js/service-kinds.js';
 
 const FIELD_LABELS = {
   photo_url: 'photo', telephone: 'téléphone', discord: 'Discord', bio: 'présentation', divisions: 'divisions', date_entree: "date d'entrée",
@@ -132,13 +132,13 @@ r.put('/:id', (req, res) => {
   const id = intParam(req.params.id);
   const self = id === req.user.id;
   const admin = hasRole(req.user, 'admin');
+  const before = getOr404('SELECT * FROM users WHERE id = ?', id, 'Agent introuvable');
   const allowed = [
     ...(self || admin ? SELF_FIELDS : []),
-    ...(hasRole(req.user, 'superviseur') ? SUPERVISOR_FIELDS : isMember('academy', req.user) ? ACADEMY_FIELDS : []),
+    ...(managesProfile(req.user, before) ? SUPERVISOR_FIELDS : isMember('academy', req.user) ? ACADEMY_FIELDS : []),
     ...(admin ? ADMIN_FIELDS : []),
   ];
   if (!allowed.length) fail(403, 'Vous ne pouvez modifier que votre propre profil');
-  const before = getOr404('SELECT * FROM users WHERE id = ?', id, 'Agent introuvable');
   const f = clean(req.body ?? {}, allowed, before);
   // Un rookie promu quitte le tutorat : ses tuteurs lui sont retirés (effectif de l'Academy, profils)
   if ('grade' in f && !ROOKIE.test(f.grade)) f.tuteurs = '[]';

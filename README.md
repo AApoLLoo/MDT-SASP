@@ -133,7 +133,7 @@ La configuration se fait par variables d'environnement, ou dans un fichier `.env
 
 Rôles :
 - **Agent** : rédige ses rapports. Sur son propre profil, il modifie sa photo, son téléphone, son Discord, sa présentation et son mot de passe.
-- **Superviseur** : modifie ou rouvre tous les rapports, supprime des fiches et des scellés, change le niveau Defcon, consulte l'historique. Il fixe aussi les divisions, la date d'entrée et les qualifications des agents. Côté divisions, il n'accède qu'à la Police Academy et aux siennes (`DIVISIONS_SUPERVISEUR` et `managesDivision` dans `public/mdt/js/service-kinds.js`).
+- **Superviseur** : modifie ou rouvre tous les rapports, supprime des fiches et des scellés, change le niveau Defcon, consulte l'historique. Il fixe aussi les divisions, la date d'entrée et les qualifications des agents (rôle « agent » uniquement : ni les siennes, ni celles d'un autre superviseur, de l'état-major ou d'un compte justice ; `managesProfile`). Côté divisions, il n'accède qu'à la Police Academy et aux siennes (`DIVISIONS_SUPERVISEUR` et `managesDivision` dans `public/mdt/js/service-kinds.js`).
 - **État-major** : a tous les droits du superviseur, sur toutes les divisions. Il n'a pas accès à l'Administration (comptes, paramètres, sauvegardes) ni à la modification du Code pénal.
 - **Administrateur** : a tous les droits de l'état-major. Il gère les comptes (création, matricule, nom, grade, rôle, révocation, réinitialisation du mot de passe), les paramètres du MDT, le Code pénal et les sauvegardes.
 
